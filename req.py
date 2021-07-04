@@ -4,11 +4,11 @@ import config
 import re
 import sys
 from typing import List, Dict
-from bs4 import BeautifulSoup, ResultSet
+from bs4 import BeautifulSoup
 
 cookies = {
-    'PHPSESSID':'dccfafabab5c8eca3f0e1c354d8e5e3c',
-    'user': 'YjA3OTAyMDAxOuW%2BkOe2reismTpzdHVkZW50OuWQjOWtuA%3D%3D'
+    'PHPSESSID': config.PHPSESSID,
+    'user': config.USER
 }
 
 home_url = 'https://ceiba.ntu.edu.tw'
