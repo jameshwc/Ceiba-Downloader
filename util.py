@@ -13,11 +13,11 @@ def beautify_soup(content: bytes):
         br.replace_with("\n")
     return soup
 
-def progress_decorator(object: str):
+def progress_decorator():
     def decorator(func):
         def wrap(self, *args):
-            print(strings.object_download_info.format(self.cname, object))
+            print(strings.object_download_info.format(self.cname, args[3]))
             func(self, *args)
-            print(strings.object_finish_info.format(self.cname, object))
+            print(strings.object_finish_info.format(self.cname, args[3]))
         return wrap
     return decorator
