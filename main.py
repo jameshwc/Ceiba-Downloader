@@ -19,7 +19,7 @@ class Ceiba():
 
         self.sess: requests.Session = requests.session()
         self.courses: List[Course] = []
-
+        self.sess.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0'})
         if cookie_PHPSESSID and cookie_user:
             self.sess.cookies.set("PHPSESSID", config.PHPSESSID)
             self.sess.cookies.set("user", config.USER)
@@ -64,8 +64,8 @@ class Ceiba():
 
     def download_courses(self):
         for course in self.courses:
-            # if course.cname != '微積分甲下':  # debug
-            #     continue
+            if course.cname != '微積分甲下':  # debug
+                continue
             print(strings.course_download_info.format(course.cname))
             os.makedirs(course.path, exist_ok=True)
             course.download(self.sess)

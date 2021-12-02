@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 from pathlib import Path
 from util import get_valid_filename
 from tqdm import tqdm
+import re
 
 
 class Crawler():
@@ -26,6 +27,20 @@ class Crawler():
                 self.filename = self.filename.removesuffix('.html')
             if static:
                 path = Path(os.path.join(self.path, self.filename))  # TODO: check if filename exists
+                if response.headers['content-type'] == 'text/css':
+                    new_content = response.content
+                    resources = re.findall(r'url\((.*?)\)', str(response.content))
+                    if len(resources) > 0:
+                        resources_path = os.path.join(self.path, "resources")
+                        os.makedirs(resources_path, exist_ok=True)
+                        for res in resources:
+                            resp = self.session.get(urljoin(self.url, res))
+                            res_filename = res.split('/')[-1]
+                            with open(os.path.join(resources_path, res_filename), 'wb') as resource_file:
+                                resource_file.write(resp.content)
+                            new_content = new_content.replace(bytes('url(' + res, encoding='utf-8'), bytes('url(resources/' + res_filename, encoding='utf-8'))
+                    path.write_bytes(new_content)
+                    return True
             else:
                 path = Path(os.path.join(os.path.join(self.path, "files"), self.filename))
             path.write_bytes(response.content)
@@ -50,7 +65,7 @@ class Crawler():
         
         hrefs = tqdm(soup.find_all('a')) if is_table else soup.find_all('a')
         for a in hrefs:
-            if len(a.text) > 0 and a.text not in ['作業列表']:
+            if len(a.text) > 0 and a.text not in ['作業列表'] and not a['href'].startswith('mailto'):
                 if not a['href'].startswith('http') or a['href'].startswith('https://ceiba.ntu.edu.tw'):
                     url = urljoin(urljoin(self.url, obj), a.get('href'))
                     filename = get_valid_filename(a.text)
