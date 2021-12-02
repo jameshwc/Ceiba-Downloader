@@ -10,6 +10,7 @@ home_url = 'https://ceiba.ntu.edu.tw'
 login_url = 'https://ceiba.ntu.edu.tw/ChkSessLib.php'
 module_url = 'https://ceiba.ntu.edu.tw/modules/main.php'
 courses_url = 'https://ceiba.ntu.edu.tw/student/index.php?seme_op=107-2'
+button_url = 'https://ceiba.ntu.edu.tw/modules/button.php'
 skip_courses_list = ['中文系大學國文網站']
 Link = namedtuple('Link', ['name', 'url'])
 
