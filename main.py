@@ -64,7 +64,7 @@ class Ceiba():
 
     def download_courses(self):
         for course in self.courses:
-            if course.cname != '微積分甲下':  # debug
+            if course.cname not in ['離散數學', '猶太文化']:  # debug
                 continue
             print(strings.course_download_info.format(course.cname))
             os.makedirs(course.path, exist_ok=True)

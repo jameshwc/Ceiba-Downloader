@@ -4,12 +4,8 @@ import config
 import util
 import strings
 import re
-import csv
-from tqdm import tqdm
-from pathlib import Path
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-from namedlist import namedlist
 from crawler import Crawler
 
 
@@ -31,7 +27,9 @@ class Course():
 
     def download(self, session: requests.Session):
         cname_map = {'bulletin': '公佈欄', 'syllabus': '課程大綱', 'hw': '作業',
-                     'info': '課程資訊', 'personal': '教師資訊', 'grade': '學習成績'}
+                     'info': '課程資訊', 'personal': '教師資訊', 'grade': '學習成績',
+                     'board': '討論看板', 'calendar': '課程行事曆', 'share': '資源分享',
+                     'vote': '投票區', 'student': '修課學生', 'grade': '學習成績'}
         
         current_url = session.get(self.href).url
         self.course_sn = re.search(r'course/([0-9a-f]*)+', current_url).group(0).removeprefix('course/')
@@ -72,7 +70,7 @@ class Course():
         items = []
         for a in nav_co.find_all('a'):
             item = re.search(r"onclick\('(.*?)'.*\)", a['onclick']).group(1)
-            if item not in ['logout']:
+            if item not in ['logout', 'calendar']:  # I assume the calendar is a feature nobody uses.
                 a['href'] = os.path.join(item, item + ".html")
                 items.append(item)
             else:
