@@ -33,7 +33,7 @@ class Course():
         
         current_url = session.get(self.href).url
         self.course_sn = re.search(r'course/([0-9a-f]*)+', current_url).group(0).removeprefix('course/')
-        modules = self.__homepage_download(session, '首頁')
+        modules = self.homepage_download(session, '首頁')
         for module in modules:
             self.__html_download(session, cname_map[module], module)
 
@@ -48,14 +48,29 @@ class Course():
         dir = os.path.join(self.path, module)
         os.makedirs(dir, exist_ok=True)
 
-        c = Crawler(session, url, dir, module + '.html')
-        c.crawl(is_table=True, obj=module + '/')
+        c = Crawler(session, url, dir, module + '.html', 0)
+        c.crawl(is_table=True)
     
     @util.progress_decorator()
-    def __homepage_download(self, session: requests.Session, cname: str = '首頁'):
-        button_url = util.button_url + "?csn=" + self.course_sn + "&default_fun=info&current_lang=chinese" # TODO:language
+    def homepage_download(self, session: requests.Session, cname: str = '首頁'):
+        url_gen = lambda x: x + "?csn=" + self.course_sn + "&default_fun=info&current_lang=chinese"  # TODO:language
+        button_url = url_gen(util.button_url)
+        banner_url = url_gen(util.banner_url)
+        homepage_url = url_gen(util.homepage_url)
+        Crawler(session, banner_url, self.path, "banner.html").crawl()
+        self.__download_homepage(session, homepage_url)
         return self.__download_button(session, button_url, 'button.html')
     
+    def __download_homepage(self, session: requests.Session, url: str, filename: str = 'index.html'):
+        resp = session.get(url)
+        soup = BeautifulSoup(resp.content, 'html.parser')
+        soup.find("frame", {"name": "topFrame"})['src'] = "banner.html"
+        soup.find("frame", {"name": "leftFrame"})['src'] = "button.html"
+        soup.find("frame", {"name": "mainFrame"})['src'] = "info/info.html"
+        # TODO: footer.php
+        with open(os.path.join(self.path, filename), 'w', encoding='utf-8') as file:
+            file.write(str(soup))
+
     def __download_button(self, session: requests.Session, url: str, filename: str):
         resp = session.get(url)
         soup = BeautifulSoup(resp.content, 'html.parser')
@@ -63,7 +78,7 @@ class Course():
             url = urljoin(url, css.get('href'))
             css['href'] = url.split('/')[-1]
             
-            c = Crawler(session, url, self.path, css['href'])
+            c = Crawler(session, url, self.path, css['href'], 0)
             c.crawl(static=True)
         
         nav_co = soup.find("div", {"id": "nav_co"})
