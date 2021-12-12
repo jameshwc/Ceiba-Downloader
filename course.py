@@ -85,11 +85,11 @@ class Course():
         items = []
         for a in nav_co.find_all('a'):
             item = re.search(r"onclick\('(.*?)'.*\)", a['onclick']).group(1)
-            if item not in ['logout', 'calendar']:  # I assume the calendar is a feature nobody uses.
-                a['href'] = os.path.join(item, item + ".html")
-                items.append(item)
-            else:
+            if item in ['logout', 'calendar']:  # I assume the calendar is a feature nobody uses.
                 a.extract()  # remove the element
+                continue
+            a['href'] = os.path.join(item, item + ".html")
+            items.append(item)
         with open(os.path.join(self.path, filename), 'w', encoding='utf-8') as file:
             file.write(str(soup))
         return items

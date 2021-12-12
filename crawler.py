@@ -59,6 +59,7 @@ class Crawler():
         
         for op in soup.find_all('option'):
             op.extract()
+            
         hrefs = tqdm(soup.find_all('a')) if is_table else soup.find_all('a')
         # hrefs = soup.find_all('a')
         skip_href_texts = ['作業列表', '友善列印']

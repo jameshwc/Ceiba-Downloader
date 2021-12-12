@@ -5,10 +5,11 @@ import appdirs
 import os
 import json
 from pathlib import Path
+
 home_url = 'https://ceiba.ntu.edu.tw'
 login_url = 'https://ceiba.ntu.edu.tw/ChkSessLib.php'
 module_url = 'https://ceiba.ntu.edu.tw/modules/main.php'
-courses_url = 'https://ceiba.ntu.edu.tw/student/index.php?seme_op=107-2'
+courses_url = 'https://ceiba.ntu.edu.tw/student/index.php?seme_op=all'
 button_url = 'https://ceiba.ntu.edu.tw/modules/button.php'
 banner_url = 'https://ceiba.ntu.edu.tw/modules/banner.php'
 homepage_url = 'https://ceiba.ntu.edu.tw/modules/index.php'
@@ -16,7 +17,7 @@ skip_courses_list = ['中文系大學國文網站']
 data_dir = Path(appdirs.user_data_dir('ceiba-downloader', 'jameshwc'))
 data_dir.mkdir(parents=True, exist_ok=True)
 
-crawled_courses = json.load(os.path.join(data_dir, 'courses.json'))
+# crawled_courses = json.load(os.path.join(data_dir, 'courses.json'))
 
 
 def get_valid_filename(name: str):
