@@ -77,11 +77,10 @@ class MyWidget(QtWidgets.QWidget):
         login_error_msg_box.setWindowTitle('登入失敗！')
         login_error_msg_box.setIcon(QMessageBox.Critical)
         login_error_msg_box.setStandardButtons(QMessageBox.Retry)
+        
         if self.method_toggle.isChecked():
-            print('use cookies')
             ceiba = Ceiba(cookie_user=self.username_edit.text(), cookie_PHPSESSID=self.password_edit.text())
         else:
-            print('use user/pass')
             try:
                 ceiba = Ceiba(username=self.username_edit.text(), password=self.password_edit.text())
             except InvalidCredentials:
@@ -111,6 +110,7 @@ class MyWidget(QtWidgets.QWidget):
                 layout = QGridLayout()
                 courses_by_semester_layouts[course.semester] = layout
             checkbox = QCheckBox("&"+ course.cname)
+            checkbox.setChecked(True)
             courses_by_semester_layouts[course.semester].addWidget(checkbox)
         
         tabWidget = QTabWidget()
@@ -119,8 +119,17 @@ class MyWidget(QtWidgets.QWidget):
             semester_widget.setLayout(courses_by_semester_layouts[semester])
             tabWidget.addTab(semester_widget, "&"+semester)
         
-        courses_main_layout.addWidget(tabWidget)
+        options_and_download_groupbox = QGroupBox()
+        options_and_download_layout = QVBoxLayout()
+        download_button = QPushButton('下載')
+        check_all_courses_button = QCheckBox('勾選全部')
+        options_and_download_layout.addWidget(check_all_courses_button)
+        options_and_download_layout.addWidget(download_button)
+        options_and_download_groupbox.setLayout(options_and_download_layout)
+        courses_main_layout.addWidget(tabWidget, 0, 0)
+        courses_main_layout.addWidget(options_and_download_groupbox, 1, 0)
         self.courses_group_box.setLayout(courses_main_layout)
+        self.courses_group_box.setCheckable(True)
             
 if __name__ == "__main__":
     app = QApplication([])
