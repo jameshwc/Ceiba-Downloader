@@ -1,10 +1,12 @@
 # This Python file uses the following encoding: utf-8
 from os import error
 import sys
+from typing import Dict
 
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
+from PySide6.QtGui import *
 from exceptions import InvalidCredentials
 from pytoggle import PyToggle
 from ceiba import Ceiba
@@ -12,8 +14,6 @@ class MyWidget(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
 
-        self.login_use_cookie = False
-        
         self.create_login_group_box()
         self.create_courses_group_box()
         
@@ -95,20 +95,32 @@ class MyWidget(QtWidgets.QWidget):
             login_error_msg_box.exec()
             return
         
-        find_label: QLabel = None
-        for widget in self.login_group_box.children():
-            if find_label is None and widget.metaObject().className() == "QLabel":
-                find_label = widget
-                continue
-            widget.deleteLater()
-        find_label.setText(ceiba.student_name + "，歡迎你！")
+        for i in reversed(range(self.login_layout.count())): 
+            self.login_layout.itemAt(i).widget().setParent(None)
         
-        layout = QGridLayout()
+        welcome_label = QLabel(ceiba.student_name + "，歡迎你！")    
+        welcome_label.setFont(QFont('', 32))
+        self.login_layout.addWidget(welcome_label, 0, 0)
+        self.login_group_box.setLayout(self.login_layout)
+        
+        courses_main_layout = QGridLayout()
+        courses_by_semester_layouts: Dict[str, QLayout] = {}
+        
         for course in courses:
-            print(course.cname)
-            checkbox = QCheckBox("&"+course.cname)
-            layout.addWidget(checkbox)
-        self.courses_group_box.setLayout(layout)
+            if course.semester not in courses_by_semester_layouts:
+                layout = QGridLayout()
+                courses_by_semester_layouts[course.semester] = layout
+            checkbox = QCheckBox("&"+ course.cname)
+            courses_by_semester_layouts[course.semester].addWidget(checkbox)
+        
+        tabWidget = QTabWidget()
+        for semester in courses_by_semester_layouts:
+            semester_widget = QWidget()
+            semester_widget.setLayout(courses_by_semester_layouts[semester])
+            tabWidget.addTab(semester_widget, "&"+semester)
+        
+        courses_main_layout.addWidget(tabWidget)
+        self.courses_group_box.setLayout(courses_main_layout)
             
 if __name__ == "__main__":
     app = QApplication([])
