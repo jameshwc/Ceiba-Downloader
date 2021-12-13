@@ -1,7 +1,7 @@
 # This Python file uses the following encoding: utf-8
 from os import error
 import sys
-from typing import Dict
+from typing import Dict, List
 
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import *
@@ -10,6 +10,7 @@ from PySide6.QtGui import *
 from exceptions import InvalidCredentials
 from pytoggle import PyToggle
 from ceiba import Ceiba
+from course import Course
 class MyWidget(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
@@ -71,12 +72,9 @@ class MyWidget(QtWidgets.QWidget):
 
     def create_courses_group_box(self):
         self.courses_group_box = QGroupBox("課程")
+        self.courses_group_box.setDisabled(True)
     
     def login(self):
-        login_error_msg_box = QMessageBox()
-        login_error_msg_box.setWindowTitle('登入失敗！')
-        login_error_msg_box.setIcon(QMessageBox.Critical)
-        login_error_msg_box.setStandardButtons(QMessageBox.Retry)
         
         if self.method_toggle.isChecked():
             ceiba = Ceiba(cookie_user=self.username_edit.text(), cookie_PHPSESSID=self.password_edit.text())
@@ -84,23 +82,28 @@ class MyWidget(QtWidgets.QWidget):
             try:
                 ceiba = Ceiba(username=self.username_edit.text(), password=self.password_edit.text())
             except InvalidCredentials:
-                login_error_msg_box.setText('登入失敗！請檢查帳號（學號）與密碼輸入是否正確！')
-                login_error_msg_box.exec()
+                QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查帳號（學號）與密碼輸入是否正確！', QMessageBox.Retry)
                 return
         try:
             courses = ceiba.get_courses_list()
         except InvalidCredentials:
-            login_error_msg_box.setText('登入失敗！請檢查 Cookies 有沒有輸入正確！')
-            login_error_msg_box.exec()
+            QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查 Cookies 有沒有輸入正確！', QMessageBox.Retry)
             return
         
+        self.welcome_after_login(ceiba.student_name)
+        self.fill_course_group_box(courses)
+        
+    def welcome_after_login(self, student_name):
         for i in reversed(range(self.login_layout.count())): 
             self.login_layout.itemAt(i).widget().setParent(None)
         
-        welcome_label = QLabel(ceiba.student_name + "，歡迎你！")    
+        welcome_label = QLabel(student_name + "，歡迎你！")    
         welcome_label.setFont(QFont('', 32))
         self.login_layout.addWidget(welcome_label, 0, 0)
         self.login_group_box.setLayout(self.login_layout)
+        
+    def fill_course_group_box(self, courses: List[Course]):
+        self.courses_group_box.setDisabled(False)
         
         courses_main_layout = QGridLayout()
         courses_by_semester_layouts: Dict[str, QLayout] = {}
