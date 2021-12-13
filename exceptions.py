@@ -4,5 +4,5 @@ class InvalidLoginParameters(Exception):
 
 class InvalidCredentials(Exception):
     def __str__(self):
-        return '登入失敗！請檢察帳號與密碼是否正確！'
+        return '登入失敗！請檢查帳號與密碼是否正確！'
     

@@ -66,12 +66,11 @@ class Ceiba():
                     href=href))
         return self.courses
 
-    def download_courses(self):
+    def download_courses(self, cname_filter_list=None, modules_filter=None):
         for course in self.courses:
-            if course.cname not in ['猶太文化']:  # debug
-                continue
-            print(strings.course_download_info.format(course.cname))
-            os.makedirs(course.path, exist_ok=True)
-            course.download(self.sess)
-            print(strings.course_finish_info.format(course.cname))
+            if cname_filter_list is None or course.cname in cname_filter_list:
+                print(strings.course_download_info.format(course.cname))
+                os.makedirs(course.path, exist_ok=True)
+                course.download(self.sess, modules_filter)
+                print(strings.course_finish_info.format(course.cname))
             

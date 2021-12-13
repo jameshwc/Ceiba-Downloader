@@ -6,11 +6,17 @@ import strings
 import re
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+from typing import List
 from crawler import Crawler
 
 
 class Course():
 
+    cname_map = {'bulletin': '公佈欄', 'syllabus': '課程大綱', 'hw': '作業',
+                    'info': '課程資訊', 'personal': '教師資訊', 'grade': '學習成績',
+                    'board': '討論看板', 'calendar': '課程行事曆', 'share': '資源分享',
+                    'vote': '投票區', 'student': '修課學生'}
+    
     def __init__(self, semester, course_num, cname, ename, teacher, href):
         self.semester = semester
         self.course_num = course_num
@@ -25,17 +31,13 @@ class Course():
     def __str__(self):
         return " ".join([self.cname, self.teacher, self.href])
 
-    def download(self, session: requests.Session):
-        cname_map = {'bulletin': '公佈欄', 'syllabus': '課程大綱', 'hw': '作業',
-                     'info': '課程資訊', 'personal': '教師資訊', 'grade': '學習成績',
-                     'board': '討論看板', 'calendar': '課程行事曆', 'share': '資源分享',
-                     'vote': '投票區', 'student': '修課學生', 'grade': '學習成績'}
-        
+    def download(self, session: requests.Session, modules_filter_list: List[str] = None):
         current_url = session.get(self.href).url
         self.course_sn = re.search(r'course/([0-9a-f]*)+', current_url).group(0).removeprefix('course/')
         modules = self.homepage_download(session, '首頁')
         for module in modules:
-            self.__html_download(session, cname_map[module], module)
+            if modules_filter_list is None or module in modules_filter_list:
+                self.__html_download(session, Course.cname_map[module], module)
 
     @util.progress_decorator()
     def __html_download(self, session: requests.Session, obj_cname: str, module: str):
@@ -71,7 +73,7 @@ class Course():
         with open(os.path.join(self.path, filename), 'w', encoding='utf-8') as file:
             file.write(str(soup))
 
-    def __download_button(self, session: requests.Session, url: str, filename: str):
+    def __download_button(self, session: requests.Session, url: str, filename: str) -> List[str]:
         resp = session.get(url)
         soup = BeautifulSoup(resp.content, 'html.parser')
         for css in soup.find_all('link'):

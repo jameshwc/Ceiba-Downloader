@@ -11,6 +11,20 @@ from exceptions import InvalidCredentials
 from pytoggle import PyToggle
 from ceiba import Ceiba
 from course import Course
+
+class CheckableComboBox(QComboBox):
+    # once there is a checkState set, it is rendered
+    # here we assume default Unchecked
+    def addItem(self, item):
+        super(CheckableComboBox, self).addItem(item)
+        item = self.model().item(self.count() - 1, 0)
+        item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+        item.setCheckState(Qt.Unchecked)
+
+    def itemChecked(self, index):
+        item = self.model().item(index, 0)
+        return item.checkState() == Qt.Checked
+
 class MyWidget(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
@@ -37,7 +51,7 @@ class MyWidget(QtWidgets.QWidget):
         self.password_edit = QLineEdit('')
         self.password_edit.setEchoMode(QLineEdit.Password)
 		
-        login_button = QPushButton('Login')
+        login_button = QPushButton('登入')
         login_button.clicked.connect(self.login)
         
         self.method_toggle = PyToggle(width=80)
@@ -77,20 +91,20 @@ class MyWidget(QtWidgets.QWidget):
     def login(self):
         
         if self.method_toggle.isChecked():
-            ceiba = Ceiba(cookie_user=self.username_edit.text(), cookie_PHPSESSID=self.password_edit.text())
+            self.ceiba = Ceiba(cookie_user=self.username_edit.text(), cookie_PHPSESSID=self.password_edit.text())
         else:
             try:
-                ceiba = Ceiba(username=self.username_edit.text(), password=self.password_edit.text())
+                self.ceiba = Ceiba(username=self.username_edit.text(), password=self.password_edit.text())
             except InvalidCredentials:
                 QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查帳號（學號）與密碼輸入是否正確！', QMessageBox.Retry)
                 return
         try:
-            courses = ceiba.get_courses_list()
+            courses = self.ceiba.get_courses_list()
         except InvalidCredentials:
             QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查 Cookies 有沒有輸入正確！', QMessageBox.Retry)
             return
         
-        self.welcome_after_login(ceiba.student_name)
+        self.welcome_after_login(self.ceiba.student_name)
         self.fill_course_group_box(courses)
         
     def welcome_after_login(self, student_name):
@@ -107,13 +121,14 @@ class MyWidget(QtWidgets.QWidget):
         
         courses_main_layout = QGridLayout()
         courses_by_semester_layouts: Dict[str, QLayout] = {}
-        
+        self.courses_checkboxes: List[QCheckBox] = []
+
         for course in courses:
             if course.semester not in courses_by_semester_layouts:
                 layout = QGridLayout()
                 courses_by_semester_layouts[course.semester] = layout
-            checkbox = QCheckBox("&"+ course.cname)
-            checkbox.setChecked(True)
+            checkbox = QCheckBox("&" + course.cname)
+            self.courses_checkboxes.append(checkbox)
             courses_by_semester_layouts[course.semester].addWidget(checkbox)
         
         tabWidget = QTabWidget()
@@ -123,16 +138,60 @@ class MyWidget(QtWidgets.QWidget):
             tabWidget.addTab(semester_widget, "&"+semester)
         
         options_and_download_groupbox = QGroupBox()
-        options_and_download_layout = QVBoxLayout()
+        options_and_download_layout = QGridLayout()
         download_button = QPushButton('下載')
+        download_button.clicked.connect(self.download)
+
+        def click_all_courses_checkbox(state):
+            for checkbox in self.courses_checkboxes:
+                if state == Qt.Checked:
+                    checkbox.setCheckState(Qt.Checked)
+                elif state == Qt.Unchecked:
+                    checkbox.setCheckState(Qt.Unchecked)
+        
         check_all_courses_button = QCheckBox('勾選全部')
-        options_and_download_layout.addWidget(check_all_courses_button)
-        options_and_download_layout.addWidget(download_button)
+        check_all_courses_button.stateChanged.connect(click_all_courses_checkbox)
+        
+        self.download_item_combo_box = CheckableComboBox()
+        self.download_item_combo_box.setPlaceholderText('<---點我展開--->')
+        for item_name in Course.cname_map.values():
+            self.download_item_combo_box.addItem(item_name)
+        self.download_item_combo_box.setCurrentIndex(-1)
+        download_item_label = QLabel('下載項目：')                
+        download_item_layout = QVBoxLayout()
+        download_item_layout.addWidget(download_item_label)
+        download_item_layout.addWidget(self.download_item_combo_box)
+        filepath_label = QLabel('存放路徑：')
+        self.filepath_line_edit = QLineEdit()
+        file_browse_button = QPushButton('瀏覽')
+        file_browse_button.clicked.connect(self.get_save_directory)
+        
+        options_and_download_layout.addWidget(check_all_courses_button, 0, 0)
+        options_and_download_layout.addWidget(download_item_label, 0, 1)
+        options_and_download_layout.addWidget(self.download_item_combo_box, 0, 2)
+        options_and_download_layout.addWidget(filepath_label, 1, 0)
+        options_and_download_layout.addWidget(self.filepath_line_edit, 1, 1)
+        options_and_download_layout.addWidget(file_browse_button, 1, 2)
+        options_and_download_layout.addWidget(download_button, 2, 0)
         options_and_download_groupbox.setLayout(options_and_download_layout)
+        
         courses_main_layout.addWidget(tabWidget, 0, 0)
         courses_main_layout.addWidget(options_and_download_groupbox, 1, 0)
+        
         self.courses_group_box.setLayout(courses_main_layout)
-        self.courses_group_box.setCheckable(True)
+    
+    def download(self):
+        items = []
+        for i in range(self.download_item_combo_box.count()):
+            if self.download_item_combo_box.itemChecked(i):
+                items.append(self.download_item_combo_box.model().item(i, 0).text())
+        cname_list = [x.text()[1:] for x in self.courses_checkboxes if x.isChecked()]
+        print(cname_list)
+        self.ceiba.download_courses(cname_filter_list=cname_list)
+    
+    def get_save_directory(self):
+        filepath = QFileDialog.getExistingDirectory(self)
+        self.filepath_line_edit.setText(filepath)
             
 if __name__ == "__main__":
     app = QApplication([])
