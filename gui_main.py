@@ -4,18 +4,22 @@ import sys
 from typing import Dict, List
 
 from PySide6 import QtWidgets
-from PySide6.QtWidgets import *
-from PySide6.QtCore import *
-from PySide6.QtGui import *
-from exceptions import InvalidCredentials
+from PySide6.QtWidgets import (
+    QMainWindow, QCheckBox, QFileDialog, QProgressBar, 
+    QPushButton, QVBoxLayout, QWidget, QGridLayout, QGroupBox, QLabel,
+    QLineEdit, QMessageBox, QLayout, QApplication, QTabWidget)
+from PySide6.QtCore import (QObject, Signal, QThread, Qt)
+from PySide6.QtGui import QFont, QIcon
+from exceptions import InvalidCredentials, InvalidLoginParameters
 from qt_custom_widget import PyToggle, PyLogOutput, PyCheckableComboBox
 from ceiba import Ceiba
 from course import Course
 
+
 class CeibaWorker(QObject):
     finished = Signal()
+    success = Signal()
     failed = Signal()
-    progress = Signal(int)
 
     def __init__(self, ceiba: Ceiba):
         QObject.__init__(self)
@@ -24,15 +28,19 @@ class CeibaWorker(QObject):
     def login(self):
         try:
             self.ceiba.login()
-        except:
+        except (InvalidCredentials, InvalidLoginParameters):
             self.failed.emit()
-        finally:
-            self.finished.emit()
+        else:
+            self.success.emit()
+        self.finished.emit()
 
 class MyApp(QMainWindow):
     def __init__(self):
         super().__init__()
-
+        
+        self.setWindowTitle("Ceiba Downloader by Jameshwc")
+        self.setWindowIcon(QIcon('ceiba.ico'))
+        
         self.create_login_group_box()
         self.create_courses_group_box()
         self.create_status_group_box()
@@ -115,25 +123,29 @@ class MyApp(QMainWindow):
             self.ceiba = Ceiba(cookie_user=self.username_edit.text(), cookie_PHPSESSID=self.password_edit.text())
         else:
             self.ceiba = Ceiba(username=self.username_edit.text(), password=self.password_edit.text())
-            # QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查帳號（學號）與密碼輸入是否正確！', QMessageBox.Retry)
+        
+        def fail_handler():
+            if self.method_toggle.isChecked():
+                QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查 Cookies 有沒有輸入正確！', QMessageBox.Retry)
+            else:
+                QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查帳號（學號）與密碼輸入是否正確！', QMessageBox.Retry)
+            self.login_button.setEnabled(True)
+            self.password_edit.clear()
+        
         self.login_thread = QThread()
         self.worker = CeibaWorker(self.ceiba)
         self.worker.moveToThread(self.login_thread)
         self.login_thread.started.connect(self.worker.login)
+        self.worker.failed.connect(fail_handler)
+        self.worker.success.connect(self.after_login_successfully)
         self.worker.finished.connect(self.login_thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.login_thread.finished.connect(self.login_thread.deleteLater)
-        # self.worker.progress.connect(self.reportProgress)
         self.login_thread.start()
         self.login_button.setDisabled(True)
-        self.login_thread.finished.connect(self.after_login_successfully)
-        self.login_thread.failed.connect(
-            lambda: QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查 Cookies 有沒有輸入正確！', QMessageBox.Retry)
-        )
-        # QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查 Cookies 有沒有輸入正確！', QMessageBox.Retry)
-    
+        
     def after_login_successfully(self):
-        courses = self.ceiba.get_courses_list()
+        courses = self.ceiba.get_courses_list()  # TODO: [low priority] it can be handled in multi-thread
         self.welcome_after_login(self.ceiba.student_name)
         self.fill_course_group_box(courses)
         
