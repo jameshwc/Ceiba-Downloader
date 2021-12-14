@@ -3,9 +3,10 @@ from bs4 import BeautifulSoup
 import os
 from urllib.parse import urljoin
 from pathlib import Path
+from qt_custom_widget import PyLogOutput
 from util import get_valid_filename
-from tqdm import tqdm
 import re
+import strings
 
 
 class Crawler():
@@ -14,12 +15,13 @@ class Crawler():
     crawled_static_files = {}  # css/img: use path to avoid repetitive downloads.
     # TODO: we should move css/img to root folder instead of download them every time in each course
 
-    def __init__(self, session: requests.Session, url: str, path: str, filename: str, text: str = ""):
+    def __init__(self, session: requests.Session, url: str, path: str, filename: str, text: str = "", log_output: PyLogOutput = None):
         self.session = session
         self.url = url
         self.path = path
         self.filename = get_valid_filename(filename)
         self.text = text
+        self.log_output = log_output
 
     def crawl(self, is_table=False, static=False) -> bool:
         '''
@@ -32,12 +34,21 @@ class Crawler():
         if (self.path, response.url) in Crawler.crawled_static_files:
             return True
         
-        print(response.url, self.text)
+        if str.encode('The requested URL was rejected. Please consult with your administrator.') in response.content:
+            msg = strings.crawler_download_fail.format(self.text, response.url)
+            if self.log_output:
+                self.log_output.insertText(msg, color='red')
+            else:
+                print(msg)
+            return False
         
         if 'text/html' not in response.headers['content-type']:
             self.__download_files(response, static)
             Crawler.crawled_static_files[(self.path, response.url)] = True
             return True
+        
+        if self.log_output:
+            self.log_output.insertText(strings.crawler_download_info.format(self.text))
         
         soup = BeautifulSoup(response.content, 'html.parser')
         Crawler.crawled_urls[response.url] = False
@@ -60,11 +71,12 @@ class Crawler():
         for op in soup.find_all('option'):
             op.extract()
             
-        hrefs = tqdm(soup.find_all('a')) if is_table else soup.find_all('a')
-        # hrefs = soup.find_all('a')
+        hrefs = soup.find_all('a')
+
         skip_href_texts = ['作業列表', '友善列印']
         skip_href_texts.extend(['看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄', ' 新增主題', '引用', ' 回覆', '分頁顯示', '上個主題', '下個主題', '全部顯示'])
         skip_href_texts.extend(['上頁', '下頁'])
+        
         for a in hrefs:
             if a.text in skip_href_texts:
                 a.replaceWithChildren()
@@ -93,7 +105,7 @@ class Crawler():
             filepath = os.path.join(self.path, self.filename)
             path = Path(filepath)  # TODO: check if filename exists
             if path.exists():
-                print('')
+                print('')  # TODO
             if response.headers['content-type'] == 'text/css':
                 new_content = response.content
                 resources = re.findall(r'url\((.*?)\)', str(response.content))

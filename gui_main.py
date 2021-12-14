@@ -8,38 +8,27 @@ from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from exceptions import InvalidCredentials
-from pytoggle import PyToggle
+from qt_custom_widget import PyToggle, PyLogOutput, PyCheckableComboBox
 from ceiba import Ceiba
 from course import Course
 
-class CheckableComboBox(QComboBox):
-    # once there is a checkState set, it is rendered
-    # here we assume default Unchecked
-    def addItem(self, item):
-        super(CheckableComboBox, self).addItem(item)
-        item = self.model().item(self.count() - 1, 0)
-        item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-        item.setCheckState(Qt.Unchecked)
-
-    def itemChecked(self, index):
-        item = self.model().item(index, 0)
-        return item.checkState() == Qt.Checked
-
-class MyWidget(QtWidgets.QWidget):
+class MyApp(QMainWindow):
     def __init__(self):
         super().__init__()
 
         self.create_login_group_box()
         self.create_courses_group_box()
-        
-        main_layout = QGridLayout()
+        self.create_status_group_box()
+        self.setCentralWidget(QWidget(self))
+
+        main_layout = QGridLayout(self.centralWidget())
         main_layout.addWidget(self.login_group_box, 0, 0)
         main_layout.addWidget(self.courses_group_box, 1, 0)
+        main_layout.addWidget(self.status_group_box, 2, 0)
         main_layout.setRowStretch(1, 1)
         # main_layout.setRowStretch(2, 1)
         main_layout.setColumnStretch(0, 1)
         main_layout.setColumnStretch(1, 1)
-        self.setLayout(main_layout)
 
     def create_login_group_box(self):
         self.login_group_box = QGroupBox("使用者")
@@ -88,6 +77,21 @@ class MyWidget(QtWidgets.QWidget):
         self.courses_group_box = QGroupBox("課程")
         self.courses_group_box.setDisabled(True)
     
+    def create_status_group_box(self):
+        self.status_group_box = QGroupBox("狀態")
+        self.status_layout = QGridLayout()
+        
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(100)
+        self.progress_bar.setValue(0)
+
+        self.log_output = PyLogOutput()
+
+        self.status_layout.addWidget(self.log_output)
+        self.status_layout.addWidget(self.progress_bar)
+        self.status_group_box.setLayout(self.status_layout)
+
     def login(self):
         
         if self.method_toggle.isChecked():
@@ -152,7 +156,7 @@ class MyWidget(QtWidgets.QWidget):
         check_all_courses_button = QCheckBox('勾選全部')
         check_all_courses_button.stateChanged.connect(click_all_courses_checkbox)
         
-        self.download_item_combo_box = CheckableComboBox()
+        self.download_item_combo_box = PyCheckableComboBox()
         self.download_item_combo_box.setPlaceholderText('<---點我展開--->')
         for item_name in Course.cname_map.values():
             self.download_item_combo_box.addItem(item_name)
@@ -161,6 +165,7 @@ class MyWidget(QtWidgets.QWidget):
         download_item_layout = QVBoxLayout()
         download_item_layout.addWidget(download_item_label)
         download_item_layout.addWidget(self.download_item_combo_box)
+        
         filepath_label = QLabel('存放路徑：')
         self.filepath_line_edit = QLineEdit()
         file_browse_button = QPushButton('瀏覽')
@@ -186,8 +191,8 @@ class MyWidget(QtWidgets.QWidget):
             if self.download_item_combo_box.itemChecked(i):
                 items.append(self.download_item_combo_box.model().item(i, 0).text())
         cname_list = [x.text()[1:] for x in self.courses_checkboxes if x.isChecked()]
-        print(cname_list)
-        self.ceiba.download_courses(cname_filter_list=cname_list)
+        self.progress_bar.setMaximum(len(cname_list) * len(items))
+        self.ceiba.download_courses(self.filepath_line_edit.text(), cname_filter_list=cname_list, progress_bar=self.progress_bar, log_output=self.log_output)
     
     def get_save_directory(self):
         filepath = QFileDialog.getExistingDirectory(self)
@@ -196,7 +201,7 @@ class MyWidget(QtWidgets.QWidget):
 if __name__ == "__main__":
     app = QApplication([])
 
-    widget = MyWidget()
+    widget = MyApp()
     widget.resize(800, 600)
     widget.show()
 

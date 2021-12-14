@@ -73,10 +73,31 @@ class PyToggle(QCheckBox):
 
         p.end()
 
-if __name__ == "__main__":
-    app = QApplication([])
+class PyLogOutput(QTextEdit):
 
-    widget = PyToggle()
-    widget.resize(800, 600)
-    widget.show()
-    sys.exit(app.exec())
+    def __init__(self):
+        QTextEdit.__init__(self)
+        self.setReadOnly(True)
+        self.setLineWrapMode(QTextEdit.NoWrap)
+
+    def insertText(self, text:str, color=None):
+        self.moveCursor(QTextCursor.End)
+        # self.setCurrentFont()
+        if color:
+            text = '<span style="color:' + color + ';">' + text + "</span>"
+        self.insertPlainText(text + "\n")
+        sb = self.verticalScrollBar()
+        sb.setValue(sb.maximum())
+
+class PyCheckableComboBox(QComboBox):
+    # once there is a checkState set, it is rendered
+    # here we assume default Unchecked
+    def addItem(self, item):
+        super(CheckableComboBox, self).addItem(item)
+        item = self.model().item(self.count() - 1, 0)
+        item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+        item.setCheckState(Qt.Unchecked)
+
+    def itemChecked(self, index):
+        item = self.model().item(index, 0)
+        return item.checkState() == Qt.Checked
