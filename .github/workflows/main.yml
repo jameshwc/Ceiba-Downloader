@@ -34,7 +34,12 @@ jobs:
       - name: Package Application
         run: pyinstaller -w -F gui_main.py
 
-      - uses: actions/upload-artifact@v2
+      - name: Upload Release Asset
+        uses: "marvinpinto/action-automatic-releases@latest"
         with:
-          name: name-of-artifact
-          path: dist/
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Ceiba Downloader"
+          files: |
+            dist\gui_main.exe
