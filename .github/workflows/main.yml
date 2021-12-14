@@ -32,11 +32,8 @@ jobs:
         run: pip3 install pyinstaller
 
       - name: Package Application
-        run: pyinstaller -w -F gui_main.py
+        run: pyinstaller -w -F gui_main.py --icon ceiba.ico -n ceiba-downloader
 
-      - name: Debug
-        run: dir
-        
       - name: Upload Release Asset
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
@@ -44,4 +41,4 @@ jobs:
           automatic_release_tag: "latest"
           prerelease: true
           title: "Ceiba Downloader"
-          files: dist/gui_main.exe
+          files: dist/ceiba-downloader.exe
