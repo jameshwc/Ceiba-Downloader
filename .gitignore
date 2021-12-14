@@ -6,4 +6,3 @@ deprecated/
 test*
 build/
 dist/
-*.spec
