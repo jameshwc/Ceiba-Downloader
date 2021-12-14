@@ -12,6 +12,23 @@ from qt_custom_widget import PyToggle, PyLogOutput, PyCheckableComboBox
 from ceiba import Ceiba
 from course import Course
 
+class CeibaWorker(QObject):
+    finished = Signal()
+    failed = Signal()
+    progress = Signal(int)
+
+    def __init__(self, ceiba: Ceiba):
+        QObject.__init__(self)
+        self.ceiba = ceiba
+    
+    def login(self):
+        try:
+            self.ceiba.login()
+        except:
+            self.failed.emit()
+        finally:
+            self.finished.emit()
+
 class MyApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -40,8 +57,8 @@ class MyApp(QMainWindow):
         self.password_edit = QLineEdit('')
         self.password_edit.setEchoMode(QLineEdit.Password)
 		
-        login_button = QPushButton('登入')
-        login_button.clicked.connect(self.login)
+        self.login_button = QPushButton('登入')
+        self.login_button.clicked.connect(self.login)
         
         self.method_toggle = PyToggle(width=80)
         
@@ -68,7 +85,7 @@ class MyApp(QMainWindow):
         self.login_layout.addWidget(self.username_edit, 1, 1, 1, 2)
         self.login_layout.addWidget(password_label, 2, 0)
         self.login_layout.addWidget(self.password_edit, 2, 1, 1, 2)
-        self.login_layout.addWidget(login_button, 3, 1, 1, 2)
+        self.login_layout.addWidget(self.login_button, 3, 1, 1, 2)
         self.login_layout.setColumnStretch(0, 0)
         self.login_layout.setColumnStretch(1, 1)
         self.login_group_box.setLayout(self.login_layout)
@@ -97,17 +114,26 @@ class MyApp(QMainWindow):
         if self.method_toggle.isChecked():
             self.ceiba = Ceiba(cookie_user=self.username_edit.text(), cookie_PHPSESSID=self.password_edit.text())
         else:
-            try:
-                self.ceiba = Ceiba(username=self.username_edit.text(), password=self.password_edit.text())
-            except InvalidCredentials:
-                QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查帳號（學號）與密碼輸入是否正確！', QMessageBox.Retry)
-                return
-        try:
-            courses = self.ceiba.get_courses_list()
-        except InvalidCredentials:
-            QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查 Cookies 有沒有輸入正確！', QMessageBox.Retry)
-            return
-        
+            self.ceiba = Ceiba(username=self.username_edit.text(), password=self.password_edit.text())
+            # QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查帳號（學號）與密碼輸入是否正確！', QMessageBox.Retry)
+        self.login_thread = QThread()
+        self.worker = CeibaWorker(self.ceiba)
+        self.worker.moveToThread(self.login_thread)
+        self.login_thread.started.connect(self.worker.login)
+        self.worker.finished.connect(self.login_thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.login_thread.finished.connect(self.login_thread.deleteLater)
+        # self.worker.progress.connect(self.reportProgress)
+        self.login_thread.start()
+        self.login_button.setDisabled(True)
+        self.login_thread.finished.connect(self.after_login_successfully)
+        self.login_thread.failed.connect(
+            lambda: QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查 Cookies 有沒有輸入正確！', QMessageBox.Retry)
+        )
+        # QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查 Cookies 有沒有輸入正確！', QMessageBox.Retry)
+    
+    def after_login_successfully(self):
+        courses = self.ceiba.get_courses_list()
         self.welcome_after_login(self.ceiba.student_name)
         self.fill_course_group_box(courses)
         

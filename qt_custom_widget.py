@@ -93,7 +93,7 @@ class PyCheckableComboBox(QComboBox):
     # once there is a checkState set, it is rendered
     # here we assume default Unchecked
     def addItem(self, item):
-        super(CheckableComboBox, self).addItem(item)
+        super(PyCheckableComboBox, self).addItem(item)
         item = self.model().item(self.count() - 1, 0)
         item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
         item.setCheckState(Qt.Unchecked)
