@@ -55,7 +55,7 @@ class Course():
         dir = os.path.join(self.path, module)
         os.makedirs(dir, exist_ok=True)
 
-        c = Crawler(session, url, dir, module + '.html', 0)
+        c = Crawler(session, url, dir, module + '.html', "")
         c.crawl(is_table=True)
     
     @util.progress_decorator()

@@ -42,7 +42,8 @@ class Crawler():
             Crawler.crawled_static_files[(self.path, response.url)] = True
             return True
         
-        logging.info(strings.crawler_download_info.format(self.text))
+        if len(self.text) > 0:
+            logging.info(strings.crawler_download_info.format(self.text))
         
         soup = BeautifulSoup(response.content, 'html.parser')
         Crawler.crawled_urls[response.url] = False

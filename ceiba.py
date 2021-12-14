@@ -1,3 +1,4 @@
+from PySide6.QtWidgets import QProgressBar
 import requests
 import logging
 import os
@@ -57,6 +58,8 @@ class Ceiba():
             raise InvalidCredentials
 
     def get_courses_list(self):
+        
+        logging.info('正在取得課程...')
         soup = util.beautify_soup(self.sess.get(util.courses_url).content)
         
         # tables[1] is the courses not set up in ceiba
@@ -82,14 +85,15 @@ class Ceiba():
                 ))
         return self.courses
 
-    def download_courses(self, path: str, cname_filter_list=None, modules_filter=None, progress_bar=None):
+    def download_courses(self, path: str, cname_filter_list=None, modules_filter=None, progress_bar: QProgressBar = None):
         for course in self.courses:
             if cname_filter_list is None or course.cname in cname_filter_list:
                 logging.info(strings.course_download_info.format(course.cname))
                 
                 os.makedirs(path, exist_ok=True)
-                
+                progress_val = progress_bar.value()
                 course.download(path, self.sess, modules_filter, progress_bar)
+                progress_bar.setValue(progress_val + len(modules_filter))
                 
                 logging.info(strings.course_finish_info.format(course.cname))
             
