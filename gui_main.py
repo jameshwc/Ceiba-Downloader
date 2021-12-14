@@ -4,7 +4,6 @@ import sys
 from typing import Dict, List
 import logging
 import requests
-from PySide6 import QtWidgets
 from PySide6.QtWidgets import (
     QMainWindow, QCheckBox, QFileDialog, QProgressBar,
     QPushButton, QVBoxLayout, QWidget, QGridLayout, QGroupBox, QLabel,

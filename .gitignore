@@ -4,3 +4,6 @@ venv/
 deprecated/
 .vscode/
 test*
+build/
+dist/
+*.spec
