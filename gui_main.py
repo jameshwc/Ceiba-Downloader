@@ -2,6 +2,7 @@
 from os import error
 import sys
 from typing import Dict, List
+import logging
 
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import (
@@ -111,9 +112,12 @@ class MyApp(QMainWindow):
         self.progress_bar.setMaximum(100)
         self.progress_bar.setValue(0)
 
-        self.log_output = PyLogOutput()
+        self.log_output = PyLogOutput(self)
+        self.log_output.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        logging.getLogger().addHandler(self.log_output)
+        logging.getLogger().setLevel(logging.INFO)
 
-        self.status_layout.addWidget(self.log_output)
+        self.status_layout.addWidget(self.log_output.widget)
         self.status_layout.addWidget(self.progress_bar)
         self.status_group_box.setLayout(self.status_layout)
 
@@ -230,7 +234,7 @@ class MyApp(QMainWindow):
                 items.append(self.download_item_combo_box.model().item(i, 0).text())
         cname_list = [x.text()[1:] for x in self.courses_checkboxes if x.isChecked()]
         self.progress_bar.setMaximum(len(cname_list) * len(items))
-        self.ceiba.download_courses(self.filepath_line_edit.text(), cname_filter_list=cname_list, progress_bar=self.progress_bar, log_output=self.log_output)
+        self.ceiba.download_courses(self.filepath_line_edit.text(), cname_filter_list=cname_list, modules_filter=items, progress_bar=self.progress_bar)
     
     def get_save_directory(self):
         filepath = QFileDialog.getExistingDirectory(self)

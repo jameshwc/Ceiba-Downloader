@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QProgressBar
 import requests
 import os
+import logging
 from qt_custom_widget import PyLogOutput
 import util
 import strings
@@ -32,39 +33,38 @@ class Course():
     def __str__(self):
         return " ".join([self.cname, self.teacher, self.href])
 
-    def download(self, path: str, session: requests.Session, modules_filter_list: List[str] = None, progress_bar: QProgressBar = None, log_output: PyLogOutput = None):
+    def download(self, path: str, session: requests.Session, modules_filter_list: List[str] = None, progress_bar: QProgressBar = None):
         self.path = os.path.join(path, self.folder_name)
         current_url = session.get(self.href).url
         self.course_sn = re.search(r'course/([0-9a-f]*)+', current_url).group(0).removeprefix('course/')
-        modules = self.homepage_download(session, '首頁', modules_filter_list, log_output)
+        modules = self.homepage_download(session, '首頁', modules_filter_list)
         for module in modules:
-            if log_output:
-                log_output.insertText(strings.course_module_download_info.format(self.cname, Course.cname_map[module]))
-            self.__html_download(session, Course.cname_map[module], module, log_output)
+            logging.info(strings.course_module_download_info.format(self.cname, Course.cname_map[module]))
+            self.__html_download(session, Course.cname_map[module], module)
             if progress_bar:
                 progress_bar.setValue(progress_bar.value() + 1)
 
     @util.progress_decorator()
-    def __html_download(self, session: requests.Session, obj_cname: str, module: str, log_output: PyLogOutput = None):
+    def __html_download(self, session: requests.Session, obj_cname: str, module: str):
         url = util.module_url + "?csn=" + self.course_sn + "&default_fun=" + module + "&current_lang=chinese" # TODO:language
         resp = session.get(url)
         if any(x in resp.content.decode('utf-8') for x in ['此功能並未開啟', '目前無指派作業']):
-            print(strings.cancel_on_object.format(self.cname, obj_cname, obj_cname))
+            logging.info(strings.cancel_on_object.format(self.cname, obj_cname, obj_cname))
             return
 
         dir = os.path.join(self.path, module)
         os.makedirs(dir, exist_ok=True)
 
-        c = Crawler(session, url, dir, module + '.html', 0, log_output)
+        c = Crawler(session, url, dir, module + '.html', 0)
         c.crawl(is_table=True)
     
     @util.progress_decorator()
-    def homepage_download(self, session: requests.Session, cname: str = '首頁', modules_filter_list: List[str] = None, log_output: PyLogOutput = None):
+    def homepage_download(self, session: requests.Session, cname: str = '首頁', modules_filter_list: List[str] = None):
         url_gen = lambda x: x + "?csn=" + self.course_sn + "&default_fun=info&current_lang=chinese"  # TODO:language
         button_url = url_gen(util.button_url)
         banner_url = url_gen(util.banner_url)
         homepage_url = url_gen(util.homepage_url)
-        Crawler(session, banner_url, self.path, "banner.html", log_output).crawl()
+        Crawler(session, banner_url, self.path, "banner.html").crawl()
         self.__download_homepage(session, homepage_url)
         return self.__download_button(session, button_url, 'button.html', modules_filter_list)
     
@@ -76,7 +76,7 @@ class Course():
         soup.find("frame", {"name": "mainFrame"})['src'] = "info/info.html"
         # TODO: footer.php
         with open(os.path.join(self.path, filename), 'w', encoding='utf-8') as file:
-            file.write(str(soup))
+            file.write(str(soup)) 
 
     def __download_button(self, session: requests.Session, url: str, filename: str, modules_filter_list: List[str] = None) -> List[str]:
         resp = session.get(url)
@@ -92,7 +92,9 @@ class Course():
         items = []
         for a in nav_co.find_all('a'):
             item = re.search(r"onclick\('(.*?)'.*\)", a['onclick']).group(1)
-            if item in ['logout', 'calendar'] or item not in modules_filter_list:  # I assume the calendar is a feature nobody uses.
+            if item in ['logout', 'calendar'] or \
+                    (modules_filter_list is not None and item not in modules_filter_list):
+                # I assume the calendar is a feature nobody uses.
                 a.extract()  # remove the element
                 continue
             a['href'] = os.path.join(item, item + ".html")

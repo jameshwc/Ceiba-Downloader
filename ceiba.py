@@ -1,4 +1,5 @@
 import requests
+import logging
 import os
 import util
 import strings
@@ -35,6 +36,7 @@ class Ceiba():
 
     def login_user(self):
         resp = self.sess.get(util.login_url)
+        logging.info('正在嘗試登入 Ceiba...')
         payload = {'user': self.username, 'pass': self.password}
         # will get resp that redirect to /ChkSessLib.php
         resp = self.sess.post(resp.url, data=payload)
@@ -42,6 +44,7 @@ class Ceiba():
         resp = self.sess.post(resp.url, data=payload)
         if '登入失敗' in resp.content.decode('utf-8'):
             raise InvalidCredentials
+        logging.info('登入 Ceiba 成功！')
 
     def login(self):
         if len(self.username) > 0 and len(self.password) > 0:
@@ -79,20 +82,14 @@ class Ceiba():
                 ))
         return self.courses
 
-    def download_courses(self, path: str, cname_filter_list=None, modules_filter=None, progress_bar=None, log_output: PyLogOutput = None):
+    def download_courses(self, path: str, cname_filter_list=None, modules_filter=None, progress_bar=None):
         for course in self.courses:
             if cname_filter_list is None or course.cname in cname_filter_list:
-                if log_output:
-                    log_output.insertText(strings.course_download_info.format(course.cname))
-                else:
-                    print(strings.course_download_info.format(course.cname))
+                logging.info(strings.course_download_info.format(course.cname))
                 
                 os.makedirs(path, exist_ok=True)
                 
-                course.download(path, self.sess, modules_filter, progress_bar, log_output)
+                course.download(path, self.sess, modules_filter, progress_bar)
                 
-                if log_output:
-                    log_output.insertText(strings.course_finish_info.format(course.cname))
-                else:
-                    print(strings.course_finish_info.format(course.cname))
+                logging.info(strings.course_finish_info.format(course.cname))
             

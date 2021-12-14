@@ -2,7 +2,7 @@ import re
 import strings
 from bs4 import BeautifulSoup
 import appdirs
-import os
+import logging
 import json
 from pathlib import Path
 
@@ -36,9 +36,9 @@ def beautify_soup(content: bytes):
 def progress_decorator():
     def decorator(func):
         def wrap(self, *args):
-            print(strings.object_download_info.format(self.cname, args[1]))
+            logging.info(strings.object_download_info.format(self.cname, args[1]))
             ret = func(self, *args)
-            print(strings.object_finish_info.format(self.cname, args[1]))
+            logging.info(strings.object_finish_info.format(self.cname, args[1]))
             return ret
         return wrap
     return decorator

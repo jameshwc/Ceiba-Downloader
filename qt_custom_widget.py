@@ -2,7 +2,7 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 from PySide6.QtSvgWidgets import *
-import sys
+import logging
 
 class PyToggle(QCheckBox):
     def __init__(
@@ -73,22 +73,20 @@ class PyToggle(QCheckBox):
 
         p.end()
 
-class PyLogOutput(QTextEdit):
+class PyLogOutput(logging.Handler):
 
-    def __init__(self):
-        QTextEdit.__init__(self)
-        self.setReadOnly(True)
-        self.setLineWrapMode(QTextEdit.NoWrap)
+    def __init__(self, parent=None):
+        super().__init__()
+        self.widget = QPlainTextEdit(parent)
+        self.widget.setReadOnly(True)
+        # self.widget.setLineWrapMode(QTextEdit.NoWrap)
 
-    def insertText(self, text:str, color=None):
-        self.moveCursor(QTextCursor.End)
-        # self.setCurrentFont()
-        if color:
-            text = '<span style="color:' + color + ';">' + text + "</span>"
-        self.insertPlainText(text + "\n")
-        sb = self.verticalScrollBar()
-        sb.setValue(sb.maximum())
-
+    def emit(self, record: logging.LogRecord):
+        msg = self.format(record)
+        # if color:
+        #     text = '<span style="color:' + color + ';">' + text + "</span>"
+        self.widget.appendPlainText(msg)
+    
 class PyCheckableComboBox(QComboBox):
     # once there is a checkState set, it is rendered
     # here we assume default Unchecked

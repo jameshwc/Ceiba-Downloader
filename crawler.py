@@ -1,9 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 import os
+import logging
 from urllib.parse import urljoin
 from pathlib import Path
-from qt_custom_widget import PyLogOutput
 from util import get_valid_filename
 import re
 import strings
@@ -15,13 +15,12 @@ class Crawler():
     crawled_static_files = {}  # css/img: use path to avoid repetitive downloads.
     # TODO: we should move css/img to root folder instead of download them every time in each course
 
-    def __init__(self, session: requests.Session, url: str, path: str, filename: str, text: str = "", log_output: PyLogOutput = None):
+    def __init__(self, session: requests.Session, url: str, path: str, filename: str, text: str = ""):
         self.session = session
         self.url = url
         self.path = path
         self.filename = get_valid_filename(filename)
         self.text = text
-        self.log_output = log_output
 
     def crawl(self, is_table=False, static=False) -> bool:
         '''
@@ -35,11 +34,7 @@ class Crawler():
             return True
         
         if str.encode('The requested URL was rejected. Please consult with your administrator.') in response.content:
-            msg = strings.crawler_download_fail.format(self.text, response.url)
-            if self.log_output:
-                self.log_output.insertText(msg, color='red')
-            else:
-                print(msg)
+            logging.error(strings.crawler_download_fail.format(self.text, response.url))
             return False
         
         if 'text/html' not in response.headers['content-type']:
@@ -47,8 +42,7 @@ class Crawler():
             Crawler.crawled_static_files[(self.path, response.url)] = True
             return True
         
-        if self.log_output:
-            self.log_output.insertText(strings.crawler_download_info.format(self.text))
+        logging.info(strings.crawler_download_info.format(self.text))
         
         soup = BeautifulSoup(response.content, 'html.parser')
         Crawler.crawled_urls[response.url] = False
