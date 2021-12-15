@@ -7,7 +7,7 @@ from pathlib import Path
 from util import get_valid_filename
 import re
 import strings
-
+import time
 
 class Crawler():
 
@@ -22,11 +22,21 @@ class Crawler():
         self.filename = get_valid_filename(filename)
         self.text = text
 
+    def get(self, url: str):
+        while True:
+            try:
+                response = self.session.get(url)
+            except (TimeoutError, ConnectionError):
+                logging.error(strings.crawler_timeour_error)
+                time.sleep(5)
+                continue
+            return response
+
     def crawl(self, is_table=False, static=False) -> bool:
         '''
         Return True if the url is file, and return False if the url is html.
         '''
-        response = self.session.get(self.url)
+        response = self.get(self.url)
         
         if response.url in Crawler.crawled_urls:
             return Crawler.crawled_urls[response.url]
@@ -54,13 +64,13 @@ class Crawler():
         for css in soup.find_all('link'):
             url = urljoin(self.url, css.get('href'))
             css['href'] = url.split('/')[-1]
-            c = Crawler(self.session, url, self.path, css['href'], 0)
+            c = Crawler(self.session, url, self.path, css['href'], css['href'])
             c.crawl(static=True)
 
         for img in soup.find_all('img'):
             url = urljoin(self.url, img.get('src'))
             img['src'] = url.split('/')[-1]
-            c = Crawler(self.session, url, self.path, img['src'], 0)
+            c = Crawler(self.session, url, self.path, img['src'], css['href'])
             c.crawl(static=True)
         
         for op in soup.find_all('option'):
@@ -69,9 +79,24 @@ class Crawler():
         hrefs = soup.find_all('a')
 
         skip_href_texts = ['作業列表', '友善列印']
-        skip_href_texts.extend(['看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄', ' 新增主題', '引用', ' 回覆', '分頁顯示', '上個主題', '下個主題', '全部顯示'])
+        skip_href_texts.extend(['看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄', ' 新增主題', '引用', ' 回覆', '分頁顯示', '上個主題', '下個主題', '修改'])
+        # '修改' may be an indicator to download the owner's article?
         skip_href_texts.extend(['上頁', '下頁', '上一頁', '下一頁'])
+
+        dir = self.path
         
+        # special case for board
+        is_board = False
+        # TODO: board is broken
+        # for caption in soup.find_all('caption'):
+        #     caption_text: str = caption.get_text()
+        #     if caption_text.startswith('討論看板') or caption_text.startswith('看板列表'):
+        #         board_dir = os.path.join(self.path, get_valid_filename(caption_text.removeprefix('討論看板: ')))
+        #         os.makedirs(board_dir, exist_ok=True)
+        #         dir = board_dir
+        #         is_board = True
+        #         break
+
         for a in hrefs:
             if a.text in skip_href_texts:
                 a.replaceWithChildren()
@@ -79,14 +104,13 @@ class Crawler():
             if len(a.text) > 0 and not a['href'].startswith('mailto'):
                 if not a['href'].startswith('http') or a['href'].startswith('https://ceiba.ntu.edu.tw'):
                     url = urljoin(response.url, a.get('href'))
-
                     filename = get_valid_filename(a.text)
                     if not filename.endswith('.html') or not filename.endswith('.htm'):
                         filename += ".html"
-                    a['href'] = filename
-                    c = Crawler(self.session, url, self.path, a['href'], a.text)
-                    is_file = c.crawl()
-                    if is_file:
+                    a['href'] = os.path.join(dir, filename) if is_board else filename
+                    c = Crawler(self.session, url, dir, a['href'], a.text)
+                    is_file = c.crawl(is_table=is_board)
+                    if is_file:  # TODO: avoid duplicate filenames?
                         a['href'] = os.path.join("files", filename.removesuffix('.htm').removesuffix('.html'))
 
         with open(os.path.join(self.path, self.filename), 'w', encoding='utf-8') as html:
@@ -108,7 +132,7 @@ class Crawler():
                     resources_path = os.path.join(self.path, "resources")
                     os.makedirs(resources_path, exist_ok=True)
                     for res in resources:
-                        resp = self.session.get(urljoin(self.url, res))
+                        resp = self.get(urljoin(self.url, res))
                         res_filename = res.split('/')[-1]
                         with open(os.path.join(resources_path, res_filename), 'wb') as resource_file:
                             resource_file.write(resp.content)

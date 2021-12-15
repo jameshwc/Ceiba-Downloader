@@ -5,11 +5,11 @@ import logging
 import util
 import strings
 import re
+import time
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from typing import List
 from crawler import Crawler
-
 
 class Course():
 
@@ -33,7 +33,7 @@ class Course():
 
     def download(self, path: str, session: requests.Session, modules_filter_list: List[str] = None, progress_bar: QProgressBar = None):
         self.path = os.path.join(path, self.folder_name)
-        current_url = session.get(self.href).url
+        current_url = self.__get(session, self.href).url
         self.course_sn = re.search(r'course/([0-9a-f]*)+', current_url).group(0).removeprefix('course/')
         modules = self.homepage_download(session, '首頁', modules_filter_list)
         for module in modules:
@@ -45,7 +45,7 @@ class Course():
     @util.progress_decorator()
     def __html_download(self, session: requests.Session, obj_cname: str, module: str):
         url = util.module_url + "?csn=" + self.course_sn + "&default_fun=" + module + "&current_lang=chinese" # TODO:language
-        resp = session.get(url)
+        resp = self.__get(session, url)
         if any(x in resp.content.decode('utf-8') for x in ['此功能並未開啟', '目前無指派作業']):
             logging.info(strings.cancel_on_object.format(self.cname, obj_cname, obj_cname))
             return
@@ -67,23 +67,23 @@ class Course():
         return self.__download_button(session, button_url, 'button.html', modules_filter_list)
     
     def __download_homepage(self, session: requests.Session, url: str, filename: str = 'index.html'):
-        resp = session.get(url)
+        resp = self.__get(session, url)
         soup = BeautifulSoup(resp.content, 'html.parser')
         soup.find("frame", {"name": "topFrame"})['src'] = "banner.html"
         soup.find("frame", {"name": "leftFrame"})['src'] = "button.html"
         soup.find("frame", {"name": "mainFrame"})['src'] = "info/info.html"
         # TODO: footer.php
         with open(os.path.join(self.path, filename), 'w', encoding='utf-8') as file:
-            file.write(str(soup)) 
+            file.write(str(soup))
 
     def __download_button(self, session: requests.Session, url: str, filename: str, modules_filter_list: List[str] = None) -> List[str]:
-        resp = session.get(url)
+        resp = self.__get(session, url)
         soup = BeautifulSoup(resp.content, 'html.parser')
         for css in soup.find_all('link'):
             url = urljoin(url, css.get('href'))
             css['href'] = url.split('/')[-1]
             
-            c = Crawler(session, url, self.path, css['href'], 0)
+            c = Crawler(session, url, self.path, css['href'], css['href'])
             c.crawl(static=True)
         
         nav_co = soup.find("div", {"id": "nav_co"})
@@ -95,9 +95,18 @@ class Course():
                 # I assume the calendar is a feature nobody uses.
                 a.extract()  # remove the element
                 continue
-            # a['href'] = os.path.join(item, item + ".html")
             a['onclick'] = "parent.parent.mainFrame.location='" + item + "/" + item + ".html'"
             items.append(item)
         with open(os.path.join(self.path, filename), 'w', encoding='utf-8') as file:
             file.write(str(soup))
         return items
+
+    def __get(self, session: requests.Session, url: str) -> requests.Response:
+        while True:
+            try:
+                response = session.get(url)
+            except TimeoutError:
+                logging.error(strings.crawler_timeour_error)
+                time.sleep(5)
+                continue
+            return response
