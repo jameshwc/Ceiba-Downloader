@@ -6,11 +6,12 @@
 
 ## 安裝
 
-> 目前 GUI 只支援 Windows。
 
 你可以選擇以下兩種方式安裝：
 
 ### 1. 執行 exe
+
+> 目前 Releases 只支援 Windows。Linux/Mac 使用者請先選擇第二種方式或等到我更新 Linux/Mac 的 Installer。
 
 請在 [Releases](https://github.com/jameshwc/Ceiba-Downloader/releases) 頁面找到 `ceiba-downloader.exe` 進行下載。
 
@@ -21,6 +22,6 @@
 若不想下載打包好的 exe，可以用 python 執行程式碼。
 
 0. 推薦建立虛擬環境(virtualenv, pyenv, etc.)
-1. python 使用 3.9+ 版本（因應 PySide6）
+1. python 使用 3.9+ 版本（配合 PySide6）
 2. pip3 install -r requirements.txt
 3. python3 gui_main.py
