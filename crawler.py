@@ -70,7 +70,7 @@ class Crawler():
 
         skip_href_texts = ['作業列表', '友善列印']
         skip_href_texts.extend(['看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄', ' 新增主題', '引用', ' 回覆', '分頁顯示', '上個主題', '下個主題', '全部顯示'])
-        skip_href_texts.extend(['上頁', '下頁'])
+        skip_href_texts.extend(['上頁', '下頁', '上一頁', '下一頁'])
         
         for a in hrefs:
             if a.text in skip_href_texts:

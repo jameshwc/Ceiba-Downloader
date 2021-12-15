@@ -2,11 +2,9 @@ from PySide6.QtWidgets import QProgressBar
 import requests
 import os
 import logging
-from qt_custom_widget import PyLogOutput
 import util
 import strings
 import re
-from pathlib import Path
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from typing import List
@@ -97,7 +95,8 @@ class Course():
                 # I assume the calendar is a feature nobody uses.
                 a.extract()  # remove the element
                 continue
-            a['href'] = os.path.join(item, item + ".html")
+            # a['href'] = os.path.join(item, item + ".html")
+            a['onclick'] = "parent.parent.mainFrame.location='" + item + "/" + item + ".html'"
             items.append(item)
         with open(os.path.join(self.path, filename), 'w', encoding='utf-8') as file:
             file.write(str(soup))

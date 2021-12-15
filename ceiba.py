@@ -1,4 +1,3 @@
-from PySide6.QtWidgets import QProgressBar
 import requests
 import logging
 import os
@@ -7,7 +6,6 @@ import strings
 from course import Course
 from typing import List
 from exceptions import InvalidLoginParameters, InvalidCredentials
-from qt_custom_widget import PyLogOutput
 
 class Ceiba():
     
@@ -85,15 +83,14 @@ class Ceiba():
                 ))
         return self.courses
 
-    def download_courses(self, path: str, cname_filter_list=None, modules_filter=None, progress_bar: QProgressBar = None):
+    def download_courses(self, path: str, cname_filter_list=None, modules_filter=None):
         for course in self.courses:
             if cname_filter_list is None or course.cname in cname_filter_list:
                 logging.info(strings.course_download_info.format(course.cname))
                 
                 os.makedirs(path, exist_ok=True)
-                progress_val = progress_bar.value()
-                course.download(path, self.sess, modules_filter, progress_bar)
-                progress_bar.setValue(progress_val + len(modules_filter))
+                
+                course.download(path, self.sess, modules_filter)
                 
                 logging.info(strings.course_finish_info.format(course.cname))
             
