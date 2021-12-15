@@ -1,6 +1,7 @@
 # This Python file uses the following encoding: utf-8
 import os
 import sys
+from types import TracebackType
 from typing import Dict, List
 import logging
 import requests
@@ -15,8 +16,10 @@ from qt_custom_widget import PyToggle, PyLogOutput, PyCheckableComboBox
 from ceiba import Ceiba
 from course import Course
 import strings
-
-
+        
+def exception_handler(type, value, tb):
+    logging.getLogger().error("{}: {}".format(type.__name__, str(value)))
+    
 class CeibaWorker(QObject):
     finished = Signal()
     success = Signal()
@@ -129,8 +132,10 @@ class MyApp(QMainWindow):
         self.log_output = PyLogOutput(self)
         self.log_output.setFormatter(logging.Formatter(
             '%(asctime)s - %(levelname)s - %(message)s'))
+            
         logging.getLogger().addHandler(self.log_output)
         logging.getLogger().setLevel(logging.INFO)
+        sys.excepthook = exception_handler
 
         self.status_layout.addWidget(self.log_output.widget)
         self.status_layout.addWidget(self.progress_bar)
@@ -154,7 +159,6 @@ class MyApp(QMainWindow):
                     self, '登入失敗！', '登入失敗！請檢查帳號（學號）與密碼輸入是否正確！', QMessageBox.Retry)
             self.login_button.setEnabled(True)
             self.password_edit.clear()
-
         self.login_thread = QThread()
         self.worker = CeibaWorker(self.ceiba)
         self.worker.moveToThread(self.login_thread)
@@ -285,6 +289,7 @@ class MyApp(QMainWindow):
         self.download_button.setEnabled(True)
 
 if __name__ == "__main__":
+    
     app = QApplication([])
 
     widget = MyApp()
