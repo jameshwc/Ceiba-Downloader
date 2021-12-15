@@ -32,8 +32,11 @@ jobs:
         run: pip3 install pyinstaller
 
       - name: Package Application
-        run: pyinstaller -w -F gui_main.py --icon ceiba.ico -n ceiba-downloader
-
+        run: pyinstaller -w gui_main.py --icon ceiba.ico -n ceiba-downloader
+      
+      - name: Create Self Extracting Archive
+        run: 7z a ceiba-downloader.exe -mmt -mx5 -sfx dist/ceiba-downloader
+        
       - name: Upload Release Asset
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
