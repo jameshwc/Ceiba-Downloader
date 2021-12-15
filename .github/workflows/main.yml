@@ -36,7 +36,7 @@ jobs:
       
       - name: Create Self Extracting Archive
         run: 7z a ceiba-downloader.exe -mmt -mx5 -sfx dist/ceiba-downloader
-        
+
       - name: Upload Release Asset
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
@@ -44,4 +44,4 @@ jobs:
           automatic_release_tag: "latest"
           prerelease: true
           title: "Ceiba Downloader"
-          files: dist/ceiba-downloader.exe
+          files: ceiba-downloader.exe
