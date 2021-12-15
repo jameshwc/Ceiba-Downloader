@@ -16,5 +16,3 @@ if __name__ == "__main__":
                            cname_filter_list=['文化人類學丙'],
                         #    modules_filter=['bulletin', 'info', 'teacher']
                            )
-    import strings
-    strings.cancel_on_object = strings.cancel_on_object_tw
