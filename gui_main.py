@@ -40,10 +40,17 @@ class CeibaWorker(QObject):
         self.finished.emit()
 
     def download_courses(self):
+        try:
+            if len(self.path) == 0:
+                raise FileNotFoundError
+            os.makedirs(self.path, exist_ok=True)
+        except FileNotFoundError:
+            logging.error('路徑錯誤！請檢查路徑是否空白與錯誤！')
+            self.failed.emit()
+     
         for course in self.courses:
             if course.cname in self.cname_filter_list:
                 logging.info(strings.course_download_info.format(course.cname))
-                os.makedirs(self.path, exist_ok=True)
                 course.download(
                     self.path, self.session, self.modules_filter_list, self.progress)
                 logging.info(strings.course_finish_info.format(course.cname))
@@ -276,7 +283,7 @@ class MyApp(QMainWindow):
                 self.ceiba.sess, cname_list, items,)
         self.worker.moveToThread(self.download_thread)
         self.download_thread.started.connect(self.worker.download_courses)
-        # self.worker.progress.connect(self.update_progressbar)
+        self.worker.progress.connect(self.update_progressbar)
         self.worker.finished.connect(self.download_thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.worker.finished.connect(self.after_download_successfully)

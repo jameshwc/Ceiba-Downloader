@@ -36,6 +36,9 @@ class Course():
         current_url = self.__get(session, self.href).url
         self.course_sn = re.search(r'course/([0-9a-f]*)+', current_url).group(0).removeprefix('course/')
         modules = self.homepage_download(session, '首頁', modules_filter_list)
+        if progress:
+            progress.emit(len(modules_filter_list) - len(modules))
+        
         for module in modules:
             logging.info(strings.course_module_download_info.format(self.cname, Course.cname_map[module]))
             self.__html_download(session, Course.cname_map[module], module)
