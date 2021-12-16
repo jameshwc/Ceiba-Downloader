@@ -25,6 +25,11 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       
+      - name: Set up python version
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+          
       - name: Install modules
         run: pip3 install -r requirements.txt
 
