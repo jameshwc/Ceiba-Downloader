@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QMainWindow, QCheckBox, QFileDialog, QProgressBar,
     QPushButton, QVBoxLayout, QWidget, QGridLayout, QGroupBox, QLabel,
     QLineEdit, QMessageBox, QLayout, QApplication, QTabWidget)
-from PySide6.QtCore import (QObject, Signal, QThread, Qt)
+from PySide6.QtCore import (QObject, Signal, QThread, Qt, QThreadPool)
 from PySide6.QtGui import QFont, QIcon
 from exceptions import InvalidCredentials, InvalidLoginParameters
 from qt_custom_widget import PyToggle, PyLogOutput, PyCheckableComboBox
@@ -24,6 +24,7 @@ class CeibaWorker(QObject):
     finished = Signal()
     success = Signal()
     failed = Signal()
+    progress = Signal(int)
 
     def __init__(self, ceiba: Ceiba):
         QObject.__init__(self)
@@ -38,19 +39,23 @@ class CeibaWorker(QObject):
             self.success.emit()
         self.finished.emit()
 
-    def download_courses(self, courses: List[Course], path: str, session: requests.Session, cname_filter_list, modules_filter_list, progress_bar: QProgressBar):
-        for course in courses:
-            if course.cname in cname_filter_list:
+    def download_courses(self):
+        for course in self.courses:
+            if course.cname in self.cname_filter_list:
                 logging.info(strings.course_download_info.format(course.cname))
-                os.makedirs(path, exist_ok=True)
-                progress_val = progress_bar.value()
+                os.makedirs(self.path, exist_ok=True)
                 course.download(
-                    path, session, modules_filter_list, progress_bar)
-                progress_bar.setValue(progress_val + len(modules_filter_list))
+                    self.path, self.session, self.modules_filter_list, self.progress)
                 logging.info(strings.course_finish_info.format(course.cname))
         self.success.emit()
         self.finished.emit()
 
+    def set_download_param(self, courses: List[Course], path: str, session: requests.Session, cname_filter_list, modules_filter_list):
+        self.courses = courses
+        self.path = path
+        self.session = session
+        self.cname_filter_list = cname_filter_list
+        self.modules_filter_list = modules_filter_list
 
 class MyApp(QMainWindow):
     def __init__(self):
@@ -267,12 +272,11 @@ class MyApp(QMainWindow):
         self.progress_bar.setMaximum(len(cname_list) * len(items))
         self.download_thread = QThread()
         self.worker = CeibaWorker(self.ceiba)
+        self.worker.set_download_param(self.ceiba.courses, self.filepath_line_edit.text(),
+                self.ceiba.sess, cname_list, items,)
         self.worker.moveToThread(self.download_thread)
-        self.download_thread.started.connect(
-            lambda: self.worker.download_courses(
-                self.ceiba.courses, self.filepath_line_edit.text(),
-                self.ceiba.sess, cname_list, items, self.progress_bar))
-        self.worker.success.connect(lambda: logging.info('完成下載！'))
+        self.download_thread.started.connect(self.worker.download_courses)
+        # self.worker.progress.connect(self.update_progressbar)
         self.worker.finished.connect(self.download_thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.worker.finished.connect(self.after_download_successfully)
@@ -287,6 +291,10 @@ class MyApp(QMainWindow):
     def after_download_successfully(self):
         QMessageBox.information(self, '下載完成！', '下載完成！', QMessageBox.Ok) # TODO: open directory
         self.download_button.setEnabled(True)
+        self.progress_bar.reset()
+
+    def update_progressbar(self, add_value: int):
+        self.progress_bar.setValue(self.progress_bar.value() + add_value)
 
 if __name__ == "__main__":
     

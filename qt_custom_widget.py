@@ -1,7 +1,8 @@
-from PySide6.QtCore import QEasingCurve, Qt, QPropertyAnimation, Property, QPoint, QRect
+from PySide6.QtCore import QEasingCurve, Qt, QPropertyAnimation, Property, QPoint, QRect, QObject, Signal, QMutex
 from PySide6.QtGui import QPainter, QFont, QColor
 from PySide6.QtWidgets import QCheckBox, QPlainTextEdit, QComboBox
 import logging
+from functools import cached_property
 
 class PyToggle(QCheckBox):
     def __init__(
@@ -72,19 +73,28 @@ class PyToggle(QCheckBox):
 
         p.end()
 
+class PyQtSignal(QObject):
+    log = Signal(str)
+
 class PyLogOutput(logging.Handler):
 
     def __init__(self, parent=None):
         super().__init__()
         self.widget = QPlainTextEdit(parent)
         self.widget.setReadOnly(True)
-        # self.widget.setLineWrapMode(QTextEdit.NoWrap)
+        self.signal.log.connect(self.widget.appendPlainText)
 
+    @cached_property
+    def signal(self):
+        return PyQtSignal() 
+    
     def emit(self, record: logging.LogRecord):
         msg = self.format(record)
         # if color:
         #     text = '<span style="color:' + color + ';">' + text + "</span>"
-        self.widget.appendPlainText(msg)
+        # self.widget.appendPlainText(msg)
+        self.signal.log.emit(msg)
+
     
 class PyCheckableComboBox(QComboBox):
     # once there is a checkState set, it is rendered

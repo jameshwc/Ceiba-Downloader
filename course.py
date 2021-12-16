@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QProgressBar
+from PySide6.QtCore import Signal
 import requests
 import os
 import logging
@@ -31,7 +31,7 @@ class Course():
     def __str__(self):
         return " ".join([self.cname, self.teacher, self.href])
 
-    def download(self, path: str, session: requests.Session, modules_filter_list: List[str] = None, progress_bar: QProgressBar = None):
+    def download(self, path: str, session: requests.Session, modules_filter_list: List[str] = None, progress: Signal = None):
         self.path = os.path.join(path, self.folder_name)
         current_url = self.__get(session, self.href).url
         self.course_sn = re.search(r'course/([0-9a-f]*)+', current_url).group(0).removeprefix('course/')
@@ -39,8 +39,8 @@ class Course():
         for module in modules:
             logging.info(strings.course_module_download_info.format(self.cname, Course.cname_map[module]))
             self.__html_download(session, Course.cname_map[module], module)
-            if progress_bar:
-                progress_bar.setValue(progress_bar.value() + 1)
+            if progress:
+                progress.emit(1)
 
     @util.progress_decorator()
     def __html_download(self, session: requests.Session, obj_cname: str, module: str):

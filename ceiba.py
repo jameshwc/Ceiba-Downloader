@@ -84,6 +84,7 @@ class Ceiba():
         return self.courses
 
     def download_courses(self, path: str, cname_filter_list=None, modules_filter=None):
+        logging.info('開始下載課程...')
         for course in self.courses:
             if cname_filter_list is None or course.cname in cname_filter_list:
                 logging.info(strings.course_download_info.format(course.cname))
@@ -93,4 +94,4 @@ class Ceiba():
                 course.download(path, self.sess, modules_filter)
                 
                 logging.info(strings.course_finish_info.format(course.cname))
-            
+        logging.info('完成下載！')
