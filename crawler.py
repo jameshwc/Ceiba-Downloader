@@ -51,7 +51,7 @@ class Crawler():
             logging.error(strings.crawler_download_fail.format(self.text, response.url))
             return False
         
-        if len(self.text) > 0 and static:
+        if len(self.text) > 0 and not static:
             logging.info(strings.crawler_download_info.format(self.text))
         
         if 'text/html' not in response.headers['content-type']:

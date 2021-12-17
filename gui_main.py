@@ -67,13 +67,22 @@ class MyApp(QMainWindow):
         self.setCentralWidget(QWidget(self))
 
         main_layout = QGridLayout(self.centralWidget())
-        main_layout.addWidget(self.login_group_box, 0, 0)
-        main_layout.addWidget(self.courses_group_box, 1, 0)
-        main_layout.addWidget(self.status_group_box, 2, 0)
-        main_layout.setRowStretch(1, 1)
+        user_layout = QGridLayout(self.centralWidget())
+        user_layout.addWidget(self.login_group_box, 0, 0)
+        user_layout.addWidget(self.courses_group_box, 1, 0)
+        user_layout.setRowStretch(0, 1)
+        user_layout.setRowStretch(1, 4)
+
+        user_groupbox = QGroupBox()
+        user_groupbox.setLayout(user_layout)
+        # main_layout.addWidget(self.login_group_box, 0, 0)
+        # main_layout.addWidget(self.courses_group_box, 1, 0)
+        main_layout.addWidget(user_groupbox, 0, 0)
+        main_layout.addWidget(self.status_group_box, 0, 1)
+        # main_layout.setRowStretch(1, 1)
         # main_layout.setRowStretch(2, 1)
-        main_layout.setColumnStretch(0, 1)
-        main_layout.setColumnStretch(1, 1)
+        # main_layout.setColumnStretch(1, 3)
+        # main_layout.setC
 
     def create_login_group_box(self):
         self.login_group_box = QGroupBox("使用者")
@@ -131,7 +140,7 @@ class MyApp(QMainWindow):
         self.progress_bar.setMaximum(100)
         self.progress_bar.setValue(0)
 
-        self.log_output = PyLogOutput(self)
+        self.log_output = PyLogOutput(self.status_group_box)
         self.log_output.setFormatter(logging.Formatter(
             '%(asctime)s - %(levelname)s - %(message)s'))
             
@@ -178,7 +187,7 @@ class MyApp(QMainWindow):
             self.login_layout.itemAt(i).widget().setParent(None)
 
         welcome_label = QLabel(self.ceiba.student_name + "，歡迎你！")
-        welcome_label.setFont(QFont('', 32))
+        welcome_label.setFont(QFont('', 24))
         self.login_layout.addWidget(welcome_label, 0, 0)
         self.login_group_box.setLayout(self.login_layout)
 
