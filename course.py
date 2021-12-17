@@ -87,12 +87,17 @@ class Course():
         nav_co = soup.find("div", {"id": "nav_co"})
         items = []
         for a in nav_co.find_all('a'):
-            item = re.search(r"onclick\('(.*?)'.*\)", a['onclick']).group(1)
-            if item in ['logout', 'calendar'] or \
-                    (modules_filter_list is not None and item not in modules_filter_list):
-                # I assume the calendar is a feature nobody uses.
-                a.extract()  # remove the element
-                continue
+            try:
+                item = re.search(r"onclick\('(.*?)'.*\)", a['onclick']).group(1)
+            except AttributeError:
+                logging.debug('abnormal onclick value: ' + a['onclick'])  # Only found out such case in '108-1 Machine Learning Foundations'
+                item = a.next_element['id']
+            else:
+                if item in ['logout', 'calendar'] or \
+                        (modules_filter_list is not None and item not in modules_filter_list):
+                    # I assume the calendar is a feature nobody uses.
+                    a.extract()  # remove the element
+                    continue
             a['onclick'] = "parent.parent.mainFrame.location='" + item + "/" + item + ".html'"
             items.append(item)
         with open(os.path.join(self.path, filename), 'w', encoding='utf-8') as file:

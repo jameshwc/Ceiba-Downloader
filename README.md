@@ -25,3 +25,8 @@
 1. python 使用 3.9+ 版本（配合 PySide6）
 2. `pip3 install -r requirements.txt`
 3. `python3 gui_main.py`
+
+## 已知問題
+
+1. 討論看板的 index.html 不正確 (# 參考 `Crawler.crawl()`)
+2. 學習成績的`顯示`/`隱藏`會進無限迴圈

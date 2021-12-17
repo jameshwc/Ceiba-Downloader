@@ -132,7 +132,7 @@ class MyApp(QMainWindow):
 
         self.log_output = PyLogOutput(self.status_group_box)
         self.log_output.setFormatter(logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s'))
+            '%(asctime)s - %(levelname)s - %(message)s', '%Y-%m-%d %H:%M:%S'))
             
         logging.getLogger().addHandler(self.log_output)
         logging.getLogger().setLevel(logging.INFO)

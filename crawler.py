@@ -38,9 +38,9 @@ class Crawler():
         '''
         response = self.get(self.url)
 
-        if not response.url.startswith('https://ceiba.ntu.edu.tw'):
+        if not static and not response.url.startswith('https://ceiba.ntu.edu.tw'):
             logging.warn(strings.skip_external_href.format(response.url))
-            return
+            return  # TODO: download (optionally) external documents (.pdf, .docx, etc.) (may limit the domain names)
         
         if self.url in Crawler.crawled_urls:
             return Crawler.crawled_urls[self.url]
@@ -85,7 +85,7 @@ class Crawler():
         skip_href_texts = ['作業列表', '友善列印']
         skip_href_texts.extend(['看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄', ' 新增主題', '引用', ' 回覆', '分頁顯示', '上個主題', '下個主題', '修改'])
         # '修改' may be an indicator to download the owner's article?
-        skip_href_texts.extend(['上頁', '下頁', '上一頁', '下一頁'])
+        skip_href_texts.extend(['上頁', '下頁', '上一頁', '下一頁', ' 我要評分'])
 
         dir = self.path
         
@@ -128,7 +128,7 @@ class Crawler():
             filepath = os.path.join(self.path, self.filename)
             path = Path(filepath)  # TODO: check if filename exists
             if path.exists():
-                print('')  # TODO
+                pass  # TODO
             if response.headers['content-type'] == 'text/css':
                 new_content = response.content
                 resources = re.findall(r'url\((.*?)\)', str(response.content))
