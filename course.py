@@ -108,7 +108,7 @@ class Course():
         while True:
             try:
                 response = session.get(url)
-            except TimeoutError:
+            except (TimeoutError, ConnectionResetError):
                 logging.error(strings.crawler_timeour_error)
                 time.sleep(5)
                 continue

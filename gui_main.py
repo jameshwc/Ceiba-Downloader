@@ -289,6 +289,7 @@ class MyApp(QMainWindow):
         self.progress_bar.setValue(self.progress_bar.maximum())
         QMessageBox.information(self, '下載完成！', '下載完成！', QMessageBox.Ok) # TODO: open directory
         self.download_button.setEnabled(True)
+        self.progress_bar.setMaximum(1)
         self.progress_bar.reset()
 
     def update_progressbar(self, add_value: int):

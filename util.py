@@ -3,7 +3,6 @@ import strings
 from bs4 import BeautifulSoup
 import appdirs
 import logging
-import json
 from pathlib import Path
 
 home_url = 'https://ceiba.ntu.edu.tw'

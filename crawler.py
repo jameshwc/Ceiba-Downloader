@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import os
 import logging
+from bs4.element import Tag
 from urllib.parse import urljoin
 from pathlib import Path
 from util import get_valid_filename
@@ -26,7 +27,7 @@ class Crawler():
         while True:
             try:
                 response = self.session.get(url)
-            except (TimeoutError, ConnectionError):
+            except (TimeoutError, ConnectionError, ConnectionResetError):
                 logging.error(strings.crawler_timeour_error)
                 time.sleep(5)
                 continue
@@ -87,19 +88,20 @@ class Crawler():
         # '修改' may be an indicator to download the owner's article?
         skip_href_texts.extend(['上頁', '下頁', '上一頁', '下一頁', ' 我要評分'])
 
-        dir = self.path
-        
         # special case for board
         is_board = False
-        # TODO: board is broken
-        # for caption in soup.find_all('caption'):
-        #     caption_text: str = caption.get_text()
-        #     if caption_text.startswith('討論看板') or caption_text.startswith('看板列表'):
-        #         board_dir = os.path.join(self.path, get_valid_filename(caption_text.removeprefix('討論看板: ')))
-        #         os.makedirs(board_dir, exist_ok=True)
-        #         dir = board_dir
-        #         is_board = True
-        #         break
+        board_dir = {}
+        for caption in soup.find_all('caption'):
+            caption_text: str = caption.get_text()
+            if caption_text.startswith('看板列表'):
+                rows = caption.parent.find('tbody').find_all('tr')
+                for row in rows:
+                    a_tag = row.find("p", {"class": "fname"}).find('a')
+                    dir_name = get_valid_filename(a_tag.text)
+                    board_dir[a_tag.text] = os.path.join(self.path, dir_name)
+                    os.makedirs(board_dir[a_tag.text], exist_ok=True)
+                is_board = True
+                break
 
         for a in hrefs:
             if a.text in skip_href_texts:
@@ -111,9 +113,12 @@ class Crawler():
                     filename = get_valid_filename(a.text)
                     if not filename.endswith('.html') or not filename.endswith('.htm'):
                         filename += ".html"
-                    a['href'] = os.path.join(dir, filename) if is_board else filename
-                    c = Crawler(self.session, url, dir, a['href'], a.text)
-                    is_file = c.crawl(is_table=is_board)
+                    if is_board and a.text in board_dir:
+                        a['href'] = os.path.join(board_dir[a.text], filename)
+                        is_file = Crawler(self.session, url, board_dir[a.text], a['href'], a.text).crawl(is_table=True)
+                    else:
+                        a['href'] = filename
+                        is_file = Crawler(self.session, url, self.path, a['href'], a.text).crawl()
                     if is_file:  # TODO: avoid duplicate filenames?
                         a['href'] = os.path.join("files", filename.removesuffix('.htm').removesuffix('.html'))
 
