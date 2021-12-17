@@ -46,21 +46,22 @@ class Ceiba():
             raise InvalidCredentials
         logging.info('登入 Ceiba 成功！')
 
-    def login(self):
+    def login(self, progress: Signal = None):
         if len(self.username) > 0 and len(self.password) > 0:
             self.login_user()
+            progress.emit(1)
         
         # check if user credential is correct
         soup = util.beautify_soup(self.sess.get(util.courses_url).content)
+        progress.emit(1)
         self.student_name = soup.find("span", {"class": "user"}).text
         if self.student_name == "":
             raise InvalidCredentials
 
-    def get_courses_list(self):
+    def get_courses_list(self, progress: Signal = None):
         
         logging.info('正在取得課程...')
         soup = util.beautify_soup(self.sess.get(util.courses_url).content)
-        
         # tables[1] is the courses not set up in ceiba
         table = soup.find_all("table")[0]
         rows = table.find_all('tr')
@@ -85,7 +86,7 @@ class Ceiba():
         logging.info('取得課程完畢！')
         return self.courses
 
-    def download_courses(self, path: str, cname_filter_list=None, modules_filter=None, progress: Signal = None):
+    def download_courses(self, path: str, cname_filter=None, modules_filter=None, progress: Signal = None):
         logging.info('開始下載課程...')
         try:
             if len(path) == 0: raise FileNotFoundError
@@ -94,7 +95,7 @@ class Ceiba():
             logging.error("路徑錯誤！請檢查路徑是否空白與錯誤！")
             return
         for course in self.courses:
-            if cname_filter_list is None or course.cname in cname_filter_list:
+            if cname_filter is None or course.cname in cname_filter:
                 logging.info(strings.course_download_info.format(course.cname))
                 course.download(path, self.sess, modules_filter, progress)
                 logging.info(strings.course_finish_info.format(course.cname))

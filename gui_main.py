@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QMainWindow, QCheckBox, QFileDialog, QProgressBar,
     QPushButton, QVBoxLayout, QWidget, QGridLayout, QGroupBox, QLabel,
     QLineEdit, QMessageBox, QLayout, QApplication, QTabWidget)
-from PySide6.QtCore import (QObject, Signal, QThread, Qt, QThreadPool)
+from PySide6.QtCore import (QObject, Signal, QThread, Qt, QThreadPool, QRunnable)
 from PySide6.QtGui import QFont, QIcon
 from exceptions import InvalidCredentials, InvalidLoginParameters
 from qt_custom_widget import PyToggle, PyLogOutput, PyCheckableComboBox
@@ -18,41 +18,35 @@ import strings
         
 def exception_handler(type, value, tb):
     logging.getLogger().error("{}: {}".format(type.__name__, str(value)))
-    
-class CeibaWorker(QObject):
+
+class CeibaSignals(QObject):
     finished = Signal()
     success = Signal()
     failed = Signal()
     progress = Signal(int)
+    result = Signal(object)
 
-    def __init__(self, ceiba: Ceiba):
-        QObject.__init__(self)
-        self.ceiba = ceiba
+class Worker(QRunnable):
 
-    def login(self):
+    def __init__(self, fn, *args, **kwargs):
+        super(Worker, self).__init__()
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+        self.signals = CeibaSignals()
+        self.kwargs["progress"] = self.signals.progress
+
+    def run(self):
         try:
-            self.ceiba.login()
-        except (InvalidCredentials, InvalidLoginParameters):
-            self.failed.emit()
+            result = self.fn(*self.args, **self.kwargs)
+        except Exception as e:
+            logging.error(e)
+            self.signals.failed.emit()
         else:
-            self.success.emit()
-        self.finished.emit()
-
-    def download_courses(self):
-        try:
-            self.ceiba.download_courses(self.path, self.cname_filter_list, self.modules_filter_list, self.progress)
-        except:
-            self.failed.emit()
-        else:
-            self.success.emit()
-        self.finished.emit()
-
-    def set_download_param(self, courses: List[Course], path: str, session: requests.Session, cname_filter_list, modules_filter_list):
-        self.courses = courses
-        self.path = path
-        self.session = session
-        self.cname_filter_list = cname_filter_list
-        self.modules_filter_list = modules_filter_list
+            self.signals.result.emit(result)
+            self.signals.success.emit()
+        finally:
+            self.signals.finished.emit()
 
 class MyApp(QMainWindow):
     def __init__(self):
@@ -65,7 +59,8 @@ class MyApp(QMainWindow):
         self.create_courses_group_box()
         self.create_status_group_box()
         self.setCentralWidget(QWidget(self))
-
+        self.thread_pool = QThreadPool()
+        
         main_layout = QGridLayout(self.centralWidget())
         user_layout = QGridLayout(self.centralWidget())
         user_layout.addWidget(self.login_group_box, 0, 0)
@@ -75,14 +70,8 @@ class MyApp(QMainWindow):
 
         user_groupbox = QGroupBox()
         user_groupbox.setLayout(user_layout)
-        # main_layout.addWidget(self.login_group_box, 0, 0)
-        # main_layout.addWidget(self.courses_group_box, 1, 0)
         main_layout.addWidget(user_groupbox, 0, 0)
         main_layout.addWidget(self.status_group_box, 0, 1)
-        # main_layout.setRowStretch(1, 1)
-        # main_layout.setRowStretch(2, 1)
-        # main_layout.setColumnStretch(1, 3)
-        # main_layout.setC
 
     def create_login_group_box(self):
         self.login_group_box = QGroupBox("使用者")
@@ -157,9 +146,11 @@ class MyApp(QMainWindow):
         if self.method_toggle.isChecked():
             self.ceiba = Ceiba(cookie_user=self.username_edit.text(
             ), cookie_PHPSESSID=self.password_edit.text())
+            self.progress_bar.setMaximum(1)
         else:
             self.ceiba = Ceiba(username=self.username_edit.text(),
                                password=self.password_edit.text())
+            self.progress_bar.setMaximum(2)
 
         def fail_handler():
             if self.method_toggle.isChecked():
@@ -170,19 +161,17 @@ class MyApp(QMainWindow):
                     self, '登入失敗！', '登入失敗！請檢查帳號（學號）與密碼輸入是否正確！', QMessageBox.Retry)
             self.login_button.setEnabled(True)
             self.password_edit.clear()
-        self.login_thread = QThread()
-        self.worker = CeibaWorker(self.ceiba)
-        self.worker.moveToThread(self.login_thread)
-        self.login_thread.started.connect(self.worker.login)
-        self.worker.failed.connect(fail_handler)
-        self.worker.success.connect(self.after_login_successfully)
-        self.worker.finished.connect(self.login_thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.login_thread.finished.connect(self.login_thread.deleteLater)
-        self.login_thread.start()
+
+        worker = Worker(self.ceiba.login)
+        worker.signals.failed.connect(fail_handler)
+        worker.signals.success.connect(self.after_login_successfully)
+        worker.signals.progress.connect(self.update_progressbar)
+        self.thread_pool.start(worker)
         self.login_button.setDisabled(True)
 
     def after_login_successfully(self):
+        
+        self.update_progressbar(0)  # busy indicator
         for i in reversed(range(self.login_layout.count())):
             self.login_layout.itemAt(i).widget().setParent(None)
 
@@ -191,9 +180,11 @@ class MyApp(QMainWindow):
         self.login_layout.addWidget(welcome_label, 0, 0)
         self.login_group_box.setLayout(self.login_layout)
 
-        # TODO: [low priority] it can be handled in multi-thread
-        courses = self.ceiba.get_courses_list()
-        self.fill_course_group_box(courses)
+        worker = Worker(self.ceiba.get_courses_list)
+        worker.signals.result.connect(self.fill_course_group_box)
+        worker.signals.progress.connect(self.update_progressbar)
+        self.thread_pool.start(worker)
+        self.progress_bar.setMaximum(1)
 
     def fill_course_group_box(self, courses: List[Course]):
         self.courses_group_box.setDisabled(False)
@@ -276,18 +267,11 @@ class MyApp(QMainWindow):
                       for x in self.courses_checkboxes if x.isChecked()]
 
         self.progress_bar.setMaximum(len(cname_list) * len(items))
-        self.download_thread = QThread()
-        self.worker = CeibaWorker(self.ceiba)
-        self.worker.set_download_param(self.ceiba.courses, self.filepath_line_edit.text(),
-                self.ceiba.sess, cname_list, items,)
-        self.worker.moveToThread(self.download_thread)
-        self.download_thread.started.connect(self.worker.download_courses)
-        self.worker.progress.connect(self.update_progressbar)
-        self.worker.finished.connect(self.download_thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.worker.finished.connect(self.after_download_successfully)
-        self.download_thread.finished.connect(self.download_thread.deleteLater)
-        self.download_thread.start()
+        worker = Worker(self.ceiba.download_courses, path=self.filepath_line_edit.text(), 
+                            cname_filter=cname_list, modules_filter=items)
+        worker.signals.progress.connect(self.update_progressbar)
+        worker.signals.finished.connect(self.after_download_successfully)
+        self.thread_pool.start(worker)
         self.download_button.setDisabled(True)
 
     def get_save_directory(self):
@@ -295,13 +279,22 @@ class MyApp(QMainWindow):
         self.filepath_line_edit.setText(filepath)
 
     def after_download_successfully(self):
+        self.progress_bar.setValue(self.progress_bar.maximum())
         QMessageBox.information(self, '下載完成！', '下載完成！', QMessageBox.Ok) # TODO: open directory
         self.download_button.setEnabled(True)
         self.progress_bar.reset()
-        
 
     def update_progressbar(self, add_value: int):
-        self.progress_bar.setValue(self.progress_bar.value() + add_value)
+        if add_value < 0:
+            self.progress_bar.setMaximum(self.progress_bar.maximum() + (add_value * -1))
+        elif add_value == 0:  # magic number
+            self.progress_bar.setValue(0)
+            self.progress_bar.setMaximum(0)
+            self.progress_bar.setMinimum(0)
+        elif add_value == 999:  # magic number
+            self.progress_bar.setMaximum(self.progress_bar.maximum())
+        else:
+            self.progress_bar.setValue(self.progress_bar.value() + add_value)
 
 if __name__ == "__main__":
     
