@@ -108,3 +108,11 @@ class PyCheckableComboBox(QComboBox):
     def itemChecked(self, index):
         item = self.model().item(index, 0)
         return item.checkState() == Qt.Checked
+    
+    def checkAll(self):
+        for i in range(self.count()):
+            item: QCheckBox = self.model().item(i, 0)
+            if item.checkState() != Qt.Checked:
+                item.setCheckState(Qt.Checked)
+            else:
+                item.setCheckState(Qt.Unchecked)

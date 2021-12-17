@@ -5,7 +5,7 @@ from typing import Dict, List
 import logging
 import requests
 from PySide6.QtWidgets import (
-    QMainWindow, QCheckBox, QFileDialog, QProgressBar,
+    QBoxLayout, QHBoxLayout, QMainWindow, QCheckBox, QFileDialog, QProgressBar,
     QPushButton, QVBoxLayout, QWidget, QGridLayout, QGroupBox, QLabel,
     QLineEdit, QMessageBox, QLayout, QApplication, QTabWidget)
 from PySide6.QtCore import (QObject, Signal, QThread, Qt, QThreadPool, QRunnable)
@@ -67,11 +67,12 @@ class MyApp(QMainWindow):
         user_layout.addWidget(self.courses_group_box, 1, 0)
         user_layout.setRowStretch(0, 1)
         user_layout.setRowStretch(1, 4)
-
         user_groupbox = QGroupBox()
         user_groupbox.setLayout(user_layout)
         main_layout.addWidget(user_groupbox, 0, 0)
         main_layout.addWidget(self.status_group_box, 0, 1)
+        main_layout.setColumnStretch(0, 1)
+        main_layout.setColumnStretch(1, 1)
 
     def create_login_group_box(self):
         self.login_group_box = QGroupBox("使用者")
@@ -219,9 +220,8 @@ class MyApp(QMainWindow):
                 elif state == Qt.Unchecked:
                     checkbox.setCheckState(Qt.Unchecked)
 
-        check_all_courses_button = QCheckBox('勾選全部')
-        check_all_courses_button.stateChanged.connect(
-            click_all_courses_checkbox)
+        check_all_courses_checkbox = QCheckBox('勾選全部')
+        check_all_courses_checkbox.stateChanged.connect(click_all_courses_checkbox)
 
         self.download_item_combo_box = PyCheckableComboBox()
         self.download_item_combo_box.setPlaceholderText('<---點我展開--->')
@@ -229,19 +229,26 @@ class MyApp(QMainWindow):
             self.download_item_combo_box.addItem(item_name)
         self.download_item_combo_box.setCurrentIndex(-1)
         download_item_label = QLabel('下載項目：')
-        download_item_layout = QVBoxLayout()
+        check_all_download_item_checkbox = QCheckBox('勾選全部下載項目')
+        check_all_download_item_checkbox.stateChanged.connect(self.download_item_combo_box.checkAll)
+        download_item_layout = QHBoxLayout()
         download_item_layout.addWidget(download_item_label)
         download_item_layout.addWidget(self.download_item_combo_box)
+        download_item_layout.addWidget(check_all_download_item_checkbox)
+        download_item_group_box = QGroupBox()
+        download_item_group_box.setLayout(download_item_layout)
 
         filepath_label = QLabel('存放路徑：')
         self.filepath_line_edit = QLineEdit()
         file_browse_button = QPushButton('瀏覽')
         file_browse_button.clicked.connect(self.get_save_directory)
 
-        options_and_download_layout.addWidget(check_all_courses_button, 0, 0)
-        options_and_download_layout.addWidget(download_item_label, 0, 1)
-        options_and_download_layout.addWidget(
-            self.download_item_combo_box, 0, 2)
+        options_and_download_layout.addWidget(check_all_courses_checkbox, 0, 0)
+        # options_and_download_layout.addWidget(download_item_label, 0, 1)
+        options_and_download_layout.addWidget(download_item_group_box, 0, 1)
+
+        # options_and_download_layout.addWidget(
+        #     self.download_item_combo_box, 0, 2)
         options_and_download_layout.addWidget(filepath_label, 1, 0)
         options_and_download_layout.addWidget(self.filepath_line_edit, 1, 1)
         options_and_download_layout.addWidget(file_browse_button, 1, 2)
@@ -301,7 +308,7 @@ if __name__ == "__main__":
     app = QApplication([])
 
     widget = MyApp()
-    widget.resize(800, 600)
+    widget.resize(1200, 600)
     widget.show()
 
     sys.exit(app.exec())
