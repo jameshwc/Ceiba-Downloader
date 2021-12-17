@@ -37,23 +37,27 @@ class Crawler():
         Return True if the url is file, and return False if the url is html.
         '''
         response = self.get(self.url)
+
+        if not response.url.startswith('https://ceiba.ntu.edu.tw'):
+            logging.warn(strings.skip_external_href.format(response.url))
+            return
         
-        if response.url in Crawler.crawled_urls:
-            return Crawler.crawled_urls[response.url]
-        if (self.path, response.url) in Crawler.crawled_static_files:
+        if self.url in Crawler.crawled_urls:
+            return Crawler.crawled_urls[self.url]
+        if (self.path, self.url) in Crawler.crawled_static_files:
             return True
         
         if str.encode('The requested URL was rejected. Please consult with your administrator.') in response.content:
             logging.error(strings.crawler_download_fail.format(self.text, response.url))
             return False
         
+        if len(self.text) > 0 and static:
+            logging.info(strings.crawler_download_info.format(self.text))
+        
         if 'text/html' not in response.headers['content-type']:
             self.__download_files(response, static)
             Crawler.crawled_static_files[(self.path, response.url)] = True
             return True
-        
-        if len(self.text) > 0:
-            logging.info(strings.crawler_download_info.format(self.text))
         
         soup = BeautifulSoup(response.content, 'html.parser')
         Crawler.crawled_urls[response.url] = False

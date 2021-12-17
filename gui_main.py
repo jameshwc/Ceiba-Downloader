@@ -1,7 +1,6 @@
 # This Python file uses the following encoding: utf-8
 import os
 import sys
-from types import TracebackType
 from typing import Dict, List
 import logging
 import requests
@@ -41,20 +40,11 @@ class CeibaWorker(QObject):
 
     def download_courses(self):
         try:
-            if len(self.path) == 0:
-                raise FileNotFoundError
-            os.makedirs(self.path, exist_ok=True)
-        except FileNotFoundError:
-            logging.error('路徑錯誤！請檢查路徑是否空白與錯誤！')
+            self.ceiba.download_courses(self.path, self.cname_filter_list, self.modules_filter_list, self.progress)
+        except:
             self.failed.emit()
-     
-        for course in self.courses:
-            if course.cname in self.cname_filter_list:
-                logging.info(strings.course_download_info.format(course.cname))
-                course.download(
-                    self.path, self.session, self.modules_filter_list, self.progress)
-                logging.info(strings.course_finish_info.format(course.cname))
-        self.success.emit()
+        else:
+            self.success.emit()
         self.finished.emit()
 
     def set_download_param(self, courses: List[Course], path: str, session: requests.Session, cname_filter_list, modules_filter_list):
@@ -299,6 +289,7 @@ class MyApp(QMainWindow):
         QMessageBox.information(self, '下載完成！', '下載完成！', QMessageBox.Ok) # TODO: open directory
         self.download_button.setEnabled(True)
         self.progress_bar.reset()
+        
 
     def update_progressbar(self, add_value: int):
         self.progress_bar.setValue(self.progress_bar.value() + add_value)

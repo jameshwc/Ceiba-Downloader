@@ -6,6 +6,7 @@ import strings
 from course import Course
 from typing import List
 from exceptions import InvalidLoginParameters, InvalidCredentials
+from PySide6.QtCore import Signal
 
 class Ceiba():
     
@@ -84,9 +85,10 @@ class Ceiba():
         logging.info('取得課程完畢！')
         return self.courses
 
-    def download_courses(self, path: str, cname_filter_list=None, modules_filter=None):
+    def download_courses(self, path: str, cname_filter_list=None, modules_filter=None, progress: Signal = None):
         logging.info('開始下載課程...')
         try:
+            if len(path) == 0: raise FileNotFoundError
             os.makedirs(path, exist_ok=True)
         except FileNotFoundError:
             logging.error("路徑錯誤！請檢查路徑是否空白與錯誤！")
@@ -94,6 +96,6 @@ class Ceiba():
         for course in self.courses:
             if cname_filter_list is None or course.cname in cname_filter_list:
                 logging.info(strings.course_download_info.format(course.cname))
-                course.download(path, self.sess, modules_filter)
+                course.download(path, self.sess, modules_filter, progress)
                 logging.info(strings.course_finish_info.format(course.cname))
         logging.info('完成下載！')

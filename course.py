@@ -40,7 +40,6 @@ class Course():
             progress.emit(len(modules_filter_list) - len(modules))
         
         for module in modules:
-            logging.info(strings.course_module_download_info.format(self.cname, Course.cname_map[module]))
             self.__html_download(session, Course.cname_map[module], module)
             if progress:
                 progress.emit(1)
@@ -48,10 +47,6 @@ class Course():
     @util.progress_decorator()
     def __html_download(self, session: requests.Session, obj_cname: str, module: str):
         url = util.module_url + "?csn=" + self.course_sn + "&default_fun=" + module + "&current_lang=chinese" # TODO:language
-        resp = self.__get(session, url)
-        if any(x in resp.content.decode('utf-8') for x in ['此功能並未開啟', '目前無指派作業']):
-            logging.info(strings.cancel_on_object.format(self.cname, obj_cname, obj_cname))
-            return
 
         dir = os.path.join(self.path, module)
         os.makedirs(dir, exist_ok=True)
