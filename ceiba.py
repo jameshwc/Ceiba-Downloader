@@ -53,7 +53,8 @@ class Ceiba():
         
         # check if user credential is correct
         soup = util.beautify_soup(self.sess.get(util.courses_url).content)
-        progress.emit(1)
+        if progress:
+            progress.emit(1)
         self.student_name = soup.find("span", {"class": "user"}).text
         if self.student_name == "":
             raise InvalidCredentials
