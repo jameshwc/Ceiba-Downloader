@@ -122,7 +122,7 @@ class Ceiba():
         soup = BeautifulSoup(resp.content, 'html.parser')
         table = soup.find_all("table")[0]
         rows = table.find_all('tr')
-        valid_a_tag = {}
+        valid_a_tag = set()
 
         static_dirname = 'resources'
         static_path = os.path.join(self.path, static_dirname)
@@ -143,7 +143,7 @@ class Ceiba():
                 row['style'] = 'background: silver;'
                 continue
             course['href'] = "courses/" + self.course_dir_map[course.text] + '/index.html'
-            valid_a_tag[course] = True
+            valid_a_tag.add(course)
 
         for a in soup.find_all('a'):
             if a not in valid_a_tag:

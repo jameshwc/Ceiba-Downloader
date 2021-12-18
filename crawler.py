@@ -14,7 +14,7 @@ import util
 
 class Crawler():
 
-    crawled_urls = {}
+    crawled_urls = {}  # TODO: use set
     crawled_static_files = {}  # css/img: use path to avoid repetitive downloads.
     # TODO: we should move css/img to root folder instead of download them every time in each course
 
@@ -55,7 +55,7 @@ class Crawler():
         soup = BeautifulSoup(response.content, 'html.parser')
         Crawler.crawled_urls[response.url] = False
         
-        if is_table:
+        if is_table:  # TODO: deprecate this bool parameter
             os.makedirs(os.path.join(self.path, "files"), exist_ok=True)
         
         for css in soup.find_all('link'):
