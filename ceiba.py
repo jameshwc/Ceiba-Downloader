@@ -45,10 +45,10 @@ class Ceiba():
         payload = {'user': self.username, 'pass': self.password}
         # will get resp that redirect to /ChkSessLib.php
         resp = self.sess.post(resp.url, data=payload)
-        # idk why it needs to post twice
-        resp = self.sess.post(resp.url, data=payload)
         if '登入失敗' in resp.content.decode('utf-8'):
             raise InvalidCredentials
+        # idk why it needs to post twice
+        resp = self.sess.post(resp.url, data=payload)
         logging.info('登入 Ceiba 成功！')
 
     def login(self, progress: Signal = None):
