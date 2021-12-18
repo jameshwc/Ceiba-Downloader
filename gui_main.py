@@ -1,21 +1,25 @@
 # This Python file uses the following encoding: utf-8
+import logging
 import os
 import sys
 from typing import Dict, List
-import logging
+
 import requests
-from PySide6.QtWidgets import (
-    QBoxLayout, QHBoxLayout, QMainWindow, QCheckBox, QFileDialog, QProgressBar,
-    QPushButton, QVBoxLayout, QWidget, QGridLayout, QGroupBox, QLabel,
-    QLineEdit, QMessageBox, QLayout, QApplication, QTabWidget)
-from PySide6.QtCore import (QObject, Signal, QThread, Qt, QThreadPool, QRunnable)
+from PySide6.QtCore import QObject, QRunnable, Qt, QThread, QThreadPool, Signal
 from PySide6.QtGui import QFont, QIcon
-from exceptions import InvalidCredentials, InvalidLoginParameters
-from qt_custom_widget import PyToggle, PyLogOutput, PyCheckableComboBox
+from PySide6.QtWidgets import (QApplication, QBoxLayout, QCheckBox,
+                               QFileDialog, QGridLayout, QGroupBox,
+                               QHBoxLayout, QLabel, QLayout, QLineEdit,
+                               QMainWindow, QMessageBox, QProgressBar,
+                               QPushButton, QTabWidget, QVBoxLayout, QWidget)
+
+import strings
 from ceiba import Ceiba
 from course import Course
-import strings
-        
+from exceptions import InvalidCredentials, InvalidLoginParameters
+from qt_custom_widget import PyCheckableComboBox, PyLogOutput, PyToggle
+
+
 def exception_handler(type, value, tb):
     logging.getLogger().error("{}: {}".format(type.__name__, str(value)))
 
@@ -240,6 +244,7 @@ class MyApp(QMainWindow):
 
         filepath_label = QLabel('存放路徑：')
         self.filepath_line_edit = QLineEdit()
+        self.filepath_line_edit.setReadOnly(True)
         file_browse_button = QPushButton('瀏覽')
         file_browse_button.clicked.connect(self.get_save_directory)
 
@@ -277,7 +282,8 @@ class MyApp(QMainWindow):
         worker = Worker(self.ceiba.download_courses, path=self.filepath_line_edit.text(), 
                             cname_filter=cname_list, modules_filter=items)
         worker.signals.progress.connect(self.update_progressbar)
-        worker.signals.finished.connect(self.after_download_successfully)
+        worker.signals.success.connect(self.after_download_successfully)
+        worker.signals.finished.connect(self.after_download)
         self.thread_pool.start(worker)
         self.download_button.setDisabled(True)
 
@@ -285,12 +291,14 @@ class MyApp(QMainWindow):
         filepath = QFileDialog.getExistingDirectory(self)
         self.filepath_line_edit.setText(filepath)
 
-    def after_download_successfully(self):
+    def after_download(self):
         self.progress_bar.setValue(self.progress_bar.maximum())
-        QMessageBox.information(self, '下載完成！', '下載完成！', QMessageBox.Ok) # TODO: open directory
         self.download_button.setEnabled(True)
         self.progress_bar.setMaximum(1)
         self.progress_bar.reset()
+        
+    def after_download_successfully(self):
+        QMessageBox.information(self, '下載完成！', '下載完成！', QMessageBox.Ok) # TODO: open directory
 
     def update_progressbar(self, add_value: int):
         if add_value < 0:
