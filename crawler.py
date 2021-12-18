@@ -10,8 +10,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 import strings
-from util import get_valid_filename
-
+import util
 
 class Crawler():
 
@@ -23,24 +22,14 @@ class Crawler():
         self.session = session
         self.url = url
         self.path = path
-        self.filename = get_valid_filename(filename)
+        self.filename = util.get_valid_filename(filename)
         self.text = text
-
-    def get(self, url: str):
-        while True:
-            try:
-                response = self.session.get(url)
-            except (TimeoutError, ConnectionError, ConnectionResetError):
-                logging.error(strings.crawler_timeour_error)
-                time.sleep(5)
-                continue
-            return response
 
     def crawl(self, is_table=False, static=False) -> bool:
         '''
         Return True if the url is file, and return False if the url is html.
         '''
-        response = self.get(self.url)
+        response = util.get(self.session, self.url)
 
         if not static and not response.url.startswith('https://ceiba.ntu.edu.tw'):
             logging.warn(strings.skip_external_href.format(response.url))
@@ -100,7 +89,7 @@ class Crawler():
                 rows = caption.parent.find('tbody').find_all('tr')
                 for row in rows:
                     a_tag = row.find("p", {"class": "fname"}).find('a')
-                    dir_name = get_valid_filename(a_tag.text)
+                    dir_name = util.get_valid_filename(a_tag.text)
                     board_dir[a_tag.text] = os.path.join(self.path, dir_name)
                     os.makedirs(board_dir[a_tag.text], exist_ok=True)
                 is_board = True
@@ -113,7 +102,7 @@ class Crawler():
             if len(a.text) > 0 and not a['href'].startswith('mailto'):
                 if not a['href'].startswith('http') or a['href'].startswith('https://ceiba.ntu.edu.tw'):
                     url = urljoin(response.url, a.get('href'))
-                    filename = get_valid_filename(a.text)
+                    filename = util.get_valid_filename(a.text)
                     if not filename.endswith('.html') or not filename.endswith('.htm'):
                         filename += ".html"
                     if is_board and a.text in board_dir:
@@ -144,7 +133,7 @@ class Crawler():
                     resources_path = os.path.join(self.path, "resources")
                     os.makedirs(resources_path, exist_ok=True)
                     for res in resources:
-                        resp = self.get(urljoin(self.url, res))
+                        resp = util.get(self.session, urljoin(self.url, res))
                         res_filename = res.split('/')[-1]
                         with open(os.path.join(resources_path, res_filename), 'wb') as resource_file:
                             resource_file.write(resp.content)

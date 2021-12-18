@@ -36,7 +36,7 @@ class Course():
 
     def download(self, path: str, session: requests.Session, modules_filter_list: List[str] = None, progress: Signal = None):
         self.path = os.path.join(path, self.folder_name)
-        current_url = self.__get(session, self.href).url
+        current_url = util.get(session, self.href).url
         self.course_sn = re.search(r'course/([0-9a-f]*)+', current_url).group(0).removeprefix('course/')
         modules = self.homepage_download(session, '首頁', modules_filter_list)
         if progress:
@@ -68,7 +68,7 @@ class Course():
         return self.__download_button(session, button_url, 'button.html', modules_filter_list)
     
     def __download_homepage(self, session: requests.Session, url: str, filename: str = 'index.html'):
-        resp = self.__get(session, url)
+        resp = util.get(session, url)
         soup = BeautifulSoup(resp.content, 'html.parser')
         soup.find("frame", {"name": "topFrame"})['src'] = "banner.html"
         soup.find("frame", {"name": "leftFrame"})['src'] = "button.html"
@@ -78,7 +78,7 @@ class Course():
             file.write(str(soup))
 
     def __download_button(self, session: requests.Session, url: str, filename: str, modules_filter_list: List[str] = None) -> List[str]:
-        resp = self.__get(session, url)
+        resp = util.get(session, url)
         soup = BeautifulSoup(resp.content, 'html.parser')
         for css in soup.find_all('link'):
             url = urljoin(url, css.get('href'))
@@ -106,13 +106,3 @@ class Course():
         with open(os.path.join(self.path, filename), 'w', encoding='utf-8') as file:
             file.write(str(soup))
         return items
-
-    def __get(self, session: requests.Session, url: str) -> requests.Response:
-        while True:
-            try:
-                response = session.get(url)
-            except (TimeoutError, ConnectionResetError):
-                logging.error(strings.crawler_timeour_error)
-                time.sleep(5)
-                continue
-            return response
