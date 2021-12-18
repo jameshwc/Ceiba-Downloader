@@ -40,7 +40,9 @@ class Course():
         self.course_sn = re.search(r'course/([0-9a-f]*)+', current_url).group(0).removeprefix('course/')
         modules = self.homepage_download(session, '首頁', modules_filter_list)
         if progress:
-            progress.emit(len(modules_filter_list) - len(modules))
+            modules_not_in_this_module_num = len(modules_filter_list) - len(modules)
+            if modules_not_in_this_module_num > 0:
+                progress.emit(modules_not_in_this_module_num)
         
         for module in modules:
             self.__html_download(session, Course.cname_map[module], module)
@@ -53,7 +55,7 @@ class Course():
 
         dir = os.path.join(self.path, module)
         os.makedirs(dir, exist_ok=True)
-
+        
         c = Crawler(session, url, dir, module + '.html', "")
         c.crawl(is_table=True)
     

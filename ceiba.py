@@ -1,13 +1,16 @@
 import logging
 import os
 from typing import List
+from urllib.parse import urljoin
 
 import requests
+from bs4 import BeautifulSoup
 from PySide6.QtCore import Signal
 
 import strings
 import util
 from course import Course
+from crawler import Crawler
 from exceptions import (InvalidCredentials, InvalidFilePath,
                         InvalidLoginParameters)
 
@@ -29,6 +32,7 @@ class Ceiba():
         self.path = ""
         self.username = ""
         self.password = ""
+        self.course_dir_map = {}  # cname map to dir
 
         if cookie_PHPSESSID and cookie_user:
             self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
@@ -56,7 +60,7 @@ class Ceiba():
                 progress.emit(1)
 
         # check if user credential is correct
-        soup = util.beautify_soup(self.sess.get(util.courses_url).content)
+        soup = BeautifulSoup(self.sess.get(util.courses_url).content, 'html.parser')
         if progress:
             progress.emit(1)
         self.student_name = soup.find("span", {"class": "user"}).text
@@ -66,7 +70,10 @@ class Ceiba():
     def get_courses_list(self, progress: Signal = None):
 
         logging.info('正在取得課程...')
-        soup = util.beautify_soup(self.sess.get(util.courses_url).content)
+        soup = BeautifulSoup(self.sess.get(util.courses_url).content, 'html.parser')
+        for br in soup.find_all("br"):
+            br.replace_with("\n")
+
         # tables[1] is the courses not set up in ceiba
         table = soup.find_all("table")[0]
         rows = table.find_all('tr')
@@ -79,29 +86,73 @@ class Ceiba():
             if cname in util.skip_courses_list:
                 continue
             ename = name[1] if len(name) > 1 else ""
-            self.courses.append(
-                Course(
-                    semester=cols[0],
-                    course_num=cols[2],
-                    cname=cname,
-                    ename=ename,
-                    teacher=cols[5],
-                    href=href
-                ))
+            course = Course(semester=cols[0], course_num=cols[2], cname=cname,
+                            ename=ename, teacher=cols[5], href=href)
+            self.courses.append(course)
+            self.course_dir_map[cname] = course.folder_name
         logging.info('取得課程完畢！')
         return self.courses
 
     def download_courses(self, path: str, cname_filter=None, modules_filter=None, progress: Signal = None):
-        logging.info('開始下載課程...')
+
+        self.path = path
+        self.courses_dir = os.path.join(path, "courses")
+
         try:
             if len(path) == 0:
                 raise FileNotFoundError
-            os.makedirs(path, exist_ok=True)
+            os.makedirs(self.courses_dir, exist_ok=True)
         except FileNotFoundError:
             raise InvalidFilePath
+
+        logging.info('開始下載課程...')
         for course in self.courses:
             if cname_filter is None or course.cname in cname_filter:
                 logging.info(strings.course_download_info.format(course.cname))
-                course.download(path, self.sess, modules_filter, progress)
+                course.download(self.courses_dir, self.sess, modules_filter, progress)
                 logging.info(strings.course_finish_info.format(course.cname))
+        self.download_ceiba_homepage(cname_filter)
         logging.info('完成下載！')
+
+    def download_ceiba_homepage(self, cname_filter=None, progress: Signal = None):
+        logging.info('開始下載 Ceiba 首頁！')
+        if progress:
+            progress.emit(0)
+        resp = self.sess.get(util.courses_url)
+        soup = BeautifulSoup(resp.content, 'html.parser')
+        table = soup.find_all("table")[0]
+        rows = table.find_all('tr')
+        valid_a_tag = {}
+
+        static_dirname = 'resources'
+        static_path = os.path.join(self.path, static_dirname)
+        os.makedirs(static_path, exist_ok=True)
+        for css in soup.find_all('link'):
+            url = urljoin(resp.url, css.get('href'))
+            filename = url.split('/')[-1]
+            css['href'] = static_dirname + "/" + filename
+
+            c = Crawler(self.sess, url, static_path, filename, css['href'])
+            c.crawl(static=True)
+
+        for row in rows[1:]:
+            cols = row.find_all('td')
+            course = cols[4].find('a')
+            if course.text in util.skip_courses_list or (cname_filter is not None and course.text not in cname_filter):
+                course.replaceWithChildren()
+                row['style'] = 'background: silver;'
+                continue
+            course['href'] = "courses/" + self.course_dir_map[course.text] + '/index.html'
+            valid_a_tag[course] = True
+
+        for a in soup.find_all('a'):
+            if a not in valid_a_tag:
+                a.replaceWithChildren()
+
+        for op in soup.find_all('option'):
+            op.extract()
+
+        with open(os.path.join(self.path, 'index.html'), 'w', encoding='utf-8') as file:
+            file.write(str(soup))
+
+        logging.info('下載首頁完成！')

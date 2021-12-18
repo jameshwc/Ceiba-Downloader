@@ -31,14 +31,6 @@ def get_valid_filename(name: str):
     s = re.sub(r'(?u)[^-\w.]', '_', s)
     return s
 
-
-def beautify_soup(content: bytes):
-    soup = BeautifulSoup(content, 'html.parser')
-    for br in soup.find_all("br"):
-        br.replace_with("\n")
-    return soup
-
-
 def progress_decorator():
     def decorator(func):
         def wrap(self, *args):

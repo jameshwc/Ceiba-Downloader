@@ -42,7 +42,7 @@ class Worker(QRunnable):
         try:
             result = self.fn(*self.args, **self.kwargs)
         except Exception as e:
-            logging.error(e)
+            logging.error(e, exc_info=True)
             self.signals.failed.emit()
         else:
             self.signals.result.emit(result)
