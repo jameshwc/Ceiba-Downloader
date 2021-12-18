@@ -298,7 +298,21 @@ class MyApp(QMainWindow):
         self.progress_bar.reset()
         
     def after_download_successfully(self):
-        QMessageBox.information(self, '下載完成！', '下載完成！', QMessageBox.Ok) # TODO: open directory
+        def open_directory():
+            dir = self.filepath_line_edit.text()
+            if sys.platform == 'win32':
+                os.startfile(dir)
+            else:
+                opener = "open" if sys.platform == "darwin" else "xdg-open"  # TODO: Not test on Linux/Mac yet.
+                subprocess.call([opener, dir])
+        download_finish_msgbox = QMessageBox(self)
+        download_finish_msgbox.setWindowTitle('下載完成！')
+        download_finish_msgbox.setText('下載完成！')
+        download_finish_msgbox.addButton('打開檔案目錄', download_finish_msgbox.ActionRole)  # TODO: change button position?
+        download_finish_msgbox.addButton(QMessageBox.Ok)
+        act = download_finish_msgbox.exec()
+        if act != QMessageBox.Ok:
+            open_directory()
 
     def update_progressbar(self, add_value: int):
         if add_value < 0:
