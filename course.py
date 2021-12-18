@@ -1,15 +1,18 @@
-from PySide6.QtCore import Signal
-import requests
-import os
 import logging
-import util
-import strings
+import os
 import re
 import time
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
 from typing import List
+from urllib.parse import urljoin
+
+import requests
+from bs4 import BeautifulSoup
+from PySide6.QtCore import Signal
+
+import strings
+import util
 from crawler import Crawler
+
 
 class Course():
 

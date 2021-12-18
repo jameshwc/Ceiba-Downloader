@@ -1,13 +1,13 @@
 
-from ceiba import Ceiba
-from getpass import getpass
 import logging
 import sys
+from getpass import getpass
+
+from ceiba import Ceiba
 
 if __name__ == "__main__":
     ceiba = Ceiba(username=input('Please input username: '),
                   password=getpass('Please input password: '))
-    # ceiba.path = input('Please input desired backup path: ')
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     logging.getLogger().setLevel(logging.INFO)
     ceiba.login()

@@ -1,15 +1,19 @@
-import requests
 import logging
 import os
-import util
-import strings
-from course import Course
 from typing import List
-from exceptions import InvalidFilePath, InvalidLoginParameters, InvalidCredentials
+
+import requests
 from PySide6.QtCore import Signal
 
+import strings
+import util
+from course import Course
+from exceptions import (InvalidCredentials, InvalidFilePath,
+                        InvalidLoginParameters)
+
+
 class Ceiba():
-    
+
     def __init__(
             self,
             cookie_PHPSESSID=None,
@@ -19,7 +23,8 @@ class Ceiba():
 
         self.sess: requests.Session = requests.session()
         self.courses: List[Course] = []
-        self.sess.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0'})
+        self.sess.headers.update(
+            {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0'})
         self.student_name = ""
         self.path = ""
         self.username = ""
@@ -50,7 +55,7 @@ class Ceiba():
         if len(self.username) > 0 and len(self.password) > 0:
             self.login_user()
             progress.emit(1)
-        
+
         # check if user credential is correct
         soup = util.beautify_soup(self.sess.get(util.courses_url).content)
         if progress:
@@ -60,7 +65,7 @@ class Ceiba():
             raise InvalidCredentials
 
     def get_courses_list(self, progress: Signal = None):
-        
+
         logging.info('正在取得課程...')
         soup = util.beautify_soup(self.sess.get(util.courses_url).content)
         # tables[1] is the courses not set up in ceiba
@@ -90,7 +95,8 @@ class Ceiba():
     def download_courses(self, path: str, cname_filter=None, modules_filter=None, progress: Signal = None):
         logging.info('開始下載課程...')
         try:
-            if len(path) == 0: raise FileNotFoundError
+            if len(path) == 0:
+                raise FileNotFoundError
             os.makedirs(path, exist_ok=True)
         except FileNotFoundError:
             raise InvalidFilePath

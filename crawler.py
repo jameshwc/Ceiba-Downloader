@@ -1,14 +1,17 @@
+import logging
+import os
+import re
+import time
+from pathlib import Path
+from urllib.parse import urljoin
+
 import requests
 from bs4 import BeautifulSoup
-import os
-import logging
 from bs4.element import Tag
-from urllib.parse import urljoin
-from pathlib import Path
-from util import get_valid_filename
-import re
+
 import strings
-import time
+from util import get_valid_filename
+
 
 class Crawler():
 

@@ -4,24 +4,21 @@ import os
 import sys
 from typing import Dict, List
 
-import requests
-from PySide6.QtCore import QObject, QRunnable, Qt, QThread, QThreadPool, Signal
+from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal
 from PySide6.QtGui import QFont, QIcon
-from PySide6.QtWidgets import (QApplication, QBoxLayout, QCheckBox,
-                               QFileDialog, QGridLayout, QGroupBox,
-                               QHBoxLayout, QLabel, QLayout, QLineEdit,
-                               QMainWindow, QMessageBox, QProgressBar,
-                               QPushButton, QTabWidget, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QFileDialog,
+                               QGridLayout, QGroupBox, QHBoxLayout, QLabel,
+                               QLayout, QLineEdit, QMainWindow, QMessageBox,
+                               QProgressBar, QPushButton, QTabWidget, QWidget)
 
-import strings
 from ceiba import Ceiba
 from course import Course
-from exceptions import InvalidCredentials, InvalidLoginParameters
 from qt_custom_widget import PyCheckableComboBox, PyLogOutput, PyToggle
 
 
 def exception_handler(type, value, tb):
     logging.getLogger().error("{}: {}".format(type.__name__, str(value)))
+
 
 class CeibaSignals(QObject):
     finished = Signal()
@@ -29,6 +26,7 @@ class CeibaSignals(QObject):
     failed = Signal()
     progress = Signal(int)
     result = Signal(object)
+
 
 class Worker(QRunnable):
 
@@ -52,6 +50,7 @@ class Worker(QRunnable):
         finally:
             self.signals.finished.emit()
 
+
 class MyApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -64,7 +63,7 @@ class MyApp(QMainWindow):
         self.create_status_group_box()
         self.setCentralWidget(QWidget(self))
         self.thread_pool = QThreadPool()
-        
+
         main_layout = QGridLayout(self.centralWidget())
         user_layout = QGridLayout(self.centralWidget())
         user_layout.addWidget(self.login_group_box, 0, 0)
@@ -137,7 +136,7 @@ class MyApp(QMainWindow):
         self.log_output = PyLogOutput(self.status_group_box)
         self.log_output.setFormatter(logging.Formatter(
             '%(asctime)s - %(levelname)s - %(message)s', '%Y-%m-%d %H:%M:%S'))
-            
+
         logging.getLogger().addHandler(self.log_output)
         logging.getLogger().setLevel(logging.INFO)
         sys.excepthook = exception_handler
@@ -175,7 +174,7 @@ class MyApp(QMainWindow):
         self.login_button.setDisabled(True)
 
     def after_login_successfully(self):
-        
+
         self.update_progressbar(0)  # busy indicator
         for i in reversed(range(self.login_layout.count())):
             self.login_layout.itemAt(i).widget().setParent(None)
@@ -225,7 +224,8 @@ class MyApp(QMainWindow):
                     checkbox.setCheckState(Qt.Unchecked)
 
         check_all_courses_checkbox = QCheckBox('勾選全部')
-        check_all_courses_checkbox.stateChanged.connect(click_all_courses_checkbox)
+        check_all_courses_checkbox.stateChanged.connect(
+            click_all_courses_checkbox)
 
         self.download_item_combo_box = PyCheckableComboBox()
         self.download_item_combo_box.setPlaceholderText('<---點我展開--->')
@@ -234,7 +234,8 @@ class MyApp(QMainWindow):
         self.download_item_combo_box.setCurrentIndex(-1)
         download_item_label = QLabel('下載項目：')
         check_all_download_item_checkbox = QCheckBox('勾選全部下載項目')
-        check_all_download_item_checkbox.stateChanged.connect(self.download_item_combo_box.checkAll)
+        check_all_download_item_checkbox.stateChanged.connect(
+            self.download_item_combo_box.checkAll)
         download_item_layout = QHBoxLayout()
         download_item_layout.addWidget(download_item_label)
         download_item_layout.addWidget(self.download_item_combo_box)
@@ -249,11 +250,8 @@ class MyApp(QMainWindow):
         file_browse_button.clicked.connect(self.get_save_directory)
 
         options_and_download_layout.addWidget(check_all_courses_checkbox, 0, 0)
-        # options_and_download_layout.addWidget(download_item_label, 0, 1)
         options_and_download_layout.addWidget(download_item_group_box, 0, 1)
 
-        # options_and_download_layout.addWidget(
-        #     self.download_item_combo_box, 0, 2)
         options_and_download_layout.addWidget(filepath_label, 1, 0)
         options_and_download_layout.addWidget(self.filepath_line_edit, 1, 1)
         options_and_download_layout.addWidget(file_browse_button, 1, 2)
@@ -275,12 +273,11 @@ class MyApp(QMainWindow):
                         items.append(ename)
                         break
 
-        cname_list = [x.text()[1:]
-                      for x in self.courses_checkboxes if x.isChecked()]
+        cname_list = [x.text()[1:] for x in self.courses_checkboxes if x.isChecked()]
 
         self.progress_bar.setMaximum(len(cname_list) * len(items))
-        worker = Worker(self.ceiba.download_courses, path=self.filepath_line_edit.text(), 
-                            cname_filter=cname_list, modules_filter=items)
+        worker = Worker(self.ceiba.download_courses, path=self.filepath_line_edit.text(),
+                        cname_filter=cname_list, modules_filter=items)
         worker.signals.progress.connect(self.update_progressbar)
         worker.signals.success.connect(self.after_download_successfully)
         worker.signals.finished.connect(self.after_download)
@@ -296,19 +293,21 @@ class MyApp(QMainWindow):
         self.download_button.setEnabled(True)
         self.progress_bar.setMaximum(1)
         self.progress_bar.reset()
-        
+
     def after_download_successfully(self):
         def open_directory():
             dir = self.filepath_line_edit.text()
             if sys.platform == 'win32':
                 os.startfile(dir)
             else:
-                opener = "open" if sys.platform == "darwin" else "xdg-open"  # TODO: Not test on Linux/Mac yet.
+                # TODO: Not test on Linux/Mac yet.
+                opener = "open" if sys.platform == "darwin" else "xdg-open"
                 subprocess.call([opener, dir])
         download_finish_msgbox = QMessageBox(self)
         download_finish_msgbox.setWindowTitle('下載完成！')
-        download_finish_msgbox.setText('下載完成！')
-        download_finish_msgbox.addButton('打開檔案目錄', download_finish_msgbox.ActionRole)  # TODO: change button position?
+        download_finish_msgbox.setText('下載完成！')  # TODO: change button position?
+        download_finish_msgbox.addButton(
+            '打開檔案目錄', download_finish_msgbox.ActionRole)
         download_finish_msgbox.addButton(QMessageBox.Ok)
         act = download_finish_msgbox.exec()
         if act != QMessageBox.Ok:
@@ -316,7 +315,8 @@ class MyApp(QMainWindow):
 
     def update_progressbar(self, add_value: int):
         if add_value < 0:
-            self.progress_bar.setMaximum(self.progress_bar.maximum() + (add_value * -1))
+            self.progress_bar.setMaximum(
+                self.progress_bar.maximum() + (add_value * -1))
         elif add_value == 0:  # magic number
             self.progress_bar.setValue(0)
             self.progress_bar.setMaximum(0)
@@ -326,8 +326,9 @@ class MyApp(QMainWindow):
         else:
             self.progress_bar.setValue(self.progress_bar.value() + add_value)
 
+
 if __name__ == "__main__":
-    
+
     app = QApplication([])
 
     widget = MyApp()

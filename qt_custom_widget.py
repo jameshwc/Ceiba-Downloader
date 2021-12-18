@@ -1,17 +1,20 @@
-from PySide6.QtCore import QEasingCurve, Qt, QPropertyAnimation, Property, QPoint, QRect, QObject, Signal, QMutex
-from PySide6.QtGui import QPainter, QFont, QColor
-from PySide6.QtWidgets import QCheckBox, QPlainTextEdit, QComboBox
 import logging
 from functools import cached_property
+
+from PySide6.QtCore import (Property, QEasingCurve, QObject, QPoint,
+                            QPropertyAnimation, QRect, Qt, Signal)
+from PySide6.QtGui import QColor, QFont, QPainter
+from PySide6.QtWidgets import QCheckBox, QComboBox, QPlainTextEdit
+
 
 class PyToggle(QCheckBox):
     def __init__(
         self,
-        width = 50,
-        bg_color = "#777", 
-        circle_color = "#DDD",
-        active_color = "#00BCFF",
-        animation_curve = QEasingCurve.OutBounce
+        width=50,
+        bg_color="#777",
+        circle_color="#DDD",
+        active_color="#00BCFF",
+        animation_curve=QEasingCurve.OutBounce
     ):
         QCheckBox.__init__(self)
         self.setFixedSize(width, 28)
@@ -45,7 +48,7 @@ class PyToggle(QCheckBox):
         else:
             self.animation.setEndValue(4)
         self.animation.start()
-    
+
     def hitButton(self, pos: QPoint):
         return self.contentsRect().contains(pos)
 
@@ -58,23 +61,25 @@ class PyToggle(QCheckBox):
         p.setPen(Qt.NoPen)
 
         # DRAW RECT
-        rect = QRect(0, 0, self.width(), self.height())        
+        rect = QRect(0, 0, self.width(), self.height())
 
         if not self.isChecked():
             p.setBrush(QColor(self._bg_color))
-            p.drawRoundedRect(0,0,rect.width(), 28, 14, 14)
+            p.drawRoundedRect(0, 0, rect.width(), 28, 14, 14)
             p.setBrush(QColor(self._circle_color))
             p.drawEllipse(self._position, 3, 22, 22)
         else:
             p.setBrush(QColor(self._active_color))
-            p.drawRoundedRect(0,0,rect.width(), 28, 14, 14)
+            p.drawRoundedRect(0, 0, rect.width(), 28, 14, 14)
             p.setBrush(QColor(self._circle_color))
             p.drawEllipse(self._position, 3, 22, 22)
 
         p.end()
 
+
 class PyQtSignal(QObject):
     log = Signal(str)
+
 
 class PyLogOutput(logging.Handler):
 
@@ -86,8 +91,8 @@ class PyLogOutput(logging.Handler):
 
     @cached_property
     def signal(self):
-        return PyQtSignal() 
-    
+        return PyQtSignal()
+
     def emit(self, record: logging.LogRecord):
         msg = self.format(record)
         # if color:
@@ -95,7 +100,7 @@ class PyLogOutput(logging.Handler):
         # self.widget.appendPlainText(msg)
         self.signal.log.emit(msg)
 
-    
+
 class PyCheckableComboBox(QComboBox):
     # once there is a checkState set, it is rendered
     # here we assume default Unchecked
@@ -108,7 +113,7 @@ class PyCheckableComboBox(QComboBox):
     def itemChecked(self, index):
         item = self.model().item(index, 0)
         return item.checkState() == Qt.Checked
-    
+
     def checkAll(self):
         for i in range(self.count()):
             item: QCheckBox = self.model().item(i, 0)
