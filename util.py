@@ -1,11 +1,16 @@
 import logging
 import re
-# from pathlib import Path
+import time
 
+import requests
 # import appdirs
 from bs4 import BeautifulSoup
 
 import strings
+
+# from pathlib import Path
+
+
 
 home_url = 'https://ceiba.ntu.edu.tw'
 login_url = 'https://ceiba.ntu.edu.tw/ChkSessLib.php'
@@ -43,3 +48,13 @@ def progress_decorator():
             return ret
         return wrap
     return decorator
+
+def get(session: requests.Session, url: str):
+    while True:
+        try:
+            response = session.get(url)
+        except (TimeoutError, ConnectionResetError):
+            logging.error(strings.crawler_timeour_error)
+            time.sleep(5)
+            continue
+        return response
