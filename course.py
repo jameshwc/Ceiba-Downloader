@@ -114,14 +114,7 @@ class Course():
                           modules_filter_list: List[str] = None) -> List[str]:
         resp = util.get(session, url)
         soup = BeautifulSoup(resp.content, 'html.parser')
-        for css in soup.find_all('link'):
-            url = urljoin(url, css.get('href'))
-            css_filename = url.split('/')[-1]
-            css['href'] = "static/" + css_filename
-            static_dir = os.path.join(self.path, 'static')
-            os.makedirs(static_dir, exist_ok=True)
-            Crawler(session, url, static_dir, css_filename,
-                    css['href']).crawl_css_and_resources()
+        Crawler(session, url, self.path).download_css(soup.find_all('link'))
 
         nav_co = soup.find("div", {"id": "nav_co"})
         items = []

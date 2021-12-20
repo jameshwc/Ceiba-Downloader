@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
+from bs4.element import ResultSet
 
 import strings
 from exceptions import NotFound
@@ -24,7 +25,7 @@ class Crawler():
                  session: requests.Session,
                  url: str,
                  path: str,
-                 filename: str,
+                 filename: str = "",
                  text: str = ""):
         self.session = session
         self.url = url
@@ -73,16 +74,7 @@ class Crawler():
         soup = BeautifulSoup(response.content, 'html.parser')
         Crawler.crawled_urls[response.url] = False
 
-        for css in soup.find_all('link'):
-            url = urljoin(self.url, css.get('href'))
-            if url.startswith('http') and 'ceiba' not in url:
-                continue  # skip downloading external css
-            filename = url.split('/')[-1]
-            css['href'] = "static/" + filename
-            static_dir = os.path.join(self.path, 'static')
-            os.makedirs(static_dir, exist_ok=True)
-            Crawler(self.session, url, static_dir, filename,
-                    css['href']).crawl_css_and_resources()
+        self.download_css(soup.find_all('link'))
 
         for img in soup.find_all('img'):
             url = urljoin(self.url, img.get('src'))
@@ -182,3 +174,15 @@ class Crawler():
                     bytes('url(' + res, encoding='utf-8'),
                     bytes('url(resources/' + res_filename, encoding='utf-8'))
         path.write_bytes(new_content)
+    
+    def download_css(self, links: ResultSet):
+        for css in links:
+            url = urljoin(self.url, css.get('href'))
+            if url.startswith('http') and 'ceiba' not in url:
+                continue  # skip downloading external css
+            filename = url.split('/')[-1]
+            css['href'] = 'static/' + filename
+            static_dir = os.path.join(self.path, 'static')
+            os.makedirs(static_dir, exist_ok=True)
+            Crawler(self.session, url, static_dir, filename,
+                    css['href']).crawl_css_and_resources()

@@ -142,17 +142,7 @@ class Ceiba():
         rows = table.find_all('tr')
         valid_a_tag = set()
 
-        static_dirname = 'static'
-        static_path = os.path.join(self.path, static_dirname)
-        os.makedirs(static_path, exist_ok=True)
-        for css in soup.find_all('link'):
-            url = urljoin(resp.url, css.get('href'))
-            if url.startswith('http') and 'ceiba' not in url:
-                continue  # skip downloading external css
-            filename = url.split('/')[-1]
-            css['href'] = static_dirname + "/" + filename
-            Crawler(self.sess, url, static_path, filename,
-                    css['href']).crawl_css_and_resources()
+        Crawler(self.sess, resp.url, self.path).download_css(soup.find_all('link'))
 
         for row in rows[1:]:
             cols = row.find_all('td')
