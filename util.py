@@ -51,6 +51,7 @@ def get(session: requests.Session, url: str):
             response = session.get(url)
         # except (TimeoutError, ConnectionResetError):
         except Exception as e:
+            print(type(e))
             if type(e) == TimeoutError or type(e) == ConnectionResetError:
                 logging.error(strings.crawler_timeour_error)
             else:

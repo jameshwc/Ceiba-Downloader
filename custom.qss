@@ -17,19 +17,3 @@ QGroupBox[class="no-padding"] {{
     padding-top: 0px;
     padding-right: 0px;
 }}
-QLabel {{
-    padding: 0px;
-    padding-right: 0px;
-}}
-/* 
-PyCheckableComboBox {{
-    padding-left: 0px;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}}
-
-QComboBox {{
-    padding-left: 0px;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-}} */
