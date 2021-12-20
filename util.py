@@ -10,8 +10,6 @@ import strings
 
 # from pathlib import Path
 
-
-
 home_url = 'https://ceiba.ntu.edu.tw'
 login_url = 'https://ceiba.ntu.edu.tw/ChkSessLib.php'
 module_url = 'https://ceiba.ntu.edu.tw/modules/main.php'
@@ -31,22 +29,33 @@ def get_valid_filename(name: str):
     s = re.sub(r'(?u)[^-\w.]', '_', s)
     return s
 
+
 def progress_decorator():
     def decorator(func):
         def wrap(self, *args):
-            logging.info(strings.object_download_info.format(self.cname, args[1]))
+            logging.info(
+                strings.object_download_info.format(self.cname, args[1]))
             ret = func(self, *args)
-            logging.info(strings.object_finish_info.format(self.cname, args[1]))
+            logging.info(strings.object_finish_info.format(
+                self.cname, args[1]))
             return ret
+
         return wrap
+
     return decorator
+
 
 def get(session: requests.Session, url: str):
     while True:
         try:
             response = session.get(url)
-        except (TimeoutError, ConnectionResetError):
-            logging.error(strings.crawler_timeour_error)
+        # except (TimeoutError, ConnectionResetError):
+        except Exception as e:
+            if type(e) == TimeoutError or type(e) == ConnectionResetError:
+                logging.error(strings.crawler_timeour_error)
+            else:
+                logging.error(e)
+                logging.info('五秒後重新連線...')
             time.sleep(5)
             continue
         return response

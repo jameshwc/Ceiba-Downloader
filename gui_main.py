@@ -29,7 +29,6 @@ class CeibaSignals(QObject):
 
 
 class Worker(QRunnable):
-
     def __init__(self, fn, *args, **kwargs):
         super(Worker, self).__init__()
         self.fn = fn
@@ -42,7 +41,8 @@ class Worker(QRunnable):
         try:
             result = self.fn(*self.args, **self.kwargs)
         except Exception as e:
-            logging.error(e, exc_info=True)
+            logging.error(e)
+            logging.debug(e, exc_info=True)
             self.signals.failed.emit()
         else:
             self.signals.result.emit(result)
@@ -134,8 +134,9 @@ class MyApp(QMainWindow):
         self.progress_bar.setValue(0)
 
         self.log_output = PyLogOutput(self.status_group_box)
-        self.log_output.setFormatter(logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s', '%Y-%m-%d %H:%M:%S'))
+        self.log_output.setFormatter(
+            logging.Formatter('%(asctime)s - %(levelname)s - %(message)s',
+                              '%Y-%m-%d %H:%M:%S'))
 
         logging.getLogger().addHandler(self.log_output)
         logging.getLogger().setLevel(logging.INFO)
@@ -148,8 +149,8 @@ class MyApp(QMainWindow):
     def login(self):
 
         if self.method_toggle.isChecked():
-            self.ceiba = Ceiba(cookie_user=self.username_edit.text(
-            ), cookie_PHPSESSID=self.password_edit.text())
+            self.ceiba = Ceiba(cookie_user=self.username_edit.text(),
+                               cookie_PHPSESSID=self.password_edit.text())
             self.progress_bar.setMaximum(1)
         else:
             self.ceiba = Ceiba(username=self.username_edit.text(),
@@ -158,11 +159,12 @@ class MyApp(QMainWindow):
 
         def fail_handler():
             if self.method_toggle.isChecked():
-                QMessageBox.critical(
-                    self, '登入失敗！', '登入失敗！請檢查 Cookies 有沒有輸入正確！', QMessageBox.Retry)
+                QMessageBox.critical(self, '登入失敗！',
+                                     '登入失敗！請檢查 Cookies 有沒有輸入正確！',
+                                     QMessageBox.Retry)
             else:
-                QMessageBox.critical(
-                    self, '登入失敗！', '登入失敗！請檢查帳號（學號）與密碼輸入是否正確！', QMessageBox.Retry)
+                QMessageBox.critical(self, '登入失敗！', '登入失敗！請檢查帳號（學號）與密碼輸入是否正確！',
+                                     QMessageBox.Retry)
             self.login_button.setEnabled(True)
             self.password_edit.clear()
 
@@ -230,7 +232,12 @@ class MyApp(QMainWindow):
         self.download_item_combo_box = PyCheckableComboBox()
         self.download_item_combo_box.setPlaceholderText('<---點我展開--->')
         for item_name in Course.cname_map.values():
-            self.download_item_combo_box.addItem(item_name)
+            if item_name == '課程資訊':
+                self.download_item_combo_box.addItem(item_name,
+                                                     state=Qt.Checked,
+                                                     enabled=False)
+            else:
+                self.download_item_combo_box.addItem(item_name)
         self.download_item_combo_box.setCurrentIndex(-1)
         download_item_label = QLabel('下載項目：')
         check_all_download_item_checkbox = QCheckBox('勾選全部下載項目')
@@ -267,17 +274,22 @@ class MyApp(QMainWindow):
         items = []
         for i in range(self.download_item_combo_box.count()):
             if self.download_item_combo_box.itemChecked(i):
-                module_cname = self.download_item_combo_box.model().item(i, 0).text()
+                module_cname = self.download_item_combo_box.model().item(
+                    i, 0).text()
                 for ename, cname in Course.cname_map.items():
                     if cname == module_cname:
                         items.append(ename)
                         break
 
-        cname_list = [x.text()[1:] for x in self.courses_checkboxes if x.isChecked()]
+        cname_list = [
+            x.text()[1:] for x in self.courses_checkboxes if x.isChecked()
+        ]
 
         self.progress_bar.setMaximum(len(cname_list) * len(items))
-        worker = Worker(self.ceiba.download_courses, path=self.filepath_line_edit.text(),
-                        cname_filter=cname_list, modules_filter=items)
+        worker = Worker(self.ceiba.download_courses,
+                        path=self.filepath_line_edit.text(),
+                        cname_filter=cname_list,
+                        modules_filter=items)
         worker.signals.progress.connect(self.update_progressbar)
         worker.signals.success.connect(self.after_download_successfully)
         worker.signals.finished.connect(self.after_download)
@@ -303,11 +315,13 @@ class MyApp(QMainWindow):
                 # TODO: Not test on Linux/Mac yet.
                 opener = "open" if sys.platform == "darwin" else "xdg-open"
                 subprocess.call([opener, dir])
+
         download_finish_msgbox = QMessageBox(self)
         download_finish_msgbox.setWindowTitle('下載完成！')
-        download_finish_msgbox.setText('下載完成！')  # TODO: change button position?
-        download_finish_msgbox.addButton(
-            '打開檔案目錄', download_finish_msgbox.ActionRole)
+        download_finish_msgbox.setText(
+            '下載完成！')  # TODO: change button position?
+        download_finish_msgbox.addButton('打開檔案目錄',
+                                         download_finish_msgbox.ActionRole)
         download_finish_msgbox.addButton(QMessageBox.Ok)
         act = download_finish_msgbox.exec()
         if act != QMessageBox.Ok:
@@ -315,8 +329,8 @@ class MyApp(QMainWindow):
 
     def update_progressbar(self, add_value: int):
         if add_value < 0:
-            self.progress_bar.setMaximum(
-                self.progress_bar.maximum() + (add_value * -1))
+            self.progress_bar.setMaximum(self.progress_bar.maximum() +
+                                         (add_value * -1))
         elif add_value == 0:  # magic number
             self.progress_bar.setValue(0)
             self.progress_bar.setMaximum(0)
