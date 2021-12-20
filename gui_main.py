@@ -5,16 +5,16 @@ import sys
 from typing import Dict, List
 
 from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal
-from PySide6.QtGui import QFont, QIcon
+from PySide6.QtGui import QFont, QFontDatabase, QIcon, QPalette, QColor
 from PySide6.QtWidgets import (QApplication, QCheckBox, QFileDialog,
                                QGridLayout, QGroupBox, QHBoxLayout, QLabel,
                                QLayout, QLineEdit, QMainWindow, QMessageBox,
-                               QProgressBar, QPushButton, QTabWidget, QWidget)
+                               QProgressBar, QPushButton, QScrollArea, QSizePolicy, QTabWidget, QVBoxLayout, QWidget)
 
 from ceiba import Ceiba
 from course import Course
 from qt_custom_widget import PyCheckableComboBox, PyLogOutput, PyToggle
-
+from qt_material import apply_stylesheet
 
 def exception_handler(type, value, tb):
     logging.getLogger().error("{}: {}".format(type.__name__, str(value)))
@@ -54,36 +54,44 @@ class Worker(QRunnable):
 class MyApp(QMainWindow):
     def __init__(self):
         super().__init__()
-
         self.setWindowTitle("Ceiba Downloader by Jameshwc")
         self.setWindowIcon(QIcon('ceiba.ico'))
 
         self.create_login_group_box()
         self.create_courses_group_box()
+        self.create_options_and_download_groupbox()
         self.create_status_group_box()
+        
+        self.courses_group_box.setHidden(True)
+        self.options_and_download_groupbox.setHidden(True)
         self.setCentralWidget(QWidget(self))
         self.thread_pool = QThreadPool()
 
-        main_layout = QGridLayout(self.centralWidget())
-        user_layout = QGridLayout(self.centralWidget())
-        user_layout.addWidget(self.login_group_box, 0, 0)
-        user_layout.addWidget(self.courses_group_box, 1, 0)
-        user_layout.setRowStretch(0, 1)
-        user_layout.setRowStretch(1, 4)
-        user_groupbox = QGroupBox()
-        user_groupbox.setLayout(user_layout)
-        main_layout.addWidget(user_groupbox, 0, 0)
-        main_layout.addWidget(self.status_group_box, 0, 1)
-        main_layout.setColumnStretch(0, 1)
-        main_layout.setColumnStretch(1, 1)
+        self.main_layout = QGridLayout(self.centralWidget())
+        self.user_layout = QGridLayout()
+        self.user_layout.addWidget(self.login_group_box, 0, 0)
+        self.user_layout.addWidget(self.courses_group_box, 1, 0)
+        self.user_layout.addWidget(self.options_and_download_groupbox, 2, 0)
+        self.user_layout.setRowStretch(0, 1)
+        self.user_layout.setRowStretch(1, 4)
+        self.user_layout.setRowStretch(2, 1)
+        self.user_groupbox = QGroupBox()
+        self.user_groupbox.setLayout(self.user_layout)
+        self.main_layout.addWidget(self.user_groupbox, 0, 0)
+        self.main_layout.addWidget(self.status_group_box, 0, 1)
+        self.main_layout.setColumnStretch(0, 1)
+        self.main_layout.setColumnStretch(1, 1)
 
     def create_login_group_box(self):
         self.login_group_box = QGroupBox("使用者")
 
         username_label = QLabel('帳號 (學號):')
+        username_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         self.username_edit = QLineEdit('')
 
         password_label = QLabel('密碼 :')
+        password_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+
         self.password_edit = QLineEdit('')
         self.password_edit.setEchoMode(QLineEdit.Password)
 
@@ -177,6 +185,7 @@ class MyApp(QMainWindow):
 
     def after_login_successfully(self):
 
+        self.courses_group_box.setHidden(False)
         self.update_progressbar(0)  # busy indicator
         for i in reversed(range(self.login_layout.count())):
             self.login_layout.itemAt(i).widget().setParent(None)
@@ -195,6 +204,18 @@ class MyApp(QMainWindow):
     def fill_course_group_box(self, courses: List[Course]):
         self.courses_group_box.setDisabled(False)
 
+        courses_main_layout = QVBoxLayout()
+        courses_by_semester_layouts: Dict[str, QLayout] = {}
+        self.courses_checkboxes: List[QCheckBox] = []
+
+        for course in courses:
+            if course.semester not in courses_by_semester_layouts:
+                layout = QVBoxLayout()
+                courses_by_semester_layouts[course.semester] = layout
+            checkbox = QCheckBox("&" + course.cname)
+            self.courses_checkboxes.append(checkbox)
+            courses_by_semester_layouts[course.semester].addWidget(checkbox)
+        
         courses_main_layout = QGridLayout()
         courses_by_semester_layouts: Dict[str, QLayout] = {}
         self.courses_checkboxes: List[QCheckBox] = []
@@ -206,17 +227,16 @@ class MyApp(QMainWindow):
             checkbox = QCheckBox("&" + course.cname)
             self.courses_checkboxes.append(checkbox)
             courses_by_semester_layouts[course.semester].addWidget(checkbox)
-
+        
         tabWidget = QTabWidget()
         for semester in courses_by_semester_layouts:
-            semester_widget = QWidget()
-            semester_widget.setLayout(courses_by_semester_layouts[semester])
+            semester_widget = QScrollArea()
+            semester_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+            semester_widget.setWidgetResizable(True)
+            temp_widget = QWidget()
+            semester_widget.setWidget(temp_widget)
+            temp_widget.setLayout(courses_by_semester_layouts[semester])
             tabWidget.addTab(semester_widget, "&" + semester)
-
-        options_and_download_groupbox = QGroupBox()
-        options_and_download_layout = QGridLayout()
-        self.download_button = QPushButton('下載')
-        self.download_button.clicked.connect(self.download)
 
         def click_all_courses_checkbox(state):
             for checkbox in self.courses_checkboxes:
@@ -225,9 +245,20 @@ class MyApp(QMainWindow):
                 elif state == Qt.Unchecked:
                     checkbox.setCheckState(Qt.Unchecked)
 
-        check_all_courses_checkbox = QCheckBox('勾選全部')
+        check_all_courses_checkbox = QCheckBox('勾選全部課程')
         check_all_courses_checkbox.stateChanged.connect(
             click_all_courses_checkbox)
+        
+        courses_main_layout.addWidget(tabWidget, 0, 0)
+        courses_main_layout.addWidget(check_all_courses_checkbox, 1, 0)
+        self.courses_group_box.setLayout(courses_main_layout)
+        self.options_and_download_groupbox.setHidden(False)
+
+    def create_options_and_download_groupbox(self):
+        self.options_and_download_groupbox = QGroupBox()
+        options_and_download_layout = QGridLayout()
+        self.download_button = QPushButton('下載')
+        self.download_button.clicked.connect(self.download)
 
         self.download_item_combo_box = PyCheckableComboBox()
         self.download_item_combo_box.setPlaceholderText('<---點我展開--->')
@@ -240,6 +271,7 @@ class MyApp(QMainWindow):
                 self.download_item_combo_box.addItem(item_name)
         self.download_item_combo_box.setCurrentIndex(-1)
         download_item_label = QLabel('下載項目：')
+        download_item_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         check_all_download_item_checkbox = QCheckBox('勾選全部下載項目')
         check_all_download_item_checkbox.stateChanged.connect(
             self.download_item_combo_box.checkAll)
@@ -247,6 +279,8 @@ class MyApp(QMainWindow):
         download_item_layout.addWidget(download_item_label)
         download_item_layout.addWidget(self.download_item_combo_box)
         download_item_layout.addWidget(check_all_download_item_checkbox)
+        download_item_layout.setContentsMargins(0, 0, 0, 0)
+        download_item_layout.setSpacing(0)
         download_item_group_box = QGroupBox()
         download_item_group_box.setLayout(download_item_layout)
 
@@ -255,20 +289,22 @@ class MyApp(QMainWindow):
         self.filepath_line_edit.setReadOnly(True)
         file_browse_button = QPushButton('瀏覽')
         file_browse_button.clicked.connect(self.get_save_directory)
-
-        options_and_download_layout.addWidget(check_all_courses_checkbox, 0, 0)
-        options_and_download_layout.addWidget(download_item_group_box, 0, 1)
-
-        options_and_download_layout.addWidget(filepath_label, 1, 0)
-        options_and_download_layout.addWidget(self.filepath_line_edit, 1, 1)
-        options_and_download_layout.addWidget(file_browse_button, 1, 2)
+        
+        file_groupbox_layout = QHBoxLayout()
+        file_groupbox_layout.addWidget(filepath_label)
+        file_groupbox_layout.addWidget(self.filepath_line_edit)
+        file_groupbox_layout.addWidget(file_browse_button)
+        file_groupbox = QGroupBox()
+        file_groupbox.setLayout(file_groupbox_layout)
+        
+        download_item_group_box.setProperty("class", "no-padding")
+        options_and_download_layout.addWidget(download_item_group_box, 0, 0)
+        file_groupbox.setProperty("class", "no-padding")
+        options_and_download_layout.addWidget(file_groupbox, 1, 0)
         options_and_download_layout.addWidget(self.download_button, 2, 0)
-        options_and_download_groupbox.setLayout(options_and_download_layout)
-
-        courses_main_layout.addWidget(tabWidget, 0, 0)
-        courses_main_layout.addWidget(options_and_download_groupbox, 1, 0)
-
-        self.courses_group_box.setLayout(courses_main_layout)
+        
+        self.options_and_download_groupbox.setProperty("class", "no-padding")
+        self.options_and_download_groupbox.setLayout(options_and_download_layout)
 
     def download(self):
         items = []
@@ -307,7 +343,6 @@ class MyApp(QMainWindow):
         self.progress_bar.reset()
 
     def after_download_successfully(self):
-
         def open_path(path):
             if sys.platform == 'win32':
                 os.startfile(path)
@@ -322,15 +357,17 @@ class MyApp(QMainWindow):
         download_finish_msgbox.setText('下載完成！')
         download_finish_msgbox.addButton('打開檔案目錄',
                                          download_finish_msgbox.YesRole)
-        download_finish_msgbox.addButton('打開 Ceiba 網頁', download_finish_msgbox.ActionRole)
+        download_finish_msgbox.addButton('打開 Ceiba 網頁',
+                                         download_finish_msgbox.ActionRole)
         # download_finish_msgbox.addButton(QMessageBox.Ok)
         download_finish_msgbox.exec()
-        role = download_finish_msgbox.buttonRole(download_finish_msgbox.clickedButton())
+        role = download_finish_msgbox.buttonRole(
+            download_finish_msgbox.clickedButton())
         if role == download_finish_msgbox.ActionRole:  # open index.html
-            open_path(os.path.join(self.filepath_line_edit.text(), 'index.html'))
+            open_path(
+                os.path.join(self.filepath_line_edit.text(), 'index.html'))
         elif role == download_finish_msgbox.YesRole:  # open dir
             open_path(self.filepath_line_edit.text())
-
 
     def update_progressbar(self, add_value: int):
         if add_value < 0:
@@ -350,8 +387,16 @@ if __name__ == "__main__":
 
     app = QApplication([])
 
-    widget = MyApp()
-    widget.resize(1200, 600)
-    widget.show()
+    window = MyApp()
+    font_id = QFontDatabase.addApplicationFont('GenSenRounded-M.ttc')
+    font_name = QFontDatabase.applicationFontFamilies(font_id)[0]
+    apply_stylesheet(window,
+                     theme='dark_lightgreen.xml',
+                     extra={'font_family': font_name})
+    stylesheet = window.styleSheet()
+    with open('custom.qss') as file:
+        window.setStyleSheet(stylesheet + file.read().format(**os.environ))
+    window.showMaximized()
+    window.show()
 
     sys.exit(app.exec())

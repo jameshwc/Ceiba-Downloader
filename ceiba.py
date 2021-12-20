@@ -139,7 +139,8 @@ class Ceiba():
         resp = self.sess.get(util.courses_url)
         soup = BeautifulSoup(resp.content, 'html.parser')
 
-        Crawler(self.sess, resp.url, self.path).download_css(soup.find_all('link'))
+        Crawler(self.sess, resp.url,
+                self.path).download_css(soup.find_all('link'))
 
         rows = soup.find_all("table")[0].find_all('tr')
         valid_a_tag = set()
