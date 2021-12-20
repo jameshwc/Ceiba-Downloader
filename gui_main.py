@@ -307,25 +307,30 @@ class MyApp(QMainWindow):
         self.progress_bar.reset()
 
     def after_download_successfully(self):
-        def open_directory():
-            dir = self.filepath_line_edit.text()
+
+        def open_path(path):
             if sys.platform == 'win32':
-                os.startfile(dir)
+                os.startfile(path)
             else:
                 # TODO: Not test on Linux/Mac yet.
                 opener = "open" if sys.platform == "darwin" else "xdg-open"
+                import subprocess
                 subprocess.call([opener, dir])
 
         download_finish_msgbox = QMessageBox(self)
         download_finish_msgbox.setWindowTitle('下載完成！')
-        download_finish_msgbox.setText(
-            '下載完成！')  # TODO: change button position?
+        download_finish_msgbox.setText('下載完成！')
         download_finish_msgbox.addButton('打開檔案目錄',
-                                         download_finish_msgbox.ActionRole)
-        download_finish_msgbox.addButton(QMessageBox.Ok)
-        act = download_finish_msgbox.exec()
-        if act != QMessageBox.Ok:
-            open_directory()
+                                         download_finish_msgbox.YesRole)
+        download_finish_msgbox.addButton('打開 Ceiba 網頁', download_finish_msgbox.ActionRole)
+        # download_finish_msgbox.addButton(QMessageBox.Ok)
+        download_finish_msgbox.exec()
+        role = download_finish_msgbox.buttonRole(download_finish_msgbox.clickedButton())
+        if role == download_finish_msgbox.ActionRole:  # open index.html
+            open_path(os.path.join(self.filepath_line_edit.text(), 'index.html'))
+        elif role == download_finish_msgbox.YesRole:  # open dir
+            open_path(self.filepath_line_edit.text())
+
 
     def update_progressbar(self, add_value: int):
         if add_value < 0:

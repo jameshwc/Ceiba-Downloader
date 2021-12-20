@@ -64,9 +64,9 @@ class Crawler():
                 'content-type']:  # files (e.g. pdf, docs)
             if self.filename.endswith('.html'):
                 self.filename = self.filename.removesuffix('.html')
-            dir = os.path.join(os.path.join(self.path, "files"))
-            os.makedirs(dir, exist_ok=True)
-            path = Path(os.path.join(dir, self.filename))
+            files_dir = os.path.join(os.path.join(self.path, "files"))
+            os.makedirs(files_dir, exist_ok=True)
+            path = Path(os.path.join(files_dir, self.filename))
             path.write_bytes(response.content)
             Crawler.crawled_static_files[(self.path, response.url)] = True
             return True

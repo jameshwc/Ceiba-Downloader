@@ -72,12 +72,10 @@ class Course():
                         module: str):
         url = util.module_url + "?csn=" + self.course_sn + "&default_fun=" + module + "&current_lang=chinese"  # TODO:language
 
-        dir = os.path.join(self.path, module)
-        os.makedirs(dir, exist_ok=True)
+        module_dir = os.path.join(self.path, module)
+        os.makedirs(module_dir, exist_ok=True)
 
-        c = Crawler(session, url, dir, module + '.html', "")
-        os.makedirs(os.path.join(dir, "files"), exist_ok=True)
-        c.crawl()
+        Crawler(session, url, module_dir, module + '.html', "").crawl()
 
     @util.progress_decorator()
     def homepage_download(self,
