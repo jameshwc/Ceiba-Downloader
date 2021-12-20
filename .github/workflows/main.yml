@@ -41,16 +41,34 @@ jobs:
         run: pip3 install pyinstaller
 
       - name: Package Application
-        run: pyinstaller -w -F gui_main.py --icon ceiba.ico -n ceiba-downloader
-      
-      # - name: Create Self Extracting Archive
-      #   run: 7z a ceiba-downloader.exe -mmt -mx5 -sfx dist/ceiba-downloader
+        run: pyinstaller -w -F gui_main.py --icon ceiba.ico -n ceiba-downloader-${{ matrix.os }}
 
-      - name: Upload Release Asset
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ceiba-downloader-${{ matrix.os }}
+          path: dist/*
+          retention-days: 1
+  
+  release:
+    name: "Prelease"
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # We don't need the repo, grab all artifacts from the build stage
+      # The plugin puts each artifact in a folder of `artifactname`
+      - uses: actions/download-artifact@v2
+      - name: Display fetched artifacts
+        run: ls -R
+      
+      - name: Emit a Github Release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "latest"
           prerelease: true
-          title: "Ceiba Downloader"
-          files: dist/*
+          title: "Development Build"
+          files: |
+            ceiba-downloader-windows-latest/*
+            ceiba-downloader-macos-latest/*
+            ceiba-downloader-ubuntu-latest/*
