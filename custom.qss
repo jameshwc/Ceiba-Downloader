@@ -1,0 +1,35 @@
+
+QLabel, QCheckBox, QLineEdit, QPushButton, QGroupBox {{
+    font-size: 14px;
+}}
+
+QPlainTextEdit {{
+    font-size: 16px;
+}}
+
+QGroupBox {{
+    spacing: 0px;
+    /* padding: 15px; */
+
+}}
+QGroupBox[class="no-padding"] {{
+    padding: 0px;
+    padding-top: 0px;
+    padding-right: 0px;
+}}
+QLabel {{
+    padding: 0px;
+    padding-right: 0px;
+}}
+/* 
+PyCheckableComboBox {{
+    padding-left: 0px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}}
+
+QComboBox {{
+    padding-left: 0px;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}} */

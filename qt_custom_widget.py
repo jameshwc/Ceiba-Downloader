@@ -4,7 +4,7 @@ from functools import cached_property
 from PySide6.QtCore import (Property, QEasingCurve, QObject, QPoint,
                             QPropertyAnimation, QRect, Qt, Signal)
 from PySide6.QtGui import QColor, QFont, QPainter
-from PySide6.QtWidgets import QCheckBox, QComboBox, QPlainTextEdit
+from PySide6.QtWidgets import QCheckBox, QComboBox, QPlainTextEdit, QStyleOption, QStyle
 
 
 class PyToggle(QCheckBox):
@@ -144,3 +144,11 @@ class PyCheckableComboBox(QComboBox):
                 item.setCheckState(Qt.Checked)
             else:
                 item.setCheckState(Qt.Unchecked)
+    
+    # def paintEvent(self, e):
+    #     super().paintEvent(e)
+    #     opt = QStyleOption()
+    #     opt.initFrom(self)
+    #     p = QPainter(self)
+    #     s = self.style()
+    #     s.drawPrimitive(QStyle.PE_Widget, opt, p, self)
