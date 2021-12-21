@@ -21,13 +21,15 @@ a = Analysis(['gui_main.py'],
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 
+import sys
+platform = sys.platform if sys.platform != 'darwin' else 'mac'
 exe = EXE(pyz,
           a.scripts,
           a.binaries,
           a.zipfiles,
           a.datas,
           [],
-          name='ceiba-downloader',
+          name='ceiba-downloader-'+platform,
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
