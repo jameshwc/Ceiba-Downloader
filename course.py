@@ -63,7 +63,12 @@ class Course():
                 progress.emit(modules_not_in_this_module_num)
 
         for module in modules:
-            self.__html_download(session, Course.cname_map[module], module)
+            try:
+                self.__html_download(session, Course.cname_map[module], module)
+            except Exception as e:
+                logging.error(e)
+                logging.debug(e, exc_info=True)
+                logging.warning(strings.error_skip_and_continue_download.format(self.cname, module))
             if progress:
                 progress.emit(1)
 

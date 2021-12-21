@@ -2,6 +2,7 @@
 import logging
 import os
 import sys
+from pathlib import Path
 from typing import Dict, List
 
 from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal
@@ -55,10 +56,10 @@ class MyApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Ceiba Downloader by Jameshwc")
-        icon_path = 'ceiba.ico'
+        icon_path = Path('ceiba.ico')
         if hasattr(sys, '_MEIPASS'):
-            icon_path = os.path.join(sys._MEIPASS, icon_path)
-        self.setWindowIcon(QIcon(icon_path))
+            icon_path = sys._MEIPASS / icon_path
+        self.setWindowIcon(QIcon(str(icon_path)))
 
         self.create_login_group_box()
         self.create_courses_group_box()
