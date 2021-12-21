@@ -55,7 +55,10 @@ class MyApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Ceiba Downloader by Jameshwc")
-        self.setWindowIcon(QIcon('ceiba.ico'))
+        icon_path = 'ceiba.ico'
+        if hasattr(sys, '_MEIPASS'):
+            icon_path = os.path.join(sys._MEIPASS, icon_path)
+        self.setWindowIcon(QIcon(icon_path))
 
         self.create_login_group_box()
         self.create_courses_group_box()
