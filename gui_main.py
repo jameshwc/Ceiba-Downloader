@@ -387,13 +387,24 @@ if __name__ == "__main__":
     app = QApplication([])
 
     window = MyApp()
-    font_id = QFontDatabase.addApplicationFont('GenSenRounded-M.ttc')
+    extra = {}
+    custom_qss_path = 'custom.qss'
+    font_path = 'GenSenRounded-M.ttc'
+    
+    # for pyinstaller single-file executables. 
+    # src: https://helloworldbookblog.com/distributing-python-programs-part-2-the-harder-stuff/
+    if hasattr(sys, '_MEIPASS'):
+        custom_qss_path = os.path.join(sys._MEIPASS, custom_qss_path)
+        font_path = os.path.join(sys._MEIPASS, font_path)
+    
+    font_id = QFontDatabase.addApplicationFont(font_path)
     font_name = QFontDatabase.applicationFontFamilies(font_id)[0]
+    extra = {'font_family': font_name}
     apply_stylesheet(window,
                      theme='dark_lightgreen.xml',
-                     extra={'font_family': font_name})
+                     extra=extra)
     stylesheet = window.styleSheet()
-    with open('custom.qss') as file:
+    with open(custom_qss_path) as file:
         window.setStyleSheet(stylesheet + file.read().format(**os.environ))
     window.showMaximized()
     window.show()

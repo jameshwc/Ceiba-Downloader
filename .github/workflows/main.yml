@@ -41,7 +41,7 @@ jobs:
         run: pip3 install pyinstaller
 
       - name: Package Application
-        run: pyinstaller -w -F gui_main.py --icon ceiba.ico -n ceiba-downloader-${{ matrix.os }}
+        run: pyinstaller ceiba-downloader.spec
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
