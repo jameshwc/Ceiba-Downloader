@@ -102,6 +102,11 @@ class PyLogOutput(logging.Handler):
 class PyCheckableComboBox(QComboBox):
     # once there is a checkState set, it is rendered
     # here we assume default Unchecked
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.all_checked = False
+
     def addItem(self, item, state=Qt.Unchecked, enabled=True):
         super(PyCheckableComboBox, self).addItem(item)
         item: QCheckBox = self.model().item(self.count() - 1, 0)
@@ -114,13 +119,14 @@ class PyCheckableComboBox(QComboBox):
         return item.checkState() == Qt.Checked
 
     def checkAll(self):
+        self.all_checked = False if self.all_checked else True
         for i in range(self.count()):
             item: QCheckBox = self.model().item(i, 0)
             if item.isEnabled() == False:
                 continue
-            if item.checkState() != Qt.Checked:
+            if self.all_checked and item.checkState() != Qt.Checked:
                 item.setCheckState(Qt.Checked)
-            else:
+            elif self.all_checked is False and item.checkState() == Qt.Checked:
                 item.setCheckState(Qt.Unchecked)
     
     # def paintEvent(self, e):
