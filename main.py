@@ -13,6 +13,6 @@ if __name__ == "__main__":
     ceiba.login()
     ceiba.get_courses_list()
     ceiba.download_courses('D:\\備份\\ceiba',
-                           cname_filter_list=['宗教、博物館與數位轉譯'],
+                           cname_filter=['宗教、博物館與數位轉譯'],
                            modules_filter=['board', 'bulletin', 'info', 'teacher']
                            )

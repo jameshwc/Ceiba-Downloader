@@ -152,8 +152,8 @@ class MyApp(QMainWindow):
             logging.Formatter('%(asctime)s - %(levelname)s - %(message)s',
                               '%Y-%m-%d %H:%M:%S'))
         logging.getLogger().addHandler(self.log_output)
-        # logging.getLogger().setLevel(logging.INFO)
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.INFO)
+        # logging.getLogger().setLevel(logging.DEBUG)
         sys.excepthook = exception_handler
 
         self.status_layout.addWidget(self.log_output.widget)
