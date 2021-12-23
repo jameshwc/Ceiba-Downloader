@@ -92,10 +92,14 @@ class PyLogOutput(logging.Handler):
 
     def emit(self, record: logging.LogRecord):
         msg = self.format(record)
+        color = 'white'
         if record.levelno == logging.ERROR:
-            msg = '<span style="color:red;">' + msg + "</span>"
+            color = 'red'
         elif record.levelno == logging.WARNING:
-            msg = '<span style="color:orange;">' + msg + '</span>'
+            color = 'orange'
+        elif record.levelno == logging.DEBUG:
+            color = 'gray'
+        msg = '<span style="color:' + color + ';">' + msg + "</span>"
         self.signal.log.emit(msg)
 
 
