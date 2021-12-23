@@ -3,7 +3,7 @@ import logging
 import sys
 from getpass import getpass
 
-from ceiba import Ceiba
+from ceiba.ceiba import Ceiba
 
 if __name__ == "__main__":
     ceiba = Ceiba(username=input('Please input username: '),

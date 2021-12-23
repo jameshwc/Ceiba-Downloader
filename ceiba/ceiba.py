@@ -1,17 +1,17 @@
 import logging
 import os
-from typing import List
+from typing import List, Union
 from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
 from PySide6.QtCore import Signal
+from pathlib import Path
 
-import strings
-import util
-from course import Course
-from crawler import Crawler
-from exceptions import (InvalidCredentials, InvalidFilePath,
+from . import strings, util
+from .course import Course
+from .crawler import Crawler
+from .exceptions import (InvalidCredentials, InvalidFilePath,
                         InvalidLoginParameters)
 
 
@@ -103,18 +103,18 @@ class Ceiba():
         return self.courses
 
     def download_courses(self,
-                         path: str,
+                         path: Union[Path, str],
                          cname_filter=None,
                          modules_filter=None,
                          progress: Signal = None):
 
-        self.path = path
-        self.courses_dir = os.path.join(path, "courses")
+        self.path = Path(path) if type(path) == str else path
+        self.courses_dir = self.path / "courses"
 
         try:
             if len(path) == 0:
                 raise FileNotFoundError
-            os.makedirs(self.courses_dir, exist_ok=True)
+            self.courses_dir.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
             raise InvalidFilePath
 
@@ -122,8 +122,7 @@ class Ceiba():
         for course in self.courses:
             if cname_filter is None or course.cname in cname_filter:
                 logging.info(strings.course_download_info.format(course.cname))
-                os.makedirs(os.path.join(self.courses_dir, course.folder_name),
-                            exist_ok=True)
+                self.courses_dir.joinpath(course.folder_name).mkdir(exist_ok=True)
                 course.download(self.courses_dir, self.sess, modules_filter,
                                 progress)
                 logging.info(strings.course_finish_info.format(course.cname))
@@ -164,8 +163,6 @@ class Ceiba():
         for op in soup.find_all('option'):
             op.extract()
 
-        with open(os.path.join(self.path, 'index.html'), 'w',
-                  encoding='utf-8') as file:
-            file.write(str(soup))
+        self.path.joinpath('index.html').write_text(str(soup), encoding='utf-8')
 
         logging.info('下載首頁完成！')

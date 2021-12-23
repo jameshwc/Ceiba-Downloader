@@ -12,13 +12,15 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QFileDialog,
                                QLayout, QLineEdit, QMainWindow, QMessageBox,
                                QProgressBar, QPushButton, QScrollArea, QSizePolicy, QTabWidget, QVBoxLayout, QWidget)
 
-from ceiba import Ceiba
-from course import Course
+from ceiba.ceiba import Ceiba
+from ceiba import util
+from ceiba.course import Course
+from ceiba.exceptions import InvalidCredentials, InvalidLoginParameters
 from qt_custom_widget import PyCheckableComboBox, PyLogOutput, PyToggle
 from qt_material import apply_stylesheet
 
 def exception_handler(type, value, tb):
-    logging.getLogger().error("{}: {}".format(type.__name__, str(value)))
+    logging.getLogger().error("{}: {}\n{}".format(type.__name__, str(value), tb.tb_frame.f_code.co_filename))
 
 
 class CeibaSignals(QObject):
@@ -56,7 +58,7 @@ class MyApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Ceiba Downloader by Jameshwc")
-        icon_path = Path('ceiba.ico')
+        icon_path = Path('resources/ceiba.ico')
         if hasattr(sys, '_MEIPASS'):
             icon_path = sys._MEIPASS / icon_path
         self.setWindowIcon(QIcon(str(icon_path)))
@@ -150,7 +152,8 @@ class MyApp(QMainWindow):
             logging.Formatter('%(asctime)s - %(levelname)s - %(message)s',
                               '%Y-%m-%d %H:%M:%S'))
         logging.getLogger().addHandler(self.log_output)
-        logging.getLogger().setLevel(logging.INFO)
+        # logging.getLogger().setLevel(logging.INFO)
+        logging.getLogger().setLevel(logging.DEBUG)
         sys.excepthook = exception_handler
 
         self.status_layout.addWidget(self.log_output.widget)
@@ -159,14 +162,18 @@ class MyApp(QMainWindow):
 
     def login(self):
 
-        if self.method_toggle.isChecked():
-            self.ceiba = Ceiba(cookie_user=self.username_edit.text(),
-                               cookie_PHPSESSID=self.password_edit.text())
-            self.progress_bar.setMaximum(1)
-        else:
-            self.ceiba = Ceiba(username=self.username_edit.text(),
-                               password=self.password_edit.text())
-            self.progress_bar.setMaximum(2)
+        try:
+            if self.method_toggle.isChecked():
+                self.ceiba = Ceiba(cookie_user=self.username_edit.text(),
+                                cookie_PHPSESSID=self.password_edit.text())
+                self.progress_bar.setMaximum(1)
+            else:
+                self.ceiba = Ceiba(username=self.username_edit.text(),
+                                password=self.password_edit.text())
+                self.progress_bar.setMaximum(2)
+        except InvalidLoginParameters as e:
+            logging.error(e)
+            return
 
         def fail_handler():
             if self.method_toggle.isChecked():
@@ -265,7 +272,7 @@ class MyApp(QMainWindow):
 
         self.download_item_combo_box = PyCheckableComboBox()
         self.download_item_combo_box.setPlaceholderText('<---點我展開--->')
-        for item_name in Course.cname_map.values():
+        for item_name in util.cname_map.values():
             if item_name == '課程資訊':
                 self.download_item_combo_box.addItem(item_name,
                                                      state=Qt.Checked,
@@ -315,7 +322,7 @@ class MyApp(QMainWindow):
             if self.download_item_combo_box.itemChecked(i):
                 module_cname = self.download_item_combo_box.model().item(
                     i, 0).text()
-                for ename, cname in Course.cname_map.items():
+                for ename, cname in util.cname_map.items():
                     if cname == module_cname:
                         items.append(ename)
                         break
@@ -353,7 +360,7 @@ class MyApp(QMainWindow):
                 # TODO: Not test on Linux/Mac yet.
                 opener = "open" if sys.platform == "darwin" else "xdg-open"
                 import subprocess
-                subprocess.call([opener, dir])
+                subprocess.call([opener, path])
 
         download_finish_msgbox = QMessageBox(self)
         download_finish_msgbox.setWindowTitle('下載完成！')
@@ -367,10 +374,9 @@ class MyApp(QMainWindow):
         role = download_finish_msgbox.buttonRole(
             download_finish_msgbox.clickedButton())
         if role == download_finish_msgbox.ActionRole:  # open index.html
-            open_path(
-                os.path.join(self.filepath_line_edit.text(), 'index.html'))
+            open_path(Path(self.filepath_line_edit.text(), 'index.html'))
         elif role == download_finish_msgbox.YesRole:  # open dir
-            open_path(self.filepath_line_edit.text())
+            open_path(Path(self.filepath_line_edit.text()))
 
     def update_progressbar(self, add_value: int):
         if add_value < 0:
@@ -392,24 +398,23 @@ if __name__ == "__main__":
 
     window = MyApp()
     extra = {}
-    custom_qss_path = 'custom.qss'
-    font_path = 'GenSenRounded-M.ttc'
+    custom_qss_path = Path('resources/custom.qss')
+    font_path = Path('resources/GenSenRounded-M.ttc')
     
     # for pyinstaller single-file executables. 
     # src: https://helloworldbookblog.com/distributing-python-programs-part-2-the-harder-stuff/
     if hasattr(sys, '_MEIPASS'):
-        custom_qss_path = os.path.join(sys._MEIPASS, custom_qss_path)
-        font_path = os.path.join(sys._MEIPASS, font_path)
-    
-    font_id = QFontDatabase.addApplicationFont(font_path)
+        custom_qss_path = sys._MEIPASS / custom_qss_path
+        font_path = sys._MEIPASS / font_path
+
+    font_id = QFontDatabase.addApplicationFont(str(font_path))
     font_name = QFontDatabase.applicationFontFamilies(font_id)[0]
     extra = {'font_family': font_name}
     apply_stylesheet(window,
                      theme='dark_lightgreen.xml',
                      extra=extra)
     stylesheet = window.styleSheet()
-    with open(custom_qss_path) as file:
-        window.setStyleSheet(stylesheet + file.read().format(**os.environ))
+    window.setStyleSheet(stylesheet + custom_qss_path.read_text().format(**os.environ))
     window.showMaximized()
     window.show()
 

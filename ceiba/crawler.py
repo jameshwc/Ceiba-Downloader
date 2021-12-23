@@ -3,14 +3,14 @@ import os
 import re
 from pathlib import Path
 from urllib.parse import urljoin
+from typing import Dict
 
 import requests
 from bs4 import BeautifulSoup
 from bs4.element import ResultSet
 
-import strings
-from exceptions import NotFound
-import util
+from . import strings, util
+from .exceptions import NotFound
 
 
 class Crawler():
@@ -24,7 +24,7 @@ class Crawler():
     def __init__(self,
                  session: requests.Session,
                  url: str,
-                 path: str,
+                 path: Path,
                  filename: str = "",
                  text: str = ""):
         self.session = session
@@ -64,10 +64,9 @@ class Crawler():
                 'content-type']:  # files (e.g. pdf, docs)
             if self.filename.endswith('.html'):
                 self.filename = self.filename.removesuffix('.html')
-            files_dir = os.path.join(os.path.join(self.path, "files"))
-            os.makedirs(files_dir, exist_ok=True)
-            path = Path(os.path.join(files_dir, self.filename))
-            path.write_bytes(response.content)
+            files_dir = self.path / "files"
+            files_dir.mkdir(parents=True, exist_ok=True)
+            files_dir.joinpath(self.filename).write_bytes(response.content)
             Crawler.crawled_static_files[(self.path, response.url)] = True
             return True
 
@@ -80,7 +79,7 @@ class Crawler():
             url = urljoin(self.url, img.get('src'))
             img['src'] = url.split('/')[-1]
             img_response = util.get(self.session, url)
-            path = Path(os.path.join(self.path, img['src']))
+            path = self.path / img['src']
             if path.exists():  # TODO: check if filename exists
                 pass
             path.write_bytes(img_response.content)
@@ -100,7 +99,7 @@ class Crawler():
 
         # special case for board
         is_board = False
-        board_dir = {}
+        board_dir: Dict[str, Path] = {}
         for caption in soup.find_all('caption'):
             caption_text: str = caption.get_text()
             if caption_text.startswith('看板列表'):
@@ -108,8 +107,8 @@ class Crawler():
                 for row in rows:
                     a_tag = row.find("p", {"class": "fname"}).find('a')
                     dir_name = util.get_valid_filename(a_tag.text)
-                    board_dir[a_tag.text] = os.path.join(self.path, dir_name)
-                    os.makedirs(board_dir[a_tag.text], exist_ok=True)
+                    board_dir[a_tag.text] = self.path / dir_name
+                    board_dir[a_tag.text].mkdir(parents=True, exist_ok=True)
                 is_board = True
                 break
 
@@ -126,9 +125,8 @@ class Crawler():
                     if not filename.endswith('.html'):
                         filename += ".html"
                     if is_board and a.text in board_dir:
-                        a['href'] = os.path.join(board_dir[a.text], filename)
-                        os.makedirs(os.path.join(board_dir[a.text], "files"),
-                                    exist_ok=True)
+                        a['href'] = board_dir[a.text] / filename
+                        board_dir[a.text].joinpath("files").mkdir(exist_ok=True)
                         is_file = Crawler(self.session, url, board_dir[a.text],
                                           filename, a.text).crawl()
                     else:
@@ -143,33 +141,25 @@ class Crawler():
                             continue
                         a['href'] = filename
                     if is_file:  # TODO: avoid duplicate filenames?
-                        a['href'] = os.path.join(
-                            "files",
-                            filename.removesuffix('.htm').removesuffix(
-                                '.html'))
+                        a['href'] = "files/" + filename.removesuffix('.htm').removesuffix('.html')
 
-        with open(os.path.join(self.path, self.filename),
-                  'w',
-                  encoding='utf-8') as html:
-            html.write(str(soup))
+        self.path.joinpath(self.filename).write_text(str(soup), encoding='utf-8')
         return False
 
     def crawl_css_and_resources(self):
         response = util.get(self.session, self.url)
-        path = Path(os.path.join(self.path, self.filename))
+        path = self.path / self.filename
         if path.exists():  # TODO: check if filename exists
             pass
         new_content = response.content
         resources = re.findall(r'url\((.*?)\)', str(response.content))
         if len(resources) > 0:
-            resources_path = os.path.join(self.path, "resources")
-            os.makedirs(resources_path, exist_ok=True)
+            resources_path = self.path / "resources"
+            resources_path.mkdir(exist_ok=True)
             for res in resources:
                 resp = util.get(self.session, urljoin(self.url, res))
                 res_filename = res.split('/')[-1]
-                with open(os.path.join(resources_path, res_filename),
-                          'wb') as resource_file:
-                    resource_file.write(resp.content)
+                resources_path.joinpath(res_filename).write_bytes(resp.content)
                 new_content = new_content.replace(
                     bytes('url(' + res, encoding='utf-8'),
                     bytes('url(resources/' + res_filename, encoding='utf-8'))
@@ -182,7 +172,7 @@ class Crawler():
                 continue  # skip downloading external css
             filename = url.split('/')[-1]
             css['href'] = 'static/' + filename
-            static_dir = os.path.join(self.path, 'static')
-            os.makedirs(static_dir, exist_ok=True)
+            static_dir = self.path / 'static'
+            static_dir.mkdir(exist_ok=True)
             Crawler(self.session, url, static_dir, filename,
                     css['href']).crawl_css_and_resources()

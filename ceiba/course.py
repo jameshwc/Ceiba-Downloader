@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-import time
+from pathlib import Path
 from typing import List
 from urllib.parse import urljoin
 
@@ -9,26 +9,11 @@ import requests
 from bs4 import BeautifulSoup
 from PySide6.QtCore import Signal
 
-import strings
-import util
-from crawler import Crawler
+from . import strings, util
+from .crawler import Crawler
 
 
 class Course():
-
-    cname_map = {
-        'bulletin': '公佈欄',
-        'syllabus': '課程大綱',
-        'hw': '作業',
-        'info': '課程資訊',
-        'personal': '教師資訊',
-        'grade': '學習成績',
-        'board': '討論看板',
-        'calendar': '課程行事曆',
-        'share': '資源分享',
-        'vote': '投票區',
-        'student': '修課學生'
-    }
 
     def __init__(self, semester, course_num, cname, ename, teacher, href):
         self.semester = semester
@@ -45,12 +30,13 @@ class Course():
         return " ".join([self.cname, self.teacher, self.href])
 
     def download(self,
-                 path: str,
+                 path: Path,
                  session: requests.Session,
                  modules_filter_list: List[str] = None,
                  progress: Signal = None):
-        self.path = os.path.join(path, self.folder_name)
-        os.makedirs(self.path, exist_ok=True)
+        self.path = path / self.folder_name
+        self.path.mkdir(exist_ok=True)
+        
         current_url = util.get(session, self.href).url
         self.course_sn = re.search(
             r'course/([0-9a-f]*)+',
@@ -64,7 +50,7 @@ class Course():
 
         for module in modules:
             try:
-                self.__html_download(session, Course.cname_map[module], module)
+                self.__html_download(session, util.cname_map[module], module)
             except Exception as e:
                 logging.error(e)
                 logging.debug(e, exc_info=True)
@@ -77,8 +63,8 @@ class Course():
                         module: str):
         url = util.module_url + "?csn=" + self.course_sn + "&default_fun=" + module + "&current_lang=chinese"  # TODO:language
 
-        module_dir = os.path.join(self.path, module)
-        os.makedirs(module_dir, exist_ok=True)
+        module_dir = self.path / module
+        module_dir.mkdir(exist_ok=True)
 
         Crawler(session, url, module_dir, module + '.html', "").crawl()
 
@@ -106,9 +92,7 @@ class Course():
         soup.find("frame", {"name": "leftFrame"})['src'] = "button.html"
         soup.find("frame", {"name": "mainFrame"})['src'] = "info/info.html"
         # TODO: footer.php
-        with open(os.path.join(self.path, filename), 'w',
-                  encoding='utf-8') as file:
-            file.write(str(soup))
+        self.path.joinpath(filename).write_text(str(soup), encoding='utf-8')
 
     def __download_button(self,
                           session: requests.Session,
@@ -138,7 +122,5 @@ class Course():
                     continue
             a['onclick'] = "parent.parent.mainFrame.location='" + item + "/" + item + ".html'"
             items.append(item)
-        with open(os.path.join(self.path, filename), 'w',
-                  encoding='utf-8') as file:
-            file.write(str(soup))
+        self.path.joinpath(filename).write_text(str(soup), encoding='utf-8')
         return items
