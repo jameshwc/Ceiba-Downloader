@@ -7,9 +7,9 @@ block_cipher = None
 a = Analysis(['gui_main.py'],
              pathex=[],
              binaries=[],
-             datas=[('custom.qss', '.'),
-                    ('GenSenRounded-M.ttc', '.'),
-                    ('ceiba.ico', '.')],
+             datas=[('resources/custom.qss', '.'),
+                    ('resources/GenSenRounded-M.ttc', '.'),
+                    ('resources/ceiba.ico', '.')],
              hiddenimports=[],
              hookspath=[],
              hooksconfig={},
@@ -41,4 +41,4 @@ exe = EXE(pyz,
           disable_windowed_traceback=False,
           target_arch=None,
           codesign_identity=None,
-          entitlements_file=None , icon='ceiba.ico')
+          entitlements_file=None , icon='resources/ceiba.ico')
