@@ -47,13 +47,10 @@ class Ceiba():
         logging.info('正在嘗試登入 Ceiba...')
         resp = util.get(self.sess, util.login_url)
         payload = {'user': self.username, 'pass': self.password}
-        resp = self.sess.post(
-            resp.url,
-            data=payload)  # will get resp that redirect to /ChkSessLib.php
+        resp = util.post(self.sess, resp.url, data=payload)  # will get resp that redirect to /ChkSessLib.php
         if '登入失敗' in resp.content.decode('utf-8'):
             raise InvalidCredentials
-        resp = self.sess.post(resp.url,
-                              data=payload)  # idk why it needs to post twice
+        resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice
         logging.info('登入 Ceiba 成功！')
 
     def login(self, progress: Signal = None):
@@ -63,8 +60,7 @@ class Ceiba():
                 progress.emit(1)
 
         # check if user credential is correct
-        soup = BeautifulSoup(
-            self.sess.get(util.courses_url).content, 'html.parser')
+        soup = BeautifulSoup(util.get(self.sess, util.courses_url).content, 'html.parser')
         if progress:
             progress.emit(1)
         self.student_name = soup.find("span", {"class": "user"}).text

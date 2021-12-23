@@ -61,13 +61,13 @@ def progress_decorator():
 def get(session: requests.Session, url: str):
     return loop_connect(session.get, url)
 
-def head(session: requests.Session, url: str):
-    return loop_connect(session.head, url)
+def post(session: requests.Session, url: str, data=None):
+    return loop_connect(session.post, url, data=data)
 
-def loop_connect(http_method_func, url):
+def loop_connect(http_method_func, url, **kwargs):
     while True:
         try:
-            response = http_method_func(url)
+            response = http_method_func(url, **kwargs)
         # except (TimeoutError, ConnectionResetError):
         except Exception as e:
             if type(e) == TimeoutError or type(e) == ConnectionResetError:
