@@ -44,8 +44,8 @@ class Ceiba():
             raise InvalidLoginParameters
 
     def login_user(self):
-        resp = self.sess.get(util.login_url)
         logging.info('正在嘗試登入 Ceiba...')
+        resp = util.get(self.sess, util.login_url)
         payload = {'user': self.username, 'pass': self.password}
         resp = self.sess.post(
             resp.url,
@@ -75,7 +75,7 @@ class Ceiba():
 
         logging.info('正在取得課程...')
         soup = BeautifulSoup(
-            self.sess.get(util.courses_url).content, 'html.parser')
+            util.get(self.sess, util.courses_url).content, 'html.parser')
         for br in soup.find_all("br"):
             br.replace_with("\n")
 
@@ -135,7 +135,7 @@ class Ceiba():
         logging.info('開始下載 Ceiba 首頁！')
         if progress:
             progress.emit(0)
-        resp = self.sess.get(util.courses_url)
+        resp = util.get(self.sess, util.courses_url)
         soup = BeautifulSoup(resp.content, 'html.parser')
 
         Crawler(self.sess, resp.url,

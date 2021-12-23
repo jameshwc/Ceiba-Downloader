@@ -3,7 +3,7 @@ import os
 import re
 from pathlib import Path
 from urllib.parse import urljoin
-from typing import Dict
+from typing import Dict, Set
 
 import requests
 from bs4 import BeautifulSoup
@@ -33,7 +33,7 @@ class Crawler():
         self.filename = util.get_valid_filename(filename)
         self.text = text
 
-    def crawl(self) -> bool:
+    def crawl(self):
         '''
         Return True if the url is file, and return False if the url is html.
         '''
@@ -46,29 +46,28 @@ class Crawler():
             return  # TODO: download (optionally) external documents (.pdf, .docx, etc.) (may limit the domain names)
 
         if self.url in Crawler.crawled_urls:
-            return Crawler.crawled_urls[self.url]
+            return
         if (self.path, self.url) in Crawler.crawled_static_files:
-            return True
+            return
 
         if str.encode(
                 'The requested URL was rejected. Please consult with your administrator.'
         ) in response.content:
             logging.error(
                 strings.crawler_download_fail.format(self.text, response.url))
-            return False
+            return
 
         if len(self.text) > 0:
             logging.info(strings.crawler_download_info.format(self.text))
 
-        if 'text/html' not in response.headers[
-                'content-type']:  # files (e.g. pdf, docs)
+        if 'text/html' not in response.headers['content-type']:  # files (e.g. pdf, docs)
             if self.filename.endswith('.html'):
                 self.filename = self.filename.removesuffix('.html')
             files_dir = self.path / "files"
             files_dir.mkdir(parents=True, exist_ok=True)
             files_dir.joinpath(self.filename).write_bytes(response.content)
             Crawler.crawled_static_files[(self.path, response.url)] = True
-            return True
+            return
 
         soup = BeautifulSoup(response.content, 'html.parser')
         Crawler.crawled_urls[response.url] = False
@@ -87,16 +86,6 @@ class Crawler():
         for op in soup.find_all('option'):
             op.extract()
 
-        hrefs = soup.find_all('a')
-
-        skip_href_texts = ['作業列表', '友善列印']
-        skip_href_texts.extend([
-            '看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄', ' 新增主題', '引用',
-            ' 回覆', '分頁顯示', '上個主題', '下個主題', '修改'
-        ])
-        # '修改' may be an indicator to download the owner's article?
-        skip_href_texts.extend(['上頁', '下頁', '上一頁', '下一頁', ' 我要評分'])
-
         # special case for board
         is_board = False
         board_dir: Dict[str, Path] = {}
@@ -112,6 +101,18 @@ class Crawler():
                 is_board = True
                 break
 
+        hrefs = soup.find_all('a')
+
+        skip_href_texts = ['作業列表', '友善列印']
+        skip_href_texts.extend([
+            '看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄', ' 新增主題', '引用',
+            ' 回覆', '分頁顯示', '上個主題', '下個主題', '修改'
+        ])
+        # '修改' may be an indicator to download the owner's article?
+        skip_href_texts.extend(['上頁', '下頁', '上一頁', '下一頁', ' 我要評分'])
+        
+        filename_set = set()
+        
         for a in hrefs:
             if a.text in skip_href_texts:
                 a.replaceWithChildren()
@@ -120,19 +121,27 @@ class Crawler():
                 if not a['href'].startswith('http') or a['href'].startswith(
                         'https://ceiba.ntu.edu.tw'):
                     # TODO: refactor the following code
+                    is_file = False
+                    if a.get('target') == '_blank':  # easier way to determine if it's a file. May only work in ceiba.
+                        is_file = True  # The other way is to tell whether it's a file with content-type and return filename.
                     url = urljoin(response.url, a.get('href'))
                     filename = util.get_valid_filename(a.text)
-                    if not filename.endswith('.html'):
+                    if not is_file:
                         filename += ".html"
+                    if filename in filename_set:
+                        new_filename = filename
+                        index = 0
+                        while new_filename in filename_set:
+                            index += 1
+                            new_filename = filename + "_{}".format(index)
+                        filename = new_filename
                     if is_board and a.text in board_dir:
                         a['href'] = board_dir[a.text] / filename
                         board_dir[a.text].joinpath("files").mkdir(exist_ok=True)
-                        is_file = Crawler(self.session, url, board_dir[a.text],
-                                          filename, a.text).crawl()
+                        Crawler(self.session, url, board_dir[a.text], filename, a.text).crawl()
                     else:
                         try:
-                            is_file = Crawler(self.session, url, self.path,
-                                              filename, a.text).crawl()
+                            Crawler(self.session, url, self.path, filename, a.text).crawl()
                         except NotFound as e:
                             logging.warning(e)
                             a.string = a.text + " [404 not found]"
@@ -141,7 +150,7 @@ class Crawler():
                             continue
                         a['href'] = filename
                     if is_file:  # TODO: avoid duplicate filenames?
-                        a['href'] = "files/" + filename.removesuffix('.htm').removesuffix('.html')
+                        a['href'] = "files/" + filename
 
         self.path.joinpath(self.filename).write_text(str(soup), encoding='utf-8')
         return False
@@ -176,3 +185,9 @@ class Crawler():
             static_dir.mkdir(exist_ok=True)
             Crawler(self.session, url, static_dir, filename,
                     css['href']).crawl_css_and_resources()
+    
+    def _is_file():
+        pass
+    
+    def _get_filename(self, filename: str, filename_set: Set):
+        pass
