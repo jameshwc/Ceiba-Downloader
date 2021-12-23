@@ -66,7 +66,7 @@ class Course():
         module_dir = self.path / module
         module_dir.mkdir(exist_ok=True)
 
-        Crawler(session, url, module_dir, module + '.html', "").crawl()
+        Crawler(session, url, module_dir, module).crawl()
 
     @util.progress_decorator()
     def homepage_download(self,
@@ -77,7 +77,7 @@ class Course():
         button_url = url_gen(util.button_url)
         banner_url = url_gen(util.banner_url)
         homepage_url = url_gen(util.homepage_url)
-        Crawler(session, banner_url, self.path, "banner.html").crawl()
+        Crawler(session, banner_url, self.path, "banner").crawl()
         self.__download_homepage(session, homepage_url)
         return self.__download_button(session, button_url, 'button.html',
                                       modules_filter_list)
