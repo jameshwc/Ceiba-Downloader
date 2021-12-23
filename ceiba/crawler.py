@@ -3,7 +3,7 @@ import os
 import re
 from pathlib import Path
 from urllib.parse import urljoin
-from typing import Dict, Set
+from typing import Dict, Union, Set
 
 import requests
 from bs4 import BeautifulSoup
@@ -15,8 +15,8 @@ from .exceptions import NotFound
 
 class Crawler():
 
-    crawled_files_path = set() 
-    crawled_urls = {}
+    crawled_files_path: Set[Path] = set() 
+    crawled_urls: Dict[str, Path] = {}
 
     # TODO: we should move css/img to root folder instead of download them every time in each course
 
@@ -32,7 +32,7 @@ class Crawler():
         self.filename = util.get_valid_filename(filename)
         self.text = text
 
-    def crawl(self):
+    def crawl(self) -> Union[Path, None]:
         '''
         Return True if the url is file, and return False if the url is html.
         '''
@@ -78,10 +78,10 @@ class Crawler():
         for img in soup.find_all('img'):
             url = urljoin(self.url, img.get('src'))
             img['src'] = url.split('/')[-1]
-            img_response = util.get(self.session, url)
             path = self.path / img['src']
-            if path.exists():  # TODO: check if filename exists
-                pass
+            if path.exists():
+                continue
+            img_response = util.get(self.session, url)
             path.write_bytes(img_response.content)
 
         for op in soup.find_all('option'):
@@ -140,8 +140,8 @@ class Crawler():
     def crawl_css_and_resources(self):
         response = util.get(self.session, self.url)
         path = self.path / self.filename
-        if path.exists():  # TODO: check if filename exists
-            pass
+        if path.exists():
+            return
         new_content = response.content
         resources = re.findall(r'url\((.*?)\)', str(response.content))
         if len(resources) > 0:
