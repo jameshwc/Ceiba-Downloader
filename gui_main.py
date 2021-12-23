@@ -202,7 +202,8 @@ class MyApp(QMainWindow):
             self.login_layout.itemAt(i).widget().setParent(None)
 
         welcome_label = QLabel(self.ceiba.student_name + "，歡迎你！")
-        welcome_label.setFont(QFont('', 24))
+        welcome_label.setProperty('class', 'welcome')
+        
         self.login_layout.addWidget(welcome_label, 0, 0)
         self.login_group_box.setLayout(self.login_layout)
 
