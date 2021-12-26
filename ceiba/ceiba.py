@@ -122,20 +122,23 @@ class Ceiba():
                 course.download(self.courses_dir, self.sess, modules_filter,
                                 progress)
                 logging.info(strings.course_finish_info.format(course.cname))
-        self.download_ceiba_homepage(cname_filter)
+        self.download_ceiba_homepage(self.path, cname_filter, progress=progress)
         logging.info('完成下載！')
 
     def download_ceiba_homepage(self,
+                                path: Union[Path,str],
                                 cname_filter=None,
                                 progress: Signal = None):
+        
+        self.path = Path(path) if type(path) == str else path
+
         logging.info('開始下載 Ceiba 首頁！')
         if progress:
             progress.emit(0)
         resp = util.get(self.sess, util.courses_url)
         soup = BeautifulSoup(resp.content, 'html.parser')
 
-        Crawler(self.sess, resp.url,
-                self.path).download_css(soup.find_all('link'))
+        Crawler(self.sess, resp.url, self.path).download_css(soup.find_all('link'))
 
         rows = soup.find_all("table")[0].find_all('tr')
         valid_a_tag = set()
