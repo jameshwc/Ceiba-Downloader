@@ -63,8 +63,9 @@ class Ceiba():
         soup = BeautifulSoup(util.get(self.sess, util.courses_url).content, 'html.parser')
         if progress:
             progress.emit(1)
-        self.student_name = soup.find("span", {"class": "user"}).text
-        if self.student_name == "":
+        try:
+            self.student_name = soup.find("span", {"class": "user"}).text
+        except AttributeError:
             raise InvalidCredentials
 
     def get_courses_list(self, progress: Signal = None):
