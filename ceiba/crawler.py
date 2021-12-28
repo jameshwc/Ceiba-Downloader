@@ -24,11 +24,13 @@ class Crawler():
                  session: requests.Session,
                  url: str,
                  path: Path,
+                 module: str = "",
                  filename: str = "",
                  text: str = ""):
         self.session = session
         self.url = url
         self.path = path
+        self.module = module
         self.filename = util.get_valid_filename(filename)
         self.text = text
 
@@ -65,7 +67,7 @@ class Crawler():
         
         soup = BeautifulSoup(response.content, 'html.parser')
         self.download_css(soup.find_all('link'))
-        self.__handle_imgs(soup.find_all('img'))
+        self.download_imgs(soup.find_all('img'))
         for op in soup.find_all('option'):
             op.extract()
 
@@ -97,34 +99,38 @@ class Crawler():
     
     def crawl_hrefs(self, soup: BeautifulSoup, resp_url: str) -> BeautifulSoup:
         
-        skip_href_texts = ['作業列表', '友善列印']
-        skip_href_texts.extend([
+        skip_href_texts = ['友善列印', '分頁顯示']
+        if self.module == 'board':
+            skip_href_texts.extend([
             '看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄', ' 新增主題', '引用',
-            ' 回覆', '分頁顯示', '上個主題', '下個主題', '修改'
-        ])
-        # '修改' may be an indicator to only download the owner's article?
-        skip_href_texts.extend(['上頁', '下頁', '上一頁', '下一頁', ' 我要評分', '隱藏'])
+            ' 回覆', '分頁顯示', '上個主題', '下個主題', '修改'])
+            # '修改' may be an indicator to only download the owner's article?
+            skip_href_texts.extend(['上一頁', '下一頁', ' 我要評分', '隱藏'])
+        elif self.module == 'student':
+            skip_href_texts.extend(['上頁', '下頁'])
         hrefs = soup.find_all('a')
         for a in hrefs:
             if a.text in skip_href_texts:
                 a.replaceWithChildren()
                 continue
-            if len(a.text) > 0 and not a['href'].startswith('mailto'):
-                if not a['href'].startswith('http') or a['href'].startswith(
-                        'https://ceiba.ntu.edu.tw'):
-                    url = urljoin(resp_url, a.get('href'))
-                    crawler_path = self.path
-                    if self.is_board and a.text in self.board_dir:
-                        crawler_path = self.board_dir[a.text]
-                    try:
-                        filename = Crawler(self.session, url, crawler_path, a.text).crawl()
-                    except NotFound as e:
-                        logging.warning(e)
-                        a.string = a.text + " [404 not found]"
-                        a['href'] = urljoin(self.url, a['href'])
-                        # a.replaceWithChildren()  # discuss: when 404 happens, should it link to original url?
-                        continue
-                    a['href'] = crawler_path.relative_to(self.path) / filename
+            if a['href'].startswith('https://ceiba.ntu.edu.tw'):  # TODO: debug usage, will remove it in final version
+                logging.debug('ceiba 網址以 https 開頭，網址：{}'.format(a['href']))
+                continue
+            if a['href'].startswith('mailto') or a['href'].startswith('http') or len(a.text) == 0:
+                continue
+            url = urljoin(resp_url, a.get('href'))
+            crawler_path = self.path
+            if self.is_board and a.text in self.board_dir:
+                crawler_path = self.board_dir[a.text]
+            try:
+                filename = Crawler(self.session, url, crawler_path, self.module, a.text).crawl()
+            except NotFound as e:
+                logging.warning(e)
+                a.string = a.text + " [404 not found]"
+                a['href'] = url
+                # a.replaceWithChildren()  # discuss: when 404 happens, should it link to original url?
+                continue
+            a['href'] = crawler_path.relative_to(self.path) / filename
         return soup
     
     def __handle_board(self, captions):
@@ -142,7 +148,7 @@ class Crawler():
                 self.is_board = True
                 break
     
-    def __handle_imgs(self, imgs):
+    def download_imgs(self, imgs):
         for img in imgs:
             url = urljoin(self.url, img.get('src'))
             img['src'] = url.split('/')[-1]
@@ -161,7 +167,7 @@ class Crawler():
             css['href'] = 'static/' + filename
             static_dir = self.path / 'static'
             static_dir.mkdir(exist_ok=True)
-            Crawler(self.session, url, static_dir, filename,
+            Crawler(self.session, url, static_dir, self.module, filename,
                     css['href']).crawl_css_and_resources()
     
     def __get_uniq_filepath(self, path: Path):
