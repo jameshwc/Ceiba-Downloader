@@ -74,6 +74,7 @@ def loop_connect(http_method_func, url, **kwargs):
                 logging.error(strings.crawler_timeour_error)
             else:
                 logging.error(e)
+                logging.debug("發生錯誤的網址：{}".format(url))
                 logging.info('五秒後重新連線...')
             time.sleep(5)
             continue

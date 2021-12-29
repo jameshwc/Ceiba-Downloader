@@ -15,7 +15,7 @@ from .exceptions import NotFound
 
 class Crawler():
 
-    crawled_files_path: Set[Path] = set() 
+    crawled_files_path: Set[Path] = set()
     crawled_urls: Dict[str, Path] = {}
 
     # TODO: we should move css/img to root folder instead of download them every time in each course
@@ -34,20 +34,17 @@ class Crawler():
         self.filename = util.get_valid_filename(filename)
         self.text = text
 
-    def crawl(self) -> Union[Path, None]:
-        
+    def crawl(self) -> Path:
+
         if self.url in Crawler.crawled_urls:
             logging.debug('url 重複，跳過下載：{}'.format(self.url))
             return Crawler.crawled_urls[self.url]
         
         response = util.get(self.session, self.url)
-        if response.status_code == 404:
+        if response.status_code == 404 or response.content.startswith(
+                bytes('<html><head><title>Request Rejected</title>', encoding='utf-8')):
             raise NotFound(self.text, response.url)
 
-        if response.content.startswith(bytes('The requested URL was rejected.', encoding='utf-8')):
-            logging.error(strings.crawler_download_fail.format(self.text, response.url))
-            return
-        
         if len(self.text) > 0:
             logging.info(strings.crawler_download_info.format(self.text))
 
@@ -59,22 +56,23 @@ class Crawler():
             Crawler.crawled_files_path.add(filepath)
             Crawler.crawled_urls[self.url] = filepath
             return filepath
-        
+
         self.filename += ".html"
         filepath = self.__get_uniq_filepath(self.path.joinpath(self.filename))
         Crawler.crawled_files_path.add(filepath)
         Crawler.crawled_urls[self.url] = filepath
-        
+
         soup = BeautifulSoup(response.content, 'html.parser')
         self.download_css(soup.find_all('link'))
         self.download_imgs(soup.find_all('img'))
+        
         for op in soup.find_all('option'):
             op.extract()
 
-        self.__handle_board(soup.find_all('caption')) # special case for board
-        
+        self.__handle_board(soup.find_all('caption'))  # special case for board
+
         soup = self.crawl_hrefs(soup, response.url)
-        
+
         filepath.write_text(str(soup), encoding='utf-8')
         return filepath
 
@@ -96,16 +94,16 @@ class Crawler():
                     bytes('url(' + res, encoding='utf-8'),
                     bytes('url(resources/' + res_filename, encoding='utf-8'))
         path.write_bytes(new_content)
-    
+
     def crawl_hrefs(self, soup: BeautifulSoup, resp_url: str) -> BeautifulSoup:
-        
+
         skip_href_texts = ['友善列印', '分頁顯示']
         if self.module == 'board':
             skip_href_texts.extend([
-            '看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄', ' 新增主題', '引用',
-            ' 回覆', '分頁顯示', '上個主題', '下個主題', '修改'])
+                '看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄', ' 新增主題', '引用',
+                ' 回覆', '分頁顯示', '上個主題', '下個主題', '修改'])
             # '修改' may be an indicator to only download the owner's article?
-            skip_href_texts.extend(['上一頁', '下一頁', ' 我要評分', '隱藏'])
+            skip_href_texts.extend(['上一頁', '下一頁', ' 我要評分'])
         elif self.module == 'student':
             skip_href_texts.extend(['上頁', '下頁'])
         hrefs = soup.find_all('a')
@@ -113,17 +111,14 @@ class Crawler():
             if a.text in skip_href_texts:
                 a.replaceWithChildren()
                 continue
-            if a['href'].startswith('https://ceiba.ntu.edu.tw'):  # TODO: debug usage, will remove it in final version
-                logging.debug('ceiba 網址以 https 開頭，網址：{}'.format(a['href']))
-                continue
-            if a['href'].startswith('mailto') or a['href'].startswith('http') or len(a.text) == 0:
+            if a['href'].startswith('mailto') or (a['href'].startswith('http') and 'ceiba.ntu.edu.tw' not in a['href']) or len(a.text) == 0:
                 continue
             url = urljoin(resp_url, a.get('href'))
             crawler_path = self.path
             if self.is_board and a.text in self.board_dir:
                 crawler_path = self.board_dir[a.text]
             try:
-                filename = Crawler(self.session, url, crawler_path, self.module, a.text).crawl()
+                filename = Crawler(self.session, url, crawler_path, self.module, a.text, a.text).crawl()
             except NotFound as e:
                 logging.warning(e)
                 a.string = a.text + " [404 not found]"
@@ -132,7 +127,7 @@ class Crawler():
                 continue
             a['href'] = crawler_path.relative_to(self.path) / filename
         return soup
-    
+
     def __handle_board(self, captions):
         self.is_board = False
         self.board_dir: Dict[str, Path] = {}
@@ -147,7 +142,7 @@ class Crawler():
                     self.board_dir[a_tag.text].mkdir(exist_ok=True)
                 self.is_board = True
                 break
-    
+
     def download_imgs(self, imgs):
         for img in imgs:
             url = urljoin(self.url, img.get('src'))
@@ -156,8 +151,8 @@ class Crawler():
             if path.exists():
                 continue
             img_response = util.get(self.session, url)
-            path.write_bytes(img_response.content)   
-    
+            path.write_bytes(img_response.content)
+
     def download_css(self, links: ResultSet):
         for css in links:
             url = urljoin(self.url, css.get('href'))
@@ -169,11 +164,11 @@ class Crawler():
             static_dir.mkdir(exist_ok=True)
             Crawler(self.session, url, static_dir, self.module, filename,
                     css['href']).crawl_css_and_resources()
-    
+
     def __get_uniq_filepath(self, path: Path):
         if path not in Crawler.crawled_files_path:
             return path
-        
+
         name = path.stem
         ext = path.suffix
         i = 0
@@ -181,4 +176,3 @@ class Crawler():
             i += 1
             path = path.parent / (name + "_{}".format(i) + ext)
         return path
-    
