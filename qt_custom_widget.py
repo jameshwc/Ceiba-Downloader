@@ -92,10 +92,9 @@ class PyLogOutput(logging.Handler):
 
     def emit(self, record: logging.LogRecord):
         msg = self.format(record)
-        if record.levelno == logging.ERROR:
-            msg = '<span style="color:red;">' + msg + "</span>"
-        elif record.levelno == logging.WARNING:
-            msg = '<span style="color:orange;">' + msg + '</span>'
+        color = {logging.ERROR: 'red', logging.INFO: 'white',
+                 logging.WARNING: 'orange', logging.DEBUG: 'gray'}
+        msg = '<span style="color:' + color[record.levelno] + ';">' + msg + "</span>"
         self.signal.log.emit(msg)
 
 
@@ -128,11 +127,3 @@ class PyCheckableComboBox(QComboBox):
                 item.setCheckState(Qt.Checked)
             elif self.all_checked is False and item.checkState() == Qt.Checked:
                 item.setCheckState(Qt.Unchecked)
-    
-    # def paintEvent(self, e):
-    #     super().paintEvent(e)
-    #     opt = QStyleOption()
-    #     opt.initFrom(self)
-    #     p = QPainter(self)
-    #     s = self.style()
-    #     s.drawPrimitive(QStyle.PE_Widget, opt, p, self)

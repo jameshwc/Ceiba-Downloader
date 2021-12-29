@@ -59,16 +59,22 @@ def progress_decorator():
 
 
 def get(session: requests.Session, url: str):
+    return loop_connect(session.get, url)
+
+def post(session: requests.Session, url: str, data=None):
+    return loop_connect(session.post, url, data=data)
+
+def loop_connect(http_method_func, url, **kwargs):
     while True:
         try:
-            response = session.get(url)
+            response = http_method_func(url, **kwargs)
         # except (TimeoutError, ConnectionResetError):
         except Exception as e:
-            print(type(e))
             if type(e) == TimeoutError or type(e) == ConnectionResetError:
                 logging.error(strings.crawler_timeour_error)
             else:
                 logging.error(e)
+                logging.debug("發生錯誤的網址：{}".format(url))
                 logging.info('五秒後重新連線...')
             time.sleep(5)
             continue

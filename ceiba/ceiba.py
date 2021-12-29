@@ -44,16 +44,13 @@ class Ceiba():
             raise InvalidLoginParameters
 
     def login_user(self):
-        resp = self.sess.get(util.login_url)
         logging.info('正在嘗試登入 Ceiba...')
+        resp = util.get(self.sess, util.login_url)
         payload = {'user': self.username, 'pass': self.password}
-        resp = self.sess.post(
-            resp.url,
-            data=payload)  # will get resp that redirect to /ChkSessLib.php
+        resp = util.post(self.sess, resp.url, data=payload)  # will get resp that redirect to /ChkSessLib.php
         if '登入失敗' in resp.content.decode('utf-8'):
             raise InvalidCredentials
-        resp = self.sess.post(resp.url,
-                              data=payload)  # idk why it needs to post twice
+        resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice
         logging.info('登入 Ceiba 成功！')
 
     def login(self, progress: Signal = None):
@@ -63,19 +60,19 @@ class Ceiba():
                 progress.emit(1)
 
         # check if user credential is correct
-        soup = BeautifulSoup(
-            self.sess.get(util.courses_url).content, 'html.parser')
+        soup = BeautifulSoup(util.get(self.sess, util.courses_url).content, 'html.parser')
         if progress:
             progress.emit(1)
-        self.student_name = soup.find("span", {"class": "user"}).text
-        if self.student_name == "":
+        try:
+            self.student_name = soup.find("span", {"class": "user"}).text
+        except AttributeError:
             raise InvalidCredentials
 
     def get_courses_list(self, progress: Signal = None):
 
         logging.info('正在取得課程...')
         soup = BeautifulSoup(
-            self.sess.get(util.courses_url).content, 'html.parser')
+            util.get(self.sess, util.courses_url).content, 'html.parser')
         for br in soup.find_all("br"):
             br.replace_with("\n")
 
@@ -126,20 +123,23 @@ class Ceiba():
                 course.download(self.courses_dir, self.sess, modules_filter,
                                 progress)
                 logging.info(strings.course_finish_info.format(course.cname))
-        self.download_ceiba_homepage(cname_filter)
+        self.download_ceiba_homepage(self.path, cname_filter, progress=progress)
         logging.info('完成下載！')
 
     def download_ceiba_homepage(self,
+                                path: Union[Path,str],
                                 cname_filter=None,
                                 progress: Signal = None):
+        
+        self.path = Path(path) if type(path) == str else path
+
         logging.info('開始下載 Ceiba 首頁！')
         if progress:
             progress.emit(0)
-        resp = self.sess.get(util.courses_url)
+        resp = util.get(self.sess, util.courses_url)
         soup = BeautifulSoup(resp.content, 'html.parser')
 
-        Crawler(self.sess, resp.url,
-                self.path).download_css(soup.find_all('link'))
+        Crawler(self.sess, resp.url, self.path).download_css(soup.find_all('link'))
 
         rows = soup.find_all("table")[0].find_all('tr')
         valid_a_tag = set()
