@@ -2,12 +2,11 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import List
-from urllib.parse import urljoin
+from typing import List, Optional
 
 import requests
 from bs4 import BeautifulSoup
-from PySide6.QtCore import Signal
+from PySide6.QtCore import SignalInstance
 
 from . import strings, util
 from .crawler import Crawler
@@ -32,17 +31,22 @@ class Course():
     def download(self,
                  path: Path,
                  session: requests.Session,
-                 modules_filter_list: List[str] = None,
-                 progress: Signal = None):
+                 modules_filter_list: Optional[List[str]] = None,
+                 progress: Optional[SignalInstance] = None):
         self.path = path / self.folder_name
         self.path.mkdir(exist_ok=True)
         
         current_url = util.get(session, self.href).url
-        self.course_sn = re.search(
-            r'course/([0-9a-f]*)+',
-            current_url).group(0).removeprefix('course/')
+        m = re.search(r'course/([0-9a-f]*)+',current_url)
+        if m:
+            self.course_sn = m.group(0).removeprefix('course/')
+        else:
+            logging.error(strings.error_unable_to_parse_course_sn.format(self.cname, self.cname))
+            logging.debug("網址：{}".format(current_url))
+            return
+        
         modules = self.homepage_download(session, '首頁', modules_filter_list)
-        if progress:
+        if progress and modules_filter_list:
             modules_not_in_this_module_num = len(modules_filter_list) - len(
                 modules)
             if modules_not_in_this_module_num > 0:
@@ -106,20 +110,18 @@ class Course():
         nav_co = soup.find("div", {"id": "nav_co"})
         items = []
         for a in nav_co.find_all('a'):
-            try:
-                item = re.search(r"onclick\('(.*?)'.*\)",
-                                 a['onclick']).group(1)
-            except AttributeError:
-                logging.debug(
-                    'abnormal onclick value: ' + a['onclick']
-                )  # Only found out such case in '108-1 Machine Learning Foundations'
-                item = a.next_element['id']
+            m = re.search(r"onclick\('(.*?)'.*\)", a['onclick'])
+            if m:
+                item = m.group(1)
             else:
-                if item in ['logout', 'calendar'] or \
-                        (modules_filter_list is not None and item not in modules_filter_list):
-                    # I assume the calendar is a feature nobody uses.
-                    a.extract()  # remove the element
-                    continue
+                logging.debug('abnormal onclick value: ' + a['onclick'])  
+                # Only found out such case in '108-1 Machine Learning Foundations'
+                item = a.next_element['id']
+            if item in ['logout', 'calendar'] or \
+                    (modules_filter_list is not None and item not in modules_filter_list):
+                # I assume the calendar is a feature nobody uses.
+                a.extract()  # remove the element
+                continue
             a['onclick'] = "parent.parent.mainFrame.location='" + item + "/" + item + ".html'"
             items.append(item)
         self.path.joinpath(filename).write_text(str(soup), encoding='utf-8')

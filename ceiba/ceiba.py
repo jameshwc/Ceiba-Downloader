@@ -1,11 +1,11 @@
 import logging
 import os
-from typing import List, Union
+from typing import List, Union, Optional
 from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
-from PySide6.QtCore import Signal
+from PySide6.QtCore import SignalInstance
 from pathlib import Path
 
 from . import strings, util
@@ -29,7 +29,6 @@ class Ceiba():
             'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0'
         })
         self.student_name = ""
-        self.path = ""
         self.username = ""
         self.password = ""
         self.course_dir_map = {}  # cname map to dir
@@ -53,7 +52,7 @@ class Ceiba():
         resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice
         logging.info('登入 Ceiba 成功！')
 
-    def login(self, progress: Signal = None):
+    def login(self, progress: Optional[SignalInstance] = None):
         if len(self.username) > 0 and len(self.password) > 0:
             self.login_user()
             if progress:
@@ -68,7 +67,7 @@ class Ceiba():
         except AttributeError:
             raise InvalidCredentials
 
-    def get_courses_list(self, progress: Signal = None):
+    def get_courses_list(self, progress: Optional[SignalInstance] = None):
 
         logging.info('正在取得課程...')
         soup = BeautifulSoup(
@@ -103,13 +102,13 @@ class Ceiba():
                          path: Union[Path, str],
                          cname_filter=None,
                          modules_filter=None,
-                         progress: Signal = None):
+                         progress: Optional[SignalInstance] = None):
 
-        self.path = Path(path) if type(path) == str else path
+        self.path = Path(path)
         self.courses_dir = self.path / "courses"
-
+        
         try:
-            if len(path) == 0:
+            if type(path) == str and len(path) == 0:
                 raise FileNotFoundError
             self.courses_dir.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
@@ -129,9 +128,9 @@ class Ceiba():
     def download_ceiba_homepage(self,
                                 path: Union[Path,str],
                                 cname_filter=None,
-                                progress: Signal = None):
+                                progress: Optional[SignalInstance] = None):
         
-        self.path = Path(path) if type(path) == str else path
+        self.path = Path(path)
 
         logging.info('開始下載 Ceiba 首頁！')
         if progress:

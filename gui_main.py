@@ -77,9 +77,7 @@ class MyApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Ceiba Downloader by Jameshwc")
-        icon_path = Path("resources/ceiba.ico")
-        if hasattr(sys, "_MEIPASS"):
-            icon_path = sys._MEIPASS / icon_path
+        icon_path = getattr(sys, "_MEIPASS", ".") / Path("resources/ceiba.ico")
         self.setWindowIcon(QIcon(str(icon_path)))
 
         self.create_login_group_box()
@@ -229,7 +227,7 @@ class MyApp(QMainWindow):
 
         welcome_label = QLabel(self.ceiba.student_name + "，歡迎你！")
         welcome_label.setProperty('class', 'welcome')
-        
+
         self.login_layout.addWidget(welcome_label, 0, 0)
         self.login_group_box.setLayout(self.login_layout)
 
@@ -241,18 +239,6 @@ class MyApp(QMainWindow):
 
     def fill_course_group_box(self, courses: List[Course]):
         self.courses_group_box.setDisabled(False)
-
-        courses_main_layout = QVBoxLayout()
-        courses_by_semester_layouts: Dict[str, QLayout] = {}
-        self.courses_checkboxes: List[QCheckBox] = []
-
-        for course in courses:
-            if course.semester not in courses_by_semester_layouts:
-                layout = QVBoxLayout()
-                courses_by_semester_layouts[course.semester] = layout
-            checkbox = QCheckBox("&" + course.cname)
-            self.courses_checkboxes.append(checkbox)
-            courses_by_semester_layouts[course.semester].addWidget(checkbox)
 
         courses_main_layout = QGridLayout()
         courses_by_semester_layouts: Dict[str, QLayout] = {}
@@ -315,6 +301,7 @@ class MyApp(QMainWindow):
         )
 
         self.only_download_homepage_checkbox = QCheckBox("只下載首頁")
+
         def disable_download_item_combo_box():
             if self.only_download_homepage_checkbox.isChecked():
                 self.download_item_combo_box.setDisabled(True)
@@ -448,9 +435,8 @@ if __name__ == "__main__":
 
     # for pyinstaller single-file executables.
     # src: https://helloworldbookblog.com/distributing-python-programs-part-2-the-harder-stuff/
-    if hasattr(sys, "_MEIPASS"):
-        custom_qss_path = sys._MEIPASS / custom_qss_path
-        font_path = sys._MEIPASS / font_path
+    custom_qss_path = getattr(sys, "_MEIPASS", ".") / Path("resources/custom.qss")
+    font_path = getattr(sys, "_MEIPASS", ".") / Path("resources/GenSenRounded-M.ttc")
 
     font_id = QFontDatabase.addApplicationFont(str(font_path))
     font_name = QFontDatabase.applicationFontFamilies(font_id)[0]

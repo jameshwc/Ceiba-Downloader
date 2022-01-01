@@ -2,7 +2,7 @@ import logging
 import re
 import time
 
-import requests
+from requests import Session
 # import appdirs
 from bs4 import BeautifulSoup
 
@@ -58,10 +58,10 @@ def progress_decorator():
     return decorator
 
 
-def get(session: requests.Session, url: str):
+def get(session: Session, url: str):
     return loop_connect(session.get, url)
 
-def post(session: requests.Session, url: str, data=None):
+def post(session: Session, url: str, data=None):
     return loop_connect(session.post, url, data=data)
 
 def loop_connect(http_method_func, url, **kwargs):

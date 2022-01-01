@@ -13,3 +13,4 @@ crawler_timeour_error = '下載遭到 Ceiba 伺服器阻止，沉睡 5 秒鐘後
 skip_external_href = '外部連結 {}，取消下載'
 http_not_found_error = '[404 not found] 下載 {} 時發生問題！（網址：<a>{}</a>）'
 error_skip_and_continue_download = '下載 {} 的 {} 時發生問題！繼續下載其他部分...'
+error_unable_to_parse_course_sn = '無法取得《{}》的 SN 碼！取消下載 {}...'

@@ -6,7 +6,6 @@ from PySide6.QtCore import (Property, QEasingCurve, QObject, QPoint,
 from PySide6.QtGui import QColor, QFont, QPainter
 from PySide6.QtWidgets import QCheckBox, QComboBox, QPlainTextEdit, QStyleOption, QStyle
 
-
 class PyToggle(QCheckBox):
     def __init__(self,
                  width=50,
