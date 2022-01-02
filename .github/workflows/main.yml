@@ -66,7 +66,7 @@ jobs:
           zip -r ceiba-downloader-windows.zip ceiba-downloader-windows-latest
           zip -r ceiba-downloader-macos.zip ceiba-downloader-macos-latest
           zip -r ceiba-downloader-linux.zip ceiba-downloader-ubuntu-latest
-          
+
       - name: Emit a Github Release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
@@ -75,6 +75,4 @@ jobs:
           prerelease: true
           title: "Development Build"
           files: |
-            ceiba-downloader-windows-latest/**
-            ceiba-downloader-macos-latest/**
-            ceiba-downloader-ubuntu-latest/**
+            ceiba-downloader*.zip
