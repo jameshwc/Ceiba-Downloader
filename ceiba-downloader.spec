@@ -46,4 +46,4 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                upx_exclude=[],
-               name='gui_main')
+               name='ceiba-downloader')
