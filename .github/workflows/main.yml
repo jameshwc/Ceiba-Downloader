@@ -69,6 +69,6 @@ jobs:
           prerelease: true
           title: "Development Build"
           files: |
-            ceiba-downloader-windows-latest/*
-            ceiba-downloader-macos-latest/*
-            ceiba-downloader-ubuntu-latest/*
+            ceiba-downloader-windows-latest/**
+            ceiba-downloader-macos-latest/**
+            ceiba-downloader-ubuntu-latest/**
