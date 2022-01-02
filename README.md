@@ -11,11 +11,9 @@
 
 ### 1. 執行 exe
 
-> 目前 Releases 只支援 Windows。Linux/Mac 使用者請先選擇第二種方式或等到我更新 Linux/Mac 的 Installer。
+請在 [Releases](https://github.com/jameshwc/Ceiba-Downloader/releases) 頁面找到屬於自己作業系統的 `ceiba-downloader.zip` 進行下載。
 
-請在 [Releases](https://github.com/jameshwc/Ceiba-Downloader/releases) 頁面找到 `ceiba-downloader.exe` 進行下載。
-
-> 目前用 PyInstaller 打包的程式可能會被 Windows Defender 當作病毒，可以在 Windows Defender 裡面設定排除該程式；若不放心，可以請懂 Python 的朋友直接執行程式碼（參考以下）。
+解壓縮後，在 `ceiba-downloader` 資料夾中找到 `ceiba-downloader` (Windows 為 `ceiba-downloader.exe`) 並執行。
 
 ### 2. 執行程式碼
 
