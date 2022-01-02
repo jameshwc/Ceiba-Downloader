@@ -437,7 +437,6 @@ if __name__ == "__main__":
     # src: https://helloworldbookblog.com/distributing-python-programs-part-2-the-harder-stuff/
     custom_qss_path = getattr(sys, "_MEIPASS", ".") / Path("resources/custom.qss")
     font_path = getattr(sys, "_MEIPASS", ".") / Path("resources/GenSenRounded-M.ttc")
-
     font_id = QFontDatabase.addApplicationFont(str(font_path))
     font_name = QFontDatabase.applicationFontFamilies(font_id)[0]
     extra = {"font_family": font_name}

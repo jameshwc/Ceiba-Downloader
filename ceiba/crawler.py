@@ -35,7 +35,6 @@ class Crawler():
         self.text = text
 
     def crawl(self) -> Path:
-
         if self.url in Crawler.crawled_urls:
             logging.debug('url 重複，跳過下載：{}'.format(self.url))
             return Crawler.crawled_urls[self.url]
@@ -111,7 +110,7 @@ class Crawler():
             if a.text in skip_href_texts:
                 a.replaceWithChildren()
                 continue
-            if a['href'].startswith('mailto') or (a['href'].startswith('http') and 'ceiba.ntu.edu.tw' not in a['href']) or len(a.text) == 0:
+            if a['href'].startswith('mailto') or a['href'].startswith('javascript') or (a['href'].startswith('http') and 'ceiba.ntu.edu.tw' not in a['href']) or len(a.text) == 0:
                 continue
             url = urljoin(resp_url, a.get('href'))
             crawler_path = self.path
