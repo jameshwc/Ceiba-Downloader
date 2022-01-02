@@ -77,7 +77,7 @@ class MyApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Ceiba Downloader by Jameshwc")
-        icon_path = getattr(sys, "_MEIPASS", ".") / Path("resources/ceiba.ico")
+        icon_path = Path("resources/ceiba.ico")
         self.setWindowIcon(QIcon(str(icon_path)))
 
         self.create_login_group_box()
@@ -435,8 +435,8 @@ if __name__ == "__main__":
 
     # for pyinstaller single-file executables.
     # src: https://helloworldbookblog.com/distributing-python-programs-part-2-the-harder-stuff/
-    custom_qss_path = getattr(sys, "_MEIPASS", ".") / Path("resources/custom.qss")
-    font_path = getattr(sys, "_MEIPASS", ".") / Path("resources/GenSenRounded-M.ttc")
+    custom_qss_path = Path("resources/custom.qss")
+    font_path = Path("resources/GenSenRounded-M.ttc")
     font_id = QFontDatabase.addApplicationFont(str(font_path))
     font_name = QFontDatabase.applicationFontFamilies(font_id)[0]
     extra = {"font_family": font_name}
