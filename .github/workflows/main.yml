@@ -61,6 +61,12 @@ jobs:
       - name: Display fetched artifacts
         run: ls -R
       
+      - name: Zip files
+        run: |
+          zip -r ceiba-downloader-windows.zip ceiba-downloader-windows-latest
+          zip -r ceiba-downloader-macos.zip ceiba-downloader-macos-latest
+          zip -r ceiba-downloader-linux.zip ceiba-downloader-ubuntu-latest
+          
       - name: Emit a Github Release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
