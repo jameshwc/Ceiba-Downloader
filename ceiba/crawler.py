@@ -102,7 +102,7 @@ class Crawler():
                 '看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄', ' 新增主題', '引用',
                 ' 回覆', '分頁顯示', '上個主題', '下個主題', '修改'])
             # '修改' may be an indicator to only download the owner's article?
-            skip_href_texts.extend(['上一頁', '下一頁', ' 我要評分'])
+            skip_href_texts.extend(['上一頁', '下一頁', ' 我要評分', ' 我要推薦'])
         elif self.module == 'student':
             skip_href_texts.extend(['上頁', '下頁'])
         hrefs = soup.find_all('a')
