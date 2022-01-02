@@ -61,6 +61,9 @@ jobs:
       - name: Display fetched artifacts
         run: ls -R
       
+      - name: Add execution permission
+        run: chmod +x ceiba-downloader-ubuntu-latest/ceiba-downloader/ceiba-downloader
+      
       - name: Zip files
         run: |
           cd ceiba-downloader-windows-latest && zip -r ../ceiba-downloader-windows.zip ceiba-downloader && cd ..
