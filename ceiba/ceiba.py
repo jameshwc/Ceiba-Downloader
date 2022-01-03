@@ -1,5 +1,6 @@
 import logging
-import os
+import datetime
+import json
 from typing import List, Union, Optional
 from urllib.parse import urljoin
 
@@ -7,6 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 from PySide6.QtCore import SignalInstance
 from pathlib import Path
+import uuid
 
 from . import strings, util
 from .course import Course
@@ -59,7 +61,7 @@ class Ceiba():
                 progress.emit(1)
 
         # check if user credential is correct
-        soup = BeautifulSoup(util.get(self.sess, util.courses_url).content, 'html.parser')
+        soup = BeautifulSoup(util.get(self.sess, util.info_url).content, 'html.parser')
         if progress:
             progress.emit(1)
         try:
@@ -165,3 +167,13 @@ class Ceiba():
         self.path.joinpath('index.html').write_text(str(soup), encoding='utf-8')
 
         logging.info('下載首頁完成！')
+
+    def send_ticket(self, type: str, content: str, anonymous=False):
+        id = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S') + "-" + hex(uuid.getnode())
+        payload = {'id': id, 'type': type, 'content': content}
+        if not anonymous:
+            payload['student_id'] = self.student_name
+        # payload = {'content': content}
+        resp = self.sess.post(util.ticket_url, json.dumps(payload))
+        print(resp.content, resp.status_code)
+    
