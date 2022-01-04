@@ -18,11 +18,7 @@ from .exceptions import (InvalidCredentials, InvalidFilePath,
 
 
 class Ceiba():
-    def __init__(self,
-                 cookie_PHPSESSID=None,
-                 cookie_user=None,
-                 username=None,
-                 password=None):
+    def __init__(self):
 
         self.sess: requests.Session = requests.session()
         self.courses: List[Course] = []
@@ -35,32 +31,35 @@ class Ceiba():
         self.username = ""
         self.password = ""
         self.course_dir_map = {}  # cname map to dir
+        self.is_login = False
 
-        if cookie_PHPSESSID and cookie_user:
-            self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
-            self.sess.cookies.set("user", cookie_user)
-        elif username and password:
-            self.username = username
-            self.password = password
-        else:
-            raise InvalidLoginParameters
-
-    def login_user(self):
+    def login_user(self, username, password):
         logging.info('正在嘗試登入 Ceiba...')
         resp = util.get(self.sess, util.login_url)
-        payload = {'user': self.username, 'pass': self.password}
+        payload = {'user': username, 'pass': password}
         resp = util.post(self.sess, resp.url, data=payload)  # will get resp that redirect to /ChkSessLib.php
         if '登入失敗' in resp.content.decode('utf-8'):
             raise InvalidCredentials
         resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice
         logging.info('登入 Ceiba 成功！')
 
-    def login(self, progress: Optional[SignalInstance] = None):
-        if len(self.username) > 0 and len(self.password) > 0:
-            self.login_user()
+    def login(self, 
+              cookie_PHPSESSID: str = None, 
+              cookie_user: str = None,
+              username: str = None,
+              password: str = None,
+              progress: Optional[SignalInstance] = None):
+        
+        if cookie_PHPSESSID and cookie_user:
+            self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
+            self.sess.cookies.set("user", cookie_user)
+        elif username and password:
+            self.login_user(username, password)
             if progress:
                 progress.emit(1)
-
+        else:
+            raise InvalidLoginParameters
+        
         # check if user credential is correct
         soup = BeautifulSoup(util.get(self.sess, util.info_url).content, 'html.parser')
         if progress:
@@ -69,6 +68,7 @@ class Ceiba():
             trs = soup.find_all("tr")
             self.student_name = trs[0].find('td').text
             self.email = trs[5].find('td').text
+            self.is_login = True
         except AttributeError as e:
             raise InvalidCredentials from e
 

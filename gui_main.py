@@ -98,6 +98,9 @@ class TicketSubmit(QMainWindow):
         submit_button = QPushButton('傳送')
         submit_button.clicked.connect(self.submit_ticket)
         self.annonymous_checkbox = QCheckBox("匿名傳送")
+        if not self.ceiba.is_login:
+            self.annonymous_checkbox.setChecked(True)
+            self.annonymous_checkbox.setDisabled(True)
         main_layout.addWidget(type_group_box, 1)
         main_layout.addWidget(text_edit, 8)
         main_layout.addWidget(self.annonymous_checkbox, 1)
@@ -112,6 +115,7 @@ class MyApp(QMainWindow):
         self.setWindowTitle("Ceiba Downloader by Jameshwc")
         icon_path = Path("resources/ceiba.ico")
         self.setWindowIcon(QIcon(str(icon_path)))
+        self.ceiba = Ceiba()
 
         self.create_login_group_box()
         self.create_courses_group_box()
@@ -219,22 +223,18 @@ class MyApp(QMainWindow):
 
     def login(self):
 
-        try:
-            if self.method_toggle.isChecked():
-                self.ceiba = Ceiba(
+        if self.method_toggle.isChecked():
+            worker = Worker(self.ceiba.login, 
                     cookie_user=self.username_edit.text(),
                     cookie_PHPSESSID=self.password_edit.text(),
                 )
-                self.progress_bar.setMaximum(1)
-            else:
-                self.ceiba = Ceiba(
-                    username=self.username_edit.text(),
-                    password=self.password_edit.text(),
-                )
-                self.progress_bar.setMaximum(2)
-        except InvalidLoginParameters as e:
-            logging.error(e)
-            return
+            self.progress_bar.setMaximum(1)
+        else:
+            worker = Worker(self.ceiba.login,
+                            username=self.username_edit.text(),
+                            password=self.password_edit.text(),
+                        )
+            self.progress_bar.setMaximum(2)
 
         def fail_handler():
             if self.method_toggle.isChecked():
@@ -248,7 +248,6 @@ class MyApp(QMainWindow):
             self.login_button.setEnabled(True)
             self.password_edit.clear()
 
-        worker = Worker(self.ceiba.login)
         worker.signals.failed.connect(fail_handler)
         worker.signals.success.connect(self.after_login_successfully)
         worker.signals.progress.connect(self.update_progressbar)
@@ -262,7 +261,7 @@ class MyApp(QMainWindow):
         for i in reversed(range(self.login_layout.count())):
             self.login_layout.itemAt(i).widget().setParent(None)
 
-        welcome_label = QLabel(self.ceiba.student_name + "，歡迎你！")
+        welcome_label = QLabel(self.ceiba.student_name + " " + self.ceiba.email + "，歡迎你！")
         welcome_label.setProperty('class', 'welcome')
 
         self.login_layout.addWidget(welcome_label, 0, 0)
@@ -462,7 +461,11 @@ class MyApp(QMainWindow):
             self.progress_bar.setValue(self.progress_bar.value() + add_value)
 
     def open_ticket_window(self):
-        ticket_window = TicketSubmit(self.ceiba, self)
+        if self.ceiba:
+            ticket_window = TicketSubmit(self.ceiba, self)
+        else:
+            dummy_ceiba = Ceiba(dummy=True)
+            ticket_window = TicketSubmit(dummy_ceiba, self)
         ticket_window.move(self.ticket_button.geometry().center())
         ticket_window.show()
 
