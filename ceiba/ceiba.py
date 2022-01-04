@@ -31,6 +31,7 @@ class Ceiba():
             'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0'
         })
         self.student_name = ""
+        self.email = "Not Login"
         self.username = ""
         self.password = ""
         self.course_dir_map = {}  # cname map to dir
@@ -65,9 +66,11 @@ class Ceiba():
         if progress:
             progress.emit(1)
         try:
-            self.student_name = soup.find("span", {"class": "user"}).text
-        except AttributeError:
-            raise InvalidCredentials
+            trs = soup.find_all("tr")
+            self.student_name = trs[0].find('td').text
+            self.email = trs[5].find('td').text
+        except AttributeError as e:
+            raise InvalidCredentials from e
 
     def get_courses_list(self, progress: Optional[SignalInstance] = None):
 
@@ -168,12 +171,11 @@ class Ceiba():
 
         logging.info('下載首頁完成！')
 
-    def send_ticket(self, type: str, content: str, anonymous=False):
+    def send_ticket(self, ticket_type: str, content: str, anonymous=False):
         id = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S') + "-" + hex(uuid.getnode())
-        payload = {'id': id, 'type': type, 'content': content}
+        payload = {'id': id, 'type': ticket_type, 'content': content}
         if not anonymous:
-            payload['student_id'] = self.student_name
-        # payload = {'content': content}
+            payload['email'] = self.email
         resp = self.sess.post(util.ticket_url, json.dumps(payload))
-        print(resp.content, resp.status_code)
+        logging.info(resp.status_code, resp.content)
     
