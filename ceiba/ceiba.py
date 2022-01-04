@@ -14,7 +14,7 @@ from . import strings, util
 from .course import Course
 from .crawler import Crawler
 from .exceptions import (InvalidCredentials, InvalidFilePath,
-                        InvalidLoginParameters)
+                        InvalidLoginParameters, NullTicketContent, SendTicketError)
 
 
 class Ceiba():
@@ -172,10 +172,16 @@ class Ceiba():
         logging.info('下載首頁完成！')
 
     def send_ticket(self, ticket_type: str, content: str, anonymous=False):
-        id = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S') + "-" + hex(uuid.getnode())
-        payload = {'id': id, 'type': ticket_type, 'content': content}
+        if len(content.strip()) == 0:
+            raise NullTicketContent
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+        mac_addr = hex(uuid.getnode())
+        id = timestamp + "-" + mac_addr
+        payload = {'id': id, 'type': ticket_type, 'content': content, 'timestamp': timestamp, 'mac_addr': mac_addr}
         if not anonymous:
             payload['email'] = self.email
         resp = self.sess.post(util.ticket_url, json.dumps(payload))
-        logging.info(resp.status_code, resp.content)
-    
+        if resp.status_code == 200 and resp.content == b'"Success"':
+            return
+        else:
+            raise SendTicketError(resp.content)

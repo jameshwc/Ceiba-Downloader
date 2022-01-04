@@ -3,12 +3,14 @@ import logging
 import os
 import sys
 from pathlib import Path
+from types import TracebackType
 from typing import Dict, List
 
 from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal
 from PySide6.QtGui import QFont, QFontDatabase, QIcon, QPalette, QColor, QRadialGradient
 from PySide6.QtWidgets import (
     QApplication,
+    QButtonGroup,
     QCheckBox,
     QFileDialog,
     QGridLayout,
@@ -25,6 +27,7 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSizePolicy,
     QTabWidget,
+    QPlainTextEdit,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -33,14 +36,13 @@ from PySide6.QtWidgets import (
 from ceiba.ceiba import Ceiba
 from ceiba import util
 from ceiba.course import Course
-from ceiba.exceptions import InvalidCredentials, InvalidLoginParameters
+from ceiba.exceptions import InvalidCredentials, InvalidLoginParameters, NullTicketContent, SendTicketError
 from qt_custom_widget import PyCheckableComboBox, PyLogOutput, PyToggle
 from qt_material import apply_stylesheet
 
-
-def exception_handler(type, value, tb):
+def exception_handler(type, value, tb: TracebackType):
     logging.getLogger().error(
-        "{}: {}\n{}".format(type.__name__, str(value), tb.tb_frame.f_code.co_filename)
+        "{}: {}\n{}, line {}".format(type.__name__, str(value), tb.tb_frame.f_code.co_filename, tb.tb_lineno)
     )
 
 
@@ -82,6 +84,7 @@ class TicketSubmit(QMainWindow):
         main_layout = QVBoxLayout(self.centralWidget())
         
         type_group_box = QGroupBox()
+        self.type_button_group = QButtonGroup()
         type_layout = QHBoxLayout()
         
         self.issue_radio_button = QRadioButton('Issue', type_group_box)
@@ -91,10 +94,13 @@ class TicketSubmit(QMainWindow):
         type_layout.addWidget(self.issue_radio_button)
         type_layout.addWidget(self.feedback_radio_button)
         type_layout.addWidget(self.others_radio_button)
+        self.type_button_group.addButton(self.issue_radio_button)
+        self.type_button_group.addButton(self.feedback_radio_button)
+        self.type_button_group.addButton(self.others_radio_button)
         type_group_box.setLayout(type_layout)
         type_group_box.setProperty("class", "no-padding")
 
-        text_edit = QTextEdit()
+        self.content_edit = QTextEdit()
         submit_button = QPushButton('傳送')
         submit_button.clicked.connect(self.submit_ticket)
         self.annonymous_checkbox = QCheckBox("匿名傳送")
@@ -102,12 +108,19 @@ class TicketSubmit(QMainWindow):
             self.annonymous_checkbox.setChecked(True)
             self.annonymous_checkbox.setDisabled(True)
         main_layout.addWidget(type_group_box, 1)
-        main_layout.addWidget(text_edit, 8)
+        main_layout.addWidget(self.content_edit, 8)
         main_layout.addWidget(self.annonymous_checkbox, 1)
         main_layout.addWidget(submit_button, 1)
     
     def submit_ticket(self):
-        ...
+        try:
+            self.ceiba.send_ticket(self.type_button_group.checkedButton().text(), self.content_edit.toPlainText())
+        except NullTicketContent as e:
+            logging.error(e)
+        except SendTicketError as e:
+            logging.error(e)
+        logging.info("傳送意見完成！")
+        self.close()
 
 class MyApp(QMainWindow):
     def __init__(self):
@@ -216,9 +229,9 @@ class MyApp(QMainWindow):
         self.progress_bar.setMaximum(100)
         self.progress_bar.setValue(0)
 
-        self.status_layout.addWidget(self.ticket_button)
         self.status_layout.addWidget(self.log_output.widget)
         self.status_layout.addWidget(self.progress_bar)
+        self.status_layout.addWidget(self.ticket_button)
         self.status_group_box.setLayout(self.status_layout)
 
     def login(self):
@@ -461,12 +474,8 @@ class MyApp(QMainWindow):
             self.progress_bar.setValue(self.progress_bar.value() + add_value)
 
     def open_ticket_window(self):
-        if self.ceiba:
-            ticket_window = TicketSubmit(self.ceiba, self)
-        else:
-            dummy_ceiba = Ceiba(dummy=True)
-            ticket_window = TicketSubmit(dummy_ceiba, self)
-        ticket_window.move(self.ticket_button.geometry().center())
+        ticket_window = TicketSubmit(self.ceiba, self)
+        ticket_window.move(self.log_output.geometry().center())
         ticket_window.show()
 
 if __name__ == "__main__":

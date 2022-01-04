@@ -96,6 +96,8 @@ class PyLogOutput(logging.Handler):
         msg = '<span style="color:' + color[record.levelno] + ';">' + msg + "</span>"
         self.signal.log.emit(msg)
 
+    def geometry(self) -> QRect:
+        return self.widget.geometry()
 
 class PyCheckableComboBox(QComboBox):
     # once there is a checkState set, it is rendered
