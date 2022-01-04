@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal
-from PySide6.QtGui import QFont, QFontDatabase, QIcon, QPalette, QColor
+from PySide6.QtGui import QFont, QFontDatabase, QIcon, QPalette, QColor, QRadialGradient
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -21,9 +21,11 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QProgressBar,
     QPushButton,
+    QRadioButton,
     QScrollArea,
     QSizePolicy,
     QTabWidget,
+    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -72,6 +74,37 @@ class Worker(QRunnable):
         finally:
             self.signals.finished.emit()
 
+class TicketSubmit(QMainWindow):
+    def __init__(self, ceiba: Ceiba, parent=None):
+        super().__init__(parent)
+        self.ceiba = ceiba
+        self.setCentralWidget(QWidget(self))
+        main_layout = QVBoxLayout(self.centralWidget())
+        
+        type_group_box = QGroupBox()
+        type_layout = QHBoxLayout()
+        
+        self.issue_radio_button = QRadioButton('Issue', type_group_box)
+        self.feedback_radio_button = QRadioButton('Feedback', type_group_box)
+        self.others_radio_button = QRadioButton('Others', type_group_box)
+        self.issue_radio_button.setChecked(True)
+        type_layout.addWidget(self.issue_radio_button)
+        type_layout.addWidget(self.feedback_radio_button)
+        type_layout.addWidget(self.others_radio_button)
+        type_group_box.setLayout(type_layout)
+        type_group_box.setProperty("class", "no-padding")
+
+        text_edit = QTextEdit()
+        submit_button = QPushButton('傳送')
+        submit_button.clicked.connect(self.submit_ticket)
+        self.annonymous_checkbox = QCheckBox("匿名傳送")
+        main_layout.addWidget(type_group_box, 1)
+        main_layout.addWidget(text_edit, 8)
+        main_layout.addWidget(self.annonymous_checkbox, 1)
+        main_layout.addWidget(submit_button, 1)
+    
+    def submit_ticket(self):
+        ...
 
 class MyApp(QMainWindow):
     def __init__(self):
@@ -159,10 +192,8 @@ class MyApp(QMainWindow):
         self.status_group_box = QGroupBox("狀態")
         self.status_layout = QGridLayout()
 
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setMinimum(0)
-        self.progress_bar.setMaximum(100)
-        self.progress_bar.setValue(0)
+        self.ticket_button = QPushButton("意見回饋", parent=self.status_group_box)
+        self.ticket_button.clicked.connect(self.open_ticket_window)
 
         self.log_output = PyLogOutput(self.status_group_box)
         self.log_output.setFormatter(
@@ -176,6 +207,12 @@ class MyApp(QMainWindow):
         # logging.getLogger().setLevel(logging.DEBUG)
         sys.excepthook = exception_handler
 
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(100)
+        self.progress_bar.setValue(0)
+
+        self.status_layout.addWidget(self.ticket_button)
         self.status_layout.addWidget(self.log_output.widget)
         self.status_layout.addWidget(self.progress_bar)
         self.status_group_box.setLayout(self.status_layout)
@@ -424,6 +461,10 @@ class MyApp(QMainWindow):
         else:
             self.progress_bar.setValue(self.progress_bar.value() + add_value)
 
+    def open_ticket_window(self):
+        ticket_window = TicketSubmit(self.ceiba, self)
+        ticket_window.move(self.ticket_button.geometry().center())
+        ticket_window.show()
 
 if __name__ == "__main__":
 
