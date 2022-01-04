@@ -7,7 +7,7 @@ from types import TracebackType
 from typing import Dict, List
 
 from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal
-from PySide6.QtGui import QFont, QFontDatabase, QIcon, QPalette, QColor, QRadialGradient
+from PySide6.QtGui import QFontDatabase, QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QButtonGroup,
@@ -27,7 +27,6 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSizePolicy,
     QTabWidget,
-    QPlainTextEdit,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -180,7 +179,7 @@ class MyApp(QMainWindow):
                 password_label.setText("Cookie [PHPSESSID]:")
             else:
                 username_label.setHidden(False)
-                self.password_edit.setHidden(False)
+                self.username_edit.setHidden(False)
                 password_label.setText("密碼 :")
 
         self.method_toggle.clicked.connect(switch_method)
