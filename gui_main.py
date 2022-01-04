@@ -82,7 +82,7 @@ class TicketSubmit(QMainWindow):
         self.ceiba = ceiba
         self.setCentralWidget(QWidget(self))
         main_layout = QVBoxLayout(self.centralWidget())
-        
+        self.setWindowTitle('意見回饋')
         type_group_box = QGroupBox()
         self.type_button_group = QButtonGroup()
         type_layout = QHBoxLayout()
