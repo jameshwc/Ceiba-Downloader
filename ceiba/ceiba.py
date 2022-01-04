@@ -1,5 +1,6 @@
 import logging
-import os
+import datetime
+import json
 from typing import List, Union, Optional
 from urllib.parse import urljoin
 
@@ -7,20 +8,17 @@ import requests
 from bs4 import BeautifulSoup
 from PySide6.QtCore import SignalInstance
 from pathlib import Path
+import uuid
 
 from . import strings, util
 from .course import Course
 from .crawler import Crawler
 from .exceptions import (InvalidCredentials, InvalidFilePath,
-                        InvalidLoginParameters)
+                        InvalidLoginParameters, NullTicketContent, SendTicketError)
 
 
 class Ceiba():
-    def __init__(self,
-                 cookie_PHPSESSID=None,
-                 cookie_user=None,
-                 username=None,
-                 password=None):
+    def __init__(self):
 
         self.sess: requests.Session = requests.session()
         self.courses: List[Course] = []
@@ -29,43 +27,49 @@ class Ceiba():
             'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0'
         })
         self.student_name = ""
+        self.email = "Not Login"
         self.username = ""
         self.password = ""
         self.course_dir_map = {}  # cname map to dir
+        self.is_login = False
 
-        if cookie_PHPSESSID and cookie_user:
-            self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
-            self.sess.cookies.set("user", cookie_user)
-        elif username and password:
-            self.username = username
-            self.password = password
-        else:
-            raise InvalidLoginParameters
-
-    def login_user(self):
+    def login_user(self, username, password):
         logging.info('正在嘗試登入 Ceiba...')
         resp = util.get(self.sess, util.login_url)
-        payload = {'user': self.username, 'pass': self.password}
+        payload = {'user': username, 'pass': password}
         resp = util.post(self.sess, resp.url, data=payload)  # will get resp that redirect to /ChkSessLib.php
         if '登入失敗' in resp.content.decode('utf-8'):
             raise InvalidCredentials
         resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice
         logging.info('登入 Ceiba 成功！')
 
-    def login(self, progress: Optional[SignalInstance] = None):
-        if len(self.username) > 0 and len(self.password) > 0:
-            self.login_user()
+    def login(self, 
+              cookie_PHPSESSID: Optional[str] = None, 
+              username: Optional[str] = None,
+              password: Optional[str] = None,
+              progress: Optional[SignalInstance] = None):
+        
+        if cookie_PHPSESSID:
+            self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
+            # self.sess.cookies.set("user", cookie_user)
+        elif username and password:
+            self.login_user(username, password)
             if progress:
                 progress.emit(1)
-
+        else:
+            raise InvalidLoginParameters
+        
         # check if user credential is correct
-        soup = BeautifulSoup(util.get(self.sess, util.courses_url).content, 'html.parser')
+        soup = BeautifulSoup(util.get(self.sess, util.info_url).content, 'html.parser')
         if progress:
             progress.emit(1)
         try:
-            self.student_name = soup.find("span", {"class": "user"}).text
-        except AttributeError:
-            raise InvalidCredentials
+            trs = soup.find_all("tr")
+            self.student_name = trs[0].find('td').text
+            self.email = trs[5].find('td').text
+            self.is_login = True
+        except AttributeError as e:
+            raise InvalidCredentials from e
 
     def get_courses_list(self, progress: Optional[SignalInstance] = None):
 
@@ -165,3 +169,18 @@ class Ceiba():
         self.path.joinpath('index.html').write_text(str(soup), encoding='utf-8')
 
         logging.info('下載首頁完成！')
+
+    def send_ticket(self, ticket_type: str, content: str, anonymous=False):
+        if len(content.strip()) == 0:
+            raise NullTicketContent
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+        mac_addr = hex(uuid.getnode())
+        id = timestamp + "-" + mac_addr
+        payload = {'id': id, 'type': ticket_type, 'content': content, 'timestamp': timestamp, 'mac_addr': mac_addr}
+        if not anonymous:
+            payload['email'] = self.email
+        resp = self.sess.post(util.ticket_url, json.dumps(payload))
+        if resp.status_code == 200 and resp.content == b'"Success"':
+            return
+        else:
+            raise SendTicketError(resp.content)
