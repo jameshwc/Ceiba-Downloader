@@ -158,7 +158,7 @@ class MyApp(QMainWindow):
     def create_login_group_box(self):
         self.login_group_box = QGroupBox("使用者")
 
-        username_label = QLabel("帳號 (學號):")
+        username_label = QLabel("帳號 (學號) :")
         username_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         self.username_edit = QLineEdit("")
 
@@ -175,10 +175,12 @@ class MyApp(QMainWindow):
 
         def switch_method():
             if self.method_toggle.isChecked():
-                username_label.setText("Cookie [user]:")
+                username_label.setHidden(True)
+                self.username_edit.setHidden(True)
                 password_label.setText("Cookie [PHPSESSID]:")
             else:
-                username_label.setText("帳號 (學號):")
+                username_label.setHidden(False)
+                self.password_edit.setHidden(False)
                 password_label.setText("密碼 :")
 
         self.method_toggle.clicked.connect(switch_method)
@@ -238,7 +240,6 @@ class MyApp(QMainWindow):
 
         if self.method_toggle.isChecked():
             worker = Worker(self.ceiba.login, 
-                    cookie_user=self.username_edit.text(),
                     cookie_PHPSESSID=self.password_edit.text(),
                 )
             self.progress_bar.setMaximum(1)

@@ -44,15 +44,14 @@ class Ceiba():
         logging.info('登入 Ceiba 成功！')
 
     def login(self, 
-              cookie_PHPSESSID: str = None, 
-              cookie_user: str = None,
-              username: str = None,
-              password: str = None,
+              cookie_PHPSESSID: Optional[str] = None, 
+              username: Optional[str] = None,
+              password: Optional[str] = None,
               progress: Optional[SignalInstance] = None):
         
-        if cookie_PHPSESSID and cookie_user:
+        if cookie_PHPSESSID:
             self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
-            self.sess.cookies.set("user", cookie_user)
+            # self.sess.cookies.set("user", cookie_user)
         elif username and password:
             self.login_user(username, password)
             if progress:
