@@ -42,10 +42,10 @@ class Course():
             self.course_sn = m.group(0).removeprefix('course/')
         else:
             logging.error(strings.error_unable_to_parse_course_sn.format(self.cname, self.cname))
-            logging.debug("網址：{}".format(current_url))
+            logging.debug(strings.urlf.format(current_url))
             return
         
-        modules = self.homepage_download(session, '首頁', modules_filter_list)
+        modules = self.homepage_download(session, strings.homepage, modules_filter_list)
         if progress and modules_filter_list:
             modules_not_in_this_module_num = len(modules_filter_list) - len(
                 modules)
@@ -75,7 +75,7 @@ class Course():
     @util.progress_decorator()
     def homepage_download(self,
                           session: requests.Session,
-                          cname: str = '首頁',
+                          cname: str = strings.homepage,
                           modules_filter_list: List[str] = None):
         url_gen = lambda x: x + "?csn=" + self.course_sn + "&default_fun=info&current_lang=chinese"  # TODO:language
         button_url = url_gen(util.button_url)

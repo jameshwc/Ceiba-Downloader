@@ -36,7 +36,7 @@ class Crawler():
 
     def crawl(self) -> Path:
         if self.url in Crawler.crawled_urls:
-            logging.debug('url 重複，跳過下載：{}'.format(self.url))
+            logging.debug(strings.url_duplicate.format(self.url))
             return Crawler.crawled_urls[self.url]
         
         response = util.get(self.session, self.url)

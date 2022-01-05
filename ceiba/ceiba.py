@@ -34,14 +34,14 @@ class Ceiba():
         self.is_login = False
 
     def login_user(self, username, password):
-        logging.info('正在嘗試登入 Ceiba...')
+        logging.info(strings.try_to_login)
         resp = util.get(self.sess, util.login_url)
         payload = {'user': username, 'pass': password}
         resp = util.post(self.sess, resp.url, data=payload)  # will get resp that redirect to /ChkSessLib.php
         if '登入失敗' in resp.content.decode('utf-8'):
             raise InvalidCredentials
         resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice
-        logging.info('登入 Ceiba 成功！')
+        logging.info(strings.login_successfully)
 
     def login(self, 
               cookie_PHPSESSID: Optional[str] = None, 
@@ -73,7 +73,7 @@ class Ceiba():
 
     def get_courses_list(self, progress: Optional[SignalInstance] = None):
 
-        logging.info('正在取得課程...')
+        logging.info(strings.try_to_get_courses)
         soup = BeautifulSoup(
             util.get(self.sess, util.courses_url).content, 'html.parser')
         for br in soup.find_all("br"):
@@ -99,7 +99,7 @@ class Ceiba():
                             href=href)
             self.courses.append(course)
             self.course_dir_map[cname] = course.folder_name
-        logging.info('取得課程完畢！')
+        logging.info(strings.get_courses_successfully)
         return self.courses
 
     def download_courses(self,
@@ -118,7 +118,7 @@ class Ceiba():
         except FileNotFoundError:
             raise InvalidFilePath
 
-        logging.info('開始下載課程...')
+        logging.info(strings.start_downloading_courses)
         for course in self.courses:
             if cname_filter is None or course.cname in cname_filter:
                 logging.info(strings.course_download_info.format(course.cname))
@@ -127,7 +127,7 @@ class Ceiba():
                                 progress)
                 logging.info(strings.course_finish_info.format(course.cname))
         self.download_ceiba_homepage(self.path, cname_filter, progress=progress)
-        logging.info('完成下載！')
+        logging.info(strings.download_courses_successfully)
 
     def download_ceiba_homepage(self,
                                 path: Union[Path,str],
@@ -136,7 +136,7 @@ class Ceiba():
         
         self.path = Path(path)
 
-        logging.info('開始下載 Ceiba 首頁！')
+        logging.info(strings.start_downloading_homepage)
         if progress:
             progress.emit(0)
         resp = util.get(self.sess, util.courses_url)
@@ -168,7 +168,7 @@ class Ceiba():
 
         self.path.joinpath('index.html').write_text(str(soup), encoding='utf-8')
 
-        logging.info('下載首頁完成！')
+        logging.info(strings.download_homepage_successfully)
 
     def send_ticket(self, ticket_type: str, content: str, anonymous=False):
         if len(content.strip()) == 0:
