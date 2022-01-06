@@ -77,8 +77,6 @@ class Ceiba():
         logging.info(strings.try_to_get_courses)
         soup = BeautifulSoup(
             util.get(self.sess, util.courses_url).content, 'html.parser')
-        for br in soup.find_all("br"):
-            br.replace_with("\n")
 
         # tables[1] is the courses not set up in ceiba
         table = soup.find_all("table")[0]
@@ -87,11 +85,12 @@ class Ceiba():
             cols = row.find_all('td')
             href = cols[4].find('a').get('href')
             cols = [ele.text.strip() for ele in cols]
-            name = cols[4].split('\n')
+            name = cols[4].split('\xa0')
             cname = name[0].strip()
             if cname in util.skip_courses_list:
                 continue
             ename = name[1] if len(name) > 1 else ""
+            print(href)
             course = Course(semester=cols[0],
                             course_num=cols[2],
                             cname=cname,

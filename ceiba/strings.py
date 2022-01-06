@@ -95,17 +95,17 @@ class String:
         self._skip_external_href['en'] = '外部連結 {}，取消下載'
         self._error_skip_and_continue_download['en'] = '下載 {} 的 {} 時發生問題！繼續下載其他部分...'
         self._error_unable_to_parse_course_sn['en'] = '無法取得《{}》的 SN 碼！取消下載 {}...'
-        self._try_to_login['en'] = '正在嘗試登入 Ceiba...'
-        self._login_successfully['en'] = '登入 Ceiba 成功！'
-        self._try_to_get_courses['en'] = '正在取得課程...'
-        self._get_courses_successfully['en'] = '取得課程完畢！'
-        self._start_downloading_courses['en'] = '開始下載課程...'
+        self._try_to_login['en'] = 'Trying to log in Ceiba...'
+        self._login_successfully['en'] = 'Successfully log in to Ceiba!'
+        self._try_to_get_courses['en'] = 'Trying to get the courses...'
+        self._get_courses_successfully['en'] = 'Successfully get the courses!'
+        self._start_downloading_courses['en'] = 'Downloading the courses...'
         self._download_courses_successfully['en'] = '下載課程完畢！'
         self._start_downloading_homepage['en'] = '開始下載 Ceiba 首頁！'
         self._download_homepage_successfully['en'] = '下載首頁完成！'
-        self._homepage['en'] = '首頁'
-        self._urlf['en'] = '網址：{}'
-        self._url_duplicate['en'] = 'url 重複，跳過下載：{}'
+        self._homepage['en'] = 'homepage'
+        self._urlf['en'] = 'url: {}'
+        self._url_duplicate['en'] = 'duplicate url: skipping download - {}'
         self._exception_invalid_login_parameters['en'] = '你必須提供 cookies 或計中的帳號密碼！'
         self._exception_invalid_credentials['en'] = '登入失敗！請檢查帳號與密碼是否正確！'
         self._exception_invalid_filepath['en'] = '路徑錯誤！請檢查路徑是否空白與錯誤！'
@@ -143,7 +143,7 @@ class String:
     
     @property
     def crawler_download_info(self):
-        return self.crawler_download_info[self.lang]
+        return self._crawler_download_info[self.lang]
     
     @property
     def crawler_download_fail(self):
