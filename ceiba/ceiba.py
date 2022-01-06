@@ -10,7 +10,8 @@ from PySide6.QtCore import SignalInstance
 from pathlib import Path
 import uuid
 
-from . import strings, util
+from . import util
+from .strings import strings
 from .course import Course
 from .crawler import Crawler
 from .exceptions import (InvalidCredentials, InvalidFilePath,
@@ -184,3 +185,6 @@ class Ceiba():
             return
         else:
             raise SendTicketError(resp.content)
+    
+    def set_lang(self, lang: str):
+        strings.set_lang(lang)

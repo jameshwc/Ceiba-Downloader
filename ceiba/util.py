@@ -6,7 +6,7 @@ from requests import Session
 # import appdirs
 from bs4 import BeautifulSoup
 
-from . import strings
+from .strings import strings
 
 # from pathlib import Path
 

@@ -8,7 +8,8 @@ import requests
 from bs4 import BeautifulSoup
 from PySide6.QtCore import SignalInstance
 
-from . import strings, util
+from . import util
+from .strings import strings
 from .crawler import Crawler
 
 

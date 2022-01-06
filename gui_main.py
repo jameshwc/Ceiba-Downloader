@@ -128,6 +128,7 @@ class MyApp(QMainWindow):
         icon_path = Path("resources/ceiba.ico")
         self.setWindowIcon(QIcon(str(icon_path)))
         self.ceiba = Ceiba()
+        # self.ceiba.set_lang('en')
 
         self.create_login_group_box()
         self.create_courses_group_box()
