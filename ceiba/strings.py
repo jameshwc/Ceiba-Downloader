@@ -35,6 +35,20 @@ class String:
         self._exception_null_ticket_content = {}
         self._exception_send_ticket_error = {}
         self._exception_http_not_found_error = {}
+        
+        self._qt_feedback = {}
+        self._qt_submit = {}
+        self._qt_anonymous = {}
+        self._qt_submit_ticket_successfully = {}
+        self._qt_user = {}
+        self._qt_username = {}
+        self._qt_password = {}
+        self._qt_login = {}
+        self._qt_login_method_unsafe = {}
+        self._qt_login_method_safe = {}
+        self._qt_course = {}
+        self._qt_status = {}
+        self._qt_send_ticket_button = {}
 
         self.set_zh_tw()
         self.set_en()
