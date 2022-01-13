@@ -90,7 +90,6 @@ class Ceiba():
             if cname in util.skip_courses_list:
                 continue
             ename = name[1] if len(name) > 1 else ""
-            print(href)
             course = Course(semester=cols[0],
                             course_num=cols[2],
                             cname=cname,
