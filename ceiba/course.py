@@ -24,6 +24,7 @@ class Course():
         self.href = href
         self.folder_name = util.get_valid_filename("_".join(
             [self.semester, self.cname, self.teacher]))
+        self.id = self.semester + self.course_num
         self.course_sn = 0
 
     def __str__(self):
@@ -45,14 +46,12 @@ class Course():
             logging.error(strings.error_unable_to_parse_course_sn.format(self.cname, self.cname))
             logging.debug(strings.urlf.format(current_url))
             return
-        
         modules = self.homepage_download(session, strings.homepage, modules_filter_list)
         if progress and modules_filter_list:
             modules_not_in_this_module_num = len(modules_filter_list) - len(
                 modules)
             if modules_not_in_this_module_num > 0:
                 progress.emit(modules_not_in_this_module_num)
-
         for module in modules:
             try:
                 self.__html_download(session, util.cname_map[module], module)

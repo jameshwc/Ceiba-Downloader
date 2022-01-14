@@ -274,7 +274,7 @@ class MyApp(QMainWindow):
         self.courses_group_box = QGroupBox("課程")
         self.courses_group_box.setDisabled(True)
         self.courses_checkboxes: List[QCheckBox] = []
-        self.courses_name_list: List[Tuple[str, str]] = []
+        self.courses = []
         self.check_all_courses_checkbox = QCheckBox("勾選全部課程")
 
     def create_status_group_box(self):
@@ -350,12 +350,13 @@ class MyApp(QMainWindow):
         self.progress_bar.setMaximum(1)
 
     def fill_course_group_box(self, courses: List[Course]):
+        self.courses = courses
         self.courses_group_box.setDisabled(False)
 
         courses_main_layout = QGridLayout()
         courses_by_semester_layouts: Dict[str, QLayout] = {}
 
-        for course in courses:
+        for course in self.courses:
             
             if course.semester not in courses_by_semester_layouts:
                 layout = QGridLayout()
@@ -367,7 +368,6 @@ class MyApp(QMainWindow):
                 checkbox = QCheckBox('&' + course.ename)
             
             self.courses_checkboxes.append(checkbox)
-            self.courses_name_list.append((course.cname, course.ename))
             courses_by_semester_layouts[course.semester].addWidget(checkbox)
 
         tabWidget = QTabWidget()
@@ -466,29 +466,30 @@ class MyApp(QMainWindow):
         items = []
         for i in range(self.download_item_combo_box.count()):
             if self.download_item_combo_box.itemChecked(i):
-                module_cname = self.download_item_combo_box.model().item(i, 0).text()
+                module_name = self.download_item_combo_box.model().item(i, 0).text()
                 for ename, cname in util.cname_map.items():
-                    if cname == module_cname:
+                    if module_name in [cname, ename]:
                         items.append(ename)
                         break
         
-        cname_list = []
+        course_id_list = []
         for i in range(len(self.courses_checkboxes)):
             if self.courses_checkboxes[i].isChecked():
-                cname_list.append(self.courses_name_list[i][0])
-
-        self.progress_bar.setMaximum(len(cname_list) * len(items))
+                course_id_list.append(self.courses[i].id)
+        
+        
+        self.progress_bar.setMaximum(len(course_id_list) * len(items))
         if self.only_download_homepage_checkbox.isChecked():
             worker = Worker(
                 self.ceiba.download_ceiba_homepage,
                 path=self.filepath_line_edit.text(),
-                cname_filter=cname_list,
+                course_id_filter=course_id_list,
             )
         else:
             worker = Worker(
                 self.ceiba.download_courses,
                 path=self.filepath_line_edit.text(),
-                cname_filter=cname_list,
+                course_id_filter=course_id_list,
                 modules_filter=items,
             )
         worker.signals.progress.connect(self.update_progressbar)
@@ -567,7 +568,7 @@ class MyApp(QMainWindow):
         self.status_group_box.setTitle('Status')
 
         for i in range(len(self.courses_checkboxes)):
-            self.courses_checkboxes[i].setText("&" + self.courses_name_list[i][1])
+            self.courses_checkboxes[i].setText("&" + self.courses[i].ename)
         
         self.download_button.setText('Download')
         self.check_all_courses_checkbox.setText('check all courses')
@@ -577,6 +578,9 @@ class MyApp(QMainWindow):
         self.filepath_label.setText('Path: ')
         self.file_browse_button.setText('Browse')
         self.download_item_combo_box.setPlaceholderText("<-- Click to expand -->")
+
+        self.download_item_combo_box.setItemsText(util.ename_map)
+
     
     def set_zh_tw(self):
         self.ceiba.set_lang('zh-tw')
@@ -591,7 +595,7 @@ class MyApp(QMainWindow):
         self.status_group_box.setTitle('狀態')
         
         for i in range(len(self.courses_checkboxes)):
-            self.courses_checkboxes[i].setText("&" + self.courses_name_list[i][0])
+            self.courses_checkboxes[i].setText("&" + self.courses[i].cname)
 
         self.download_button.setText('下載')
         self.check_all_courses_checkbox.setText('勾選所有課程')
@@ -601,6 +605,7 @@ class MyApp(QMainWindow):
         self.filepath_label.setText('存放路徑：')
         self.file_browse_button.setText('瀏覽')
         self.download_item_combo_box.setPlaceholderText("<-- 點我展開 -->")
+        self.download_item_combo_box.setItemsText(util.cname_map)
 
 
 if __name__ == "__main__":

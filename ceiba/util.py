@@ -33,6 +33,8 @@ cname_map = {
     'student': '修課學生'
 }
 
+ename_map = {v: k for k, v in cname_map.items()}
+
 ticket_url = 'https://xk4axzhtgc.execute-api.us-east-2.amazonaws.com/Practicing/message'
 
 def get_valid_filename(name: str):

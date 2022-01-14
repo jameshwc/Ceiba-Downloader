@@ -128,3 +128,9 @@ class PyCheckableComboBox(QComboBox):
                 item.setCheckState(Qt.Checked)
             elif self.all_checked is False and item.checkState() == Qt.Checked:
                 item.setCheckState(Qt.Unchecked)
+
+    def setItemsText(self, name_map):
+        for i in range(self.count()):
+            item: QCheckBox = self.model().item(i, 0)
+            if item.text() in name_map:
+                item.setText(name_map[item.text()])

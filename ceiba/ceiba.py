@@ -103,7 +103,7 @@ class Ceiba():
 
     def download_courses(self,
                          path: Union[Path, str],
-                         cname_filter=None,
+                         course_id_filter=None,
                          modules_filter=None,
                          progress: Optional[SignalInstance] = None):
 
@@ -119,18 +119,18 @@ class Ceiba():
 
         logging.info(strings.start_downloading_courses)
         for course in self.courses:
-            if cname_filter is None or course.cname in cname_filter:
+            if course_id_filter is None or course.id in course_id_filter:
                 logging.info(strings.course_download_info.format(course.cname))
                 self.courses_dir.joinpath(course.folder_name).mkdir(exist_ok=True)
                 course.download(self.courses_dir, self.sess, modules_filter,
                                 progress)
                 logging.info(strings.course_finish_info.format(course.cname))
-        self.download_ceiba_homepage(self.path, cname_filter, progress=progress)
+        self.download_ceiba_homepage(self.path, course_id_filter, progress=progress)
         logging.info(strings.download_courses_successfully)
 
     def download_ceiba_homepage(self,
                                 path: Union[Path,str],
-                                cname_filter=None,
+                                course_id_filter=None,
                                 progress: Optional[SignalInstance] = None):
         
         self.path = Path(path)
@@ -148,9 +148,11 @@ class Ceiba():
         for row in rows[1:]:
             cols = row.find_all('td')
             course = cols[4].find('a')
+            cols = [ele.text.strip() for ele in cols]
+            course_id = cols[0] + cols[2]
             if course.text in util.skip_courses_list or (
-                    cname_filter is not None
-                    and course.text not in cname_filter):
+                    course_id_filter is not None
+                    and course_id not in course_id_filter):
                 course.replaceWithChildren()
                 row['style'] = 'background: silver;'
                 continue
