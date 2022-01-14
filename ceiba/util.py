@@ -6,7 +6,7 @@ from requests import Session
 # import appdirs
 from bs4 import BeautifulSoup
 
-from . import strings
+from .strings import strings
 
 # from pathlib import Path
 
@@ -32,6 +32,8 @@ cname_map = {
     'vote': '投票區',
     'student': '修課學生'
 }
+
+ename_map = {v: k for k, v in cname_map.items()}
 
 ticket_url = 'https://xk4axzhtgc.execute-api.us-east-2.amazonaws.com/Practicing/message'
 

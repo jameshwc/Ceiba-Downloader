@@ -9,7 +9,8 @@ import requests
 from bs4 import BeautifulSoup
 from bs4.element import ResultSet
 
-from . import strings, util
+from . import util
+from .strings import strings
 from .exceptions import NotFound
 
 
