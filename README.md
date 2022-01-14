@@ -1,6 +1,6 @@
 # Ceiba 備份下載軟體 Ceiba Downloader
 
-> 本程式仍在開發中，雖然目前可以正常使用，但若不急的話建議寒假再來使用，功能上會更完整。另外歡迎任何的 issue/pull request，也歡迎 star 本專案與開啟 notification 以收到最新消息。
+> 歡迎任何的 issue/pull request，或 star 本專案與開啟 notification 以收到最新消息。
 
 ![](https://i.imgur.com/z7bqTNs.gif)
 
