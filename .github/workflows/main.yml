@@ -32,7 +32,7 @@ jobs:
       - name: Set up python version
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.7'
           
       - name: Install modules
         run: pip3 install -r requirements.txt

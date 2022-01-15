@@ -5,41 +5,25 @@ import sys
 import webbrowser
 from pathlib import Path
 from types import TracebackType
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal
-from PySide6.QtGui import QFontDatabase, QIcon, QAction, QActionGroup, QPixmap
-from PySide6.QtWidgets import (
-    QApplication,
-    QButtonGroup,
-    QCheckBox,
-    QFileDialog,
-    QGridLayout,
-    QGroupBox,
-    QHBoxLayout,
-    QLabel,
-    QLayout,
-    QLineEdit,
-    QMainWindow,
-    QMessageBox,
-    QProgressBar,
-    QPushButton,
-    QRadioButton,
-    QScrollArea,
-    QSizePolicy,
-    QTabWidget,
-    QTextEdit,
-    QVBoxLayout,
-    QWidget,
-    QPlainTextEdit
-)
-
-from ceiba.ceiba import Ceiba
-from ceiba import util
-from ceiba.course import Course
-from ceiba.exceptions import InvalidCredentials, InvalidLoginParameters, NullTicketContent, SendTicketError
-from qt_custom_widget import PyCheckableComboBox, PyLogOutput, PyToggle
+from PySide6.QtGui import QAction, QActionGroup, QFontDatabase, QIcon, QPixmap
+from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox,
+                               QFileDialog, QGridLayout, QGroupBox,
+                               QHBoxLayout, QLabel, QLayout, QLineEdit,
+                               QMainWindow, QMessageBox, QProgressBar,
+                               QPushButton, QRadioButton, QScrollArea,
+                               QSizePolicy, QTabWidget, QTextEdit, QVBoxLayout,
+                               QWidget)
 from qt_material import apply_stylesheet
+
+from ceiba import util
+from ceiba.ceiba import Ceiba
+from ceiba.course import Course
+from ceiba.exceptions import (InvalidCredentials, InvalidLoginParameters,
+                              NullTicketContent, SendTicketError)
+from qt_custom_widget import PyCheckableComboBox, PyLogOutput, PyToggle
 
 dirname = os.path.dirname(__file__) or '.'
 
@@ -174,7 +158,8 @@ class MyApp(QMainWindow):
         self.create_courses_group_box()
         self.create_options_and_download_groupbox()
         self.create_status_group_box()
-
+        self.set_zh_tw()
+        
         self.courses_group_box.setHidden(True)
         self.options_and_download_groupbox.setHidden(True)
         self.setCentralWidget(QWidget(self))
@@ -220,19 +205,19 @@ class MyApp(QMainWindow):
         self.menu_about.triggered.connect(self.open_about_window)
 
     def create_login_group_box(self):
-        self.login_group_box = QGroupBox("使用者")
+        self.login_group_box = QGroupBox()
 
-        self.username_label = QLabel("帳號 (學號) :")
+        self.username_label = QLabel()
         self.username_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         self.username_edit = QLineEdit("")
 
-        self.password_label = QLabel("密碼 :")
+        self.password_label = QLabel()
         self.password_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
         self.password_edit = QLineEdit("")
         self.password_edit.setEchoMode(QLineEdit.Password)
 
-        self.login_button = QPushButton("登入")
+        self.login_button = QPushButton()
         self.login_button.clicked.connect(self.login)
 
         self.method_toggle = PyToggle(width=80)
@@ -252,9 +237,11 @@ class MyApp(QMainWindow):
 
         self.method_toggle.clicked.connect(switch_method)
 
-        self.login_method_left_label = QLabel("登入方式：帳號 / 密碼（不安全）")
-        self.login_method_right_label = QLabel("cookies （安全）")
-
+        self.login_method_left_label = QLabel()
+        self.login_method_right_label = QLabel()
+        self.login_method_left_label.setProperty('class', 'hover')
+        self.login_method_right_label.setProperty('class', 'hover')
+        
         self.login_layout = QGridLayout()
 
         self.login_layout.addWidget(self.login_method_left_label, 0, 0, 1, 1)
@@ -271,14 +258,14 @@ class MyApp(QMainWindow):
         self.login_group_box.setLayout(self.login_layout)
 
     def create_courses_group_box(self):
-        self.courses_group_box = QGroupBox("課程")
+        self.courses_group_box = QGroupBox()
         self.courses_group_box.setDisabled(True)
         self.courses_checkboxes: List[QCheckBox] = []
         self.courses = []
-        self.check_all_courses_checkbox = QCheckBox("勾選全部課程")
+        self.check_all_courses_checkbox = QCheckBox()
 
     def create_status_group_box(self):
-        self.status_group_box = QGroupBox("狀態")
+        self.status_group_box = QGroupBox()
         self.status_layout = QGridLayout()
 
         # self.ticket_button = QPushButton("意見回饋", parent=self.status_group_box)
@@ -295,7 +282,6 @@ class MyApp(QMainWindow):
         logging.getLogger().setLevel(logging.INFO)
         # logging.getLogger().setLevel(logging.DEBUG)
         sys.excepthook = exception_handler
-
         self.progress_bar = QProgressBar()
         self.progress_bar.setMinimum(0)
         self.progress_bar.setMaximum(100)
@@ -397,11 +383,10 @@ class MyApp(QMainWindow):
     def create_options_and_download_groupbox(self):
         self.options_and_download_groupbox = QGroupBox()
         options_and_download_layout = QGridLayout()
-        self.download_button = QPushButton("下載")
+        self.download_button = QPushButton()
         self.download_button.clicked.connect(self.download)
 
         self.download_item_combo_box = PyCheckableComboBox()
-        self.download_item_combo_box.setPlaceholderText("<-- 點我展開 -->")
         for item_name in util.cname_map.values():
             if item_name == "課程資訊":
                 self.download_item_combo_box.addItem(
@@ -411,14 +396,15 @@ class MyApp(QMainWindow):
             self.download_item_combo_box.addItem(item_name)
         
         self.download_item_combo_box.setCurrentIndex(-1)
-        self.download_item_label = QLabel("下載項目：")
+        self.download_item_label = QLabel()
         self.download_item_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-        self.check_all_download_item_checkbox = QCheckBox("勾選全部下載項目")
+        self.check_all_download_item_checkbox = QCheckBox()
         self.check_all_download_item_checkbox.stateChanged.connect(
             self.download_item_combo_box.checkAll
         )
 
-        self.only_download_homepage_checkbox = QCheckBox("只下載首頁")
+        self.only_download_homepage_checkbox = QCheckBox()
+        # self.only_download_homepage_checkbox.setToolTip('Test')
 
         def disable_download_item_combo_box():
             if self.only_download_homepage_checkbox.isChecked():
@@ -440,10 +426,10 @@ class MyApp(QMainWindow):
         download_item_group_box = QGroupBox()
         download_item_group_box.setLayout(download_item_layout)
 
-        self.filepath_label = QLabel("存放路徑：")
+        self.filepath_label = QLabel()
         self.filepath_line_edit = QLineEdit()
         self.filepath_line_edit.setReadOnly(True)
-        self.file_browse_button = QPushButton("瀏覽")
+        self.file_browse_button = QPushButton()
         self.file_browse_button.clicked.connect(self.get_save_directory)
 
         file_groupbox_layout = QHBoxLayout()
@@ -562,8 +548,8 @@ class MyApp(QMainWindow):
         self.username_label.setText('Username (Student ID): ')
         self.password_label.setText('Password: ')
         self.login_button.setText('Login')
-        self.login_method_left_label.setText('Username/Password (unsafe)')
-        self.login_method_right_label.setText('Cookies (safe)')
+        self.login_method_left_label.setText('Username/Password [?]')
+        self.login_method_right_label.setText('Cookies [?]')
         self.courses_group_box.setTitle('Courses')
         self.status_group_box.setTitle('Status')
 
@@ -574,7 +560,7 @@ class MyApp(QMainWindow):
         self.check_all_courses_checkbox.setText('check all courses')
         self.download_item_label.setText('Download Items: ')
         self.check_all_download_item_checkbox.setText('check all items ')
-        self.only_download_homepage_checkbox.setText('only homepage')
+        self.only_download_homepage_checkbox.setText('only homepage [?]')
         self.filepath_label.setText('Path: ')
         self.file_browse_button.setText('Browse')
         self.download_item_combo_box.setPlaceholderText("<-- Click to expand -->")
@@ -589,8 +575,10 @@ class MyApp(QMainWindow):
         self.username_label.setText('帳號 (學號) :')
         self.password_label.setText('密碼 :')
         self.login_button.setText('登入')
-        self.login_method_left_label.setText('登入方式：帳號 / 密碼（不安全）')
-        self.login_method_right_label.setText('cookies （安全）')
+        self.login_method_left_label.setText('登入方式：帳號 / 密碼 [?]')
+        self.login_method_right_label.setText('cookies [?]')
+        self.login_method_left_label.setToolTip('除非你信任本程式作者，否則不應該在計中網站以外的地方輸入自己的帳密！')
+        self.login_method_right_label.setToolTip('透過手動登入 Ceiba 可以從瀏覽器的 F12 視窗看到 Cookies，請複製 PHPSESSID 的內容')
         self.courses_group_box.setTitle('課程')
         self.status_group_box.setTitle('狀態')
         
@@ -609,7 +597,6 @@ class MyApp(QMainWindow):
 
 
 if __name__ == "__main__":
-
     app = QApplication([])
 
     window = MyApp()

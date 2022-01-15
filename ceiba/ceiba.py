@@ -1,6 +1,5 @@
 import logging
 import datetime
-import json
 from typing import List, Union, Optional
 from urllib.parse import urljoin
 
@@ -117,6 +116,8 @@ class Ceiba():
         except FileNotFoundError:
             raise InvalidFilePath
 
+        self.download_ceiba_homepage(self.path, course_id_filter, progress=progress)
+        
         logging.info(strings.start_downloading_courses)
         for course in self.courses:
             if course_id_filter is None or course.id in course_id_filter:
@@ -125,7 +126,6 @@ class Ceiba():
                 course.download(self.courses_dir, self.sess, modules_filter,
                                 progress)
                 logging.info(strings.course_finish_info.format(course.cname))
-        self.download_ceiba_homepage(self.path, course_id_filter, progress=progress)
         logging.info(strings.download_courses_successfully)
 
     def download_ceiba_homepage(self,
@@ -136,8 +136,8 @@ class Ceiba():
         self.path = Path(path)
 
         logging.info(strings.start_downloading_homepage)
-        if progress:
-            progress.emit(0)
+        # if progress:
+        #     progress.emit(0)
         resp = util.get(self.sess, util.courses_url)
         soup = BeautifulSoup(resp.content, 'html.parser')
 

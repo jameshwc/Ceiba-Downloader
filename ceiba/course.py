@@ -41,7 +41,8 @@ class Course():
         current_url = util.get(session, self.href).url
         m = re.search(r'course/([0-9a-f]*)+',current_url)
         if m:
-            self.course_sn = m.group(0).removeprefix('course/')
+            if m.group(0).startswith('course/'):
+                self.course_sn = m.group(0)[7:]
         else:
             logging.error(strings.error_unable_to_parse_course_sn.format(self.cname, self.cname))
             logging.debug(strings.urlf.format(current_url))

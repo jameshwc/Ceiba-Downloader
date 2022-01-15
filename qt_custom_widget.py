@@ -1,5 +1,5 @@
 import logging
-from functools import cached_property
+from functools import lru_cache
 
 from PySide6.QtCore import (Property, QEasingCurve, QObject, QPoint,
                             QPropertyAnimation, QRect, Qt, Signal)
@@ -85,7 +85,9 @@ class PyLogOutput(logging.Handler):
         self.widget.setReadOnly(True)
         self.signal.log.connect(self.widget.appendHtml)
 
-    @cached_property
+    @property
+    @lru_cache()
+    # @cached_property
     def signal(self):
         return PyQtSignal()
 
@@ -113,7 +115,7 @@ class PyCheckableComboBox(QComboBox):
         item.setFlags(Qt.ItemIsUserCheckable)
         item.setCheckState(state)
         item.setEnabled(enabled)
-
+        
     def itemChecked(self, index):
         item = self.model().item(index, 0)
         return item.checkState() == Qt.Checked

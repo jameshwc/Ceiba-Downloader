@@ -45,7 +45,7 @@ class Crawler():
                 bytes('<html><head><title>Request Rejected</title>', encoding='utf-8')):
             raise NotFound(self.text, response.url)
 
-        if len(self.text) > 0:
+        if self.module != "grade" and len(self.text) > 0:  # grade module has many 'show' and 'hide' pages to download
             logging.info(strings.crawler_download_info.format(self.text))
 
         if 'text/html' not in response.headers['content-type']:  # files (e.g. pdf, docs)
@@ -68,7 +68,7 @@ class Crawler():
         
         for op in soup.find_all('option'):
             op.extract()
-
+    
         self.__handle_board(soup.find_all('caption'))  # special case for board
 
         soup = self.crawl_hrefs(soup, response.url)
