@@ -29,8 +29,13 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       
+      - name: Get version
+        run: |
+          echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV &&
+          echo "VERSION=$(cat version.txt)" >> $env:GITHUB_ENV
+      
       - name: Add version
-        run: perl -i -pe's/VERSION/V1.3/g' gui_main.py
+        run: perl -i -pe's/VERSION/V${{ env.VERSION }}/g' gui_main.py
       
       - name: Set up python version
         uses: actions/setup-python@v2
