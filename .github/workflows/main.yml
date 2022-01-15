@@ -41,7 +41,7 @@ jobs:
       
       - name: test
         run: cat ceiba/ceiba.py
-        
+
       - name: Set up python version
         uses: actions/setup-python@v2
         with:
@@ -83,7 +83,7 @@ jobs:
       - name: Zip files
         run: |
           cd ceiba-downloader-windows-latest && zip -r ../ceiba-downloader-windows.zip ceiba-downloader && cd ..
-          cd ceiba-downloader-macos-latest && zip -r ../ceiba-downloader-mac.zip ceiba-downloader && cd ..
+          zip -r ceiba-downloader-mac.zip ceiba-downloader-macos-latest
           cd ceiba-downloader-ubuntu-latest && zip -r ../ceiba-downloader-linux.zip ceiba-downloader && cd ..
 
       - name: Emit a Github Release
