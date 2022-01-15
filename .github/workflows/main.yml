@@ -61,6 +61,9 @@ jobs:
       - name: Display fetched artifacts
         run: ls -R
       
+      - name: Add version
+        run: sed -i 's/VERSION/V1.3/g' gui_main.py
+
       - name: Add execution permission
         run: | 
           chmod +x ceiba-downloader-ubuntu-latest/ceiba-downloader/ceiba-downloader &&
