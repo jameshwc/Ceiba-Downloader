@@ -199,13 +199,18 @@ class MyApp(QMainWindow):
         self.menu_language.addAction(self.menu_chinese)
         self.menu_language.addAction(self.menu_english)
 
-        self.menu_report = self.menu_bar.addAction("&意見回饋 / Report Issue")
+        menu = self.menu_bar
+        if sys.platform == 'darwin':
+            self.menu_help = self.menu_bar.addMenu("&幫助 / Help")
+            menu = self.menu_help
+        
+        self.menu_report = menu.addAction("&意見回饋 / Report Issue")
         self.menu_report.triggered.connect(self.open_ticket_window)
         
-        self.menu_check_update = self.menu_bar.addAction("&檢查更新 / Check for Updates")
+        self.menu_check_update = menu.addAction("&檢查更新 / Check for Updates")
         self.menu_check_update.triggered.connect(self.check_for_updates)
         
-        self.menu_about = self.menu_bar.addAction("&關於 / About")
+        self.menu_about = menu.addAction("&關於 / About")
         self.menu_about.triggered.connect(self.open_about_window)
 
     def create_login_group_box(self):
