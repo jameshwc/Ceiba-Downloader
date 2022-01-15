@@ -451,6 +451,13 @@ class MyApp(QMainWindow):
 
         self.options_and_download_groupbox.setProperty("class", "no-padding")
         self.options_and_download_groupbox.setLayout(options_and_download_layout)
+        
+
+        self.download_finish_msgbox = QMessageBox(self)
+        self.download_finish_msgbox.setWindowTitle("Ceiba Downloader by Jameshwc")
+        self.download_finish_msgbox.setText("下載完成！")
+        self.download_finish_msgbox.addButton("打開檔案目錄", self.download_finish_msgbox.YesRole)
+        self.download_finish_msgbox.addButton("打開 Ceiba 網頁", self.download_finish_msgbox.ActionRole)
 
     def download(self):
         items = []
@@ -508,20 +515,12 @@ class MyApp(QMainWindow):
                 import subprocess
 
                 subprocess.call([opener, path])
-
-        download_finish_msgbox = QMessageBox(self)
-        download_finish_msgbox.setWindowTitle("下載完成！")
-        download_finish_msgbox.setText("下載完成！")
-        download_finish_msgbox.addButton("打開檔案目錄", download_finish_msgbox.YesRole)
-        download_finish_msgbox.addButton(
-            "打開 Ceiba 網頁", download_finish_msgbox.ActionRole
-        )
-        # download_finish_msgbox.addButton(QMessageBox.Ok)
-        download_finish_msgbox.exec()
-        role = download_finish_msgbox.buttonRole(download_finish_msgbox.clickedButton())
-        if role == download_finish_msgbox.ActionRole:  # open index.html
+        
+        self.download_finish_msgbox.exec()
+        role = self.download_finish_msgbox.buttonRole(self.download_finish_msgbox.clickedButton())
+        if role == self.download_finish_msgbox.ActionRole:  # open index.html
             open_path(Path(self.filepath_line_edit.text(), "index.html"))
-        elif role == download_finish_msgbox.YesRole:  # open dir
+        elif role == self.download_finish_msgbox.YesRole:  # open dir
             open_path(Path(self.filepath_line_edit.text()))
 
     def update_progressbar(self, add_value: int):

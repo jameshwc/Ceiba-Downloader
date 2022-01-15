@@ -45,7 +45,7 @@ class Crawler():
                 bytes('<html><head><title>Request Rejected</title>', encoding='utf-8')):
             raise NotFound(self.text, response.url)
 
-        if self.module != "grade" and len(self.text) > 0:  # grade module has many 'show' and 'hide' pages to download
+        if self.module != "grade" and len(self.text.strip()) > 0:  # grade module has many 'show' and 'hide' pages to download
             logging.info(strings.crawler_download_info.format(self.text))
 
         if 'text/html' not in response.headers['content-type']:  # files (e.g. pdf, docs)
@@ -68,9 +68,11 @@ class Crawler():
         
         for op in soup.find_all('option'):
             op.extract()
-    
-        self.__handle_board(soup.find_all('caption'))  # special case for board
 
+        self.is_board = False
+        if self.module == 'board':
+            self.__handle_board(soup.find_all('caption'))  # special case for board
+        
         soup = self.crawl_hrefs(soup, response.url)
 
         filepath.write_text(str(soup), encoding='utf-8')
@@ -114,11 +116,22 @@ class Crawler():
             if a['href'].startswith('mailto') or a['href'].startswith('javascript') or (a['href'].startswith('http') and 'ceiba.ntu.edu.tw' not in a['href']) or len(a.text) == 0:
                 continue
             url = urljoin(resp_url, a.get('href'))
+            filename = a.text
+            text = a.text
+            
+            if self.module == 'vote' and a.get('href') == "#" and a.get('onclick'):
+                m = re.search(r"window\.open\(\'(.*?)\'.*", a.get('onclick'))
+                if m:
+                    url = urljoin(resp_url, m.group(1))
+                    del a['onclick']
+                filename = a.parent.parent.find_all('td')[1].text.strip()
+                text = filename
+            
             crawler_path = self.path
             if self.is_board and a.text in self.board_dir:
                 crawler_path = self.board_dir[a.text]
             try:
-                filename = Crawler(self.session, url, crawler_path, self.module, a.text, a.text).crawl()
+                filename = Crawler(self.session, url, crawler_path, self.module, filename, text).crawl()
             except NotFound as e:
                 logging.warning(e)
                 a.string = a.text + " [404 not found]"
@@ -129,7 +142,6 @@ class Crawler():
         return soup
 
     def __handle_board(self, captions):
-        self.is_board = False
         self.board_dir: Dict[str, Path] = {}
         for caption in captions:
             caption_text: str = caption.get_text()
