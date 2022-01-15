@@ -45,3 +45,8 @@ coll = COLLECT(exe,
                upx=True,
                upx_exclude=[],
                name='ceiba-downloader')
+app = BUNDLE(coll,
+       name='ceiba-downloader.app',
+       icon='resources/ceiba.ico',
+       bundle_identifier=None)
+       
