@@ -25,6 +25,10 @@ class SendTicketError(Exception):
     def __str__(self):
         return strings.exception_send_ticket_error.format(self.content)
 
+class CheckForUpdatesError(Exception):
+    def __str__(self):
+        return strings.exception_check_for_updates
+    
 class NotFound(Exception):
     def __init__(self, text, url):
         super().__init__()

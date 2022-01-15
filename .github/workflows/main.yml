@@ -35,8 +35,13 @@ jobs:
           echo "VERSION=$(cat version.txt)" >> $env:GITHUB_ENV
       
       - name: Add version
-        run: perl -i -pe's/VERSION/V${{ env.VERSION }}/g' gui_main.py
+        run: |
+          perl -i -pe's/VERSION/V${{ env.VERSION }}/g' gui_main.py
+          perl -i -pe's/self.version = 1.0/self.version = ${{ env.VERSION }}/g' ceiba/ceiba.py
       
+      - name: test
+        run: cat ceiba/ceiba.py
+        
       - name: Set up python version
         uses: actions/setup-python@v2
         with:

@@ -14,7 +14,7 @@ from . import util
 from .strings import strings
 from .course import Course
 from .crawler import Crawler
-from .exceptions import (InvalidCredentials, InvalidFilePath,
+from .exceptions import (CheckForUpdatesError, InvalidCredentials, InvalidFilePath,
                         InvalidLoginParameters, NullTicketContent, SendTicketError)
 
 
@@ -33,6 +33,7 @@ class Ceiba():
         self.password = ""
         self.course_dir_map = {}  # cname map to dir
         self.is_login = False
+        self.version = 1.0
 
     def login_user(self, username, password):
         logging.info(strings.try_to_login)
@@ -186,6 +187,17 @@ class Ceiba():
             return
         else:
             raise SendTicketError(resp.content)
+    
+    def check_for_updates(self) -> bool:
+        try:
+            resp = requests.get('https://raw.githubusercontent.com/jameshwc/Ceiba-Downloader/master/version.txt')
+            version = float(resp.content)
+            print(version)
+        except:
+            raise CheckForUpdatesError
+        if version > self.version:
+            return True
+        return False
     
     def set_lang(self, lang: str):
         strings.set_lang(lang)

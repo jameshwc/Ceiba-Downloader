@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import webbrowser
+import requests
 from pathlib import Path
 from types import TracebackType
 from typing import Dict, List
@@ -200,6 +201,9 @@ class MyApp(QMainWindow):
 
         self.menu_report = self.menu_bar.addAction("&意見回饋 / Report Issue")
         self.menu_report.triggered.connect(self.open_ticket_window)
+        
+        self.menu_check_update = self.menu_bar.addAction("&檢查更新 / Check for Updates")
+        self.menu_check_update.triggered.connect(self.check_for_updates)
         
         self.menu_about = self.menu_bar.addAction("&關於 / About")
         self.menu_about.triggered.connect(self.open_about_window)
@@ -541,6 +545,19 @@ class MyApp(QMainWindow):
         about_window = About(self)
         about_window.show()
     
+    def check_for_updates(self):
+        if self.ceiba.check_for_updates():
+            update_msgbox = QMessageBox(self)
+            update_msgbox.setIcon(QMessageBox.Information)
+            update_msgbox.setWindowTitle('Ceiba Downloader By Jameshwc')
+            update_msgbox.setText('There are available updates!')
+            update_button = update_msgbox.addButton('Download the latest version', QMessageBox.ActionRole)
+            cancel_button = update_msgbox.addButton('Cancel', QMessageBox.RejectRole)
+            if update_msgbox.exec() == QMessageBox.ActionRole:
+                webbrowser.open('https://github.com/jameshwc/Ceiba-Downloader/releases/latest')
+        else:
+            QMessageBox.information(self, 'Ceiba Downloader by Jameshwc', 'There are currently no updates available.', QMessageBox.Close)
+
     def set_en(self):
         self.ceiba.set_lang('en')
         self.language = 'en'

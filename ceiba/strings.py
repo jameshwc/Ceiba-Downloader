@@ -34,6 +34,7 @@ class String:
         self._exception_invalid_filepath = {}
         self._exception_null_ticket_content = {}
         self._exception_send_ticket_error = {}
+        self._exception_check_for_updates = {}
         self._exception_http_not_found_error = {}
         
         self._qt_feedback = {}
@@ -91,6 +92,7 @@ class String:
         self._exception_null_ticket_content['zh-tw'] = '內容空白！你必須提供意見內容！'
         self._exception_send_ticket_error['zh-tw'] = '傳送意見失敗！錯誤：{}'
         self._exception_http_not_found_error['zh-tw'] = '[404 not found] 下載 {} 時發生問題！（網址：<a>{}</a>）'
+        self._exception_check_for_updates['zh-tw'] = '檢查更新時發生錯誤！'
     
     def set_en(self):
         # TODO: translate
@@ -126,6 +128,8 @@ class String:
         self._exception_null_ticket_content['en'] = '內容空白！你必須提供意見內容！'
         self._exception_send_ticket_error['en'] = '傳送意見失敗！錯誤：{}'
         self._exception_http_not_found_error['en'] = '[404 not found] 下載 {} 時發生問題！（網址：<a>{}</a>）'
+        self._exception_check_for_updates['en'] = 'Error when checking for updates!'
+        
     
     @property
     def cancel_on_object(self):
@@ -254,5 +258,9 @@ class String:
     @property
     def exception_http_not_found_error(self):
         return self._exception_http_not_found_error[self.lang]
+
+    @property
+    def exception_check_for_updates(self):
+        return self._exception_check_for_updates[self.lang]
 
 strings = String()
