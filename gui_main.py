@@ -551,9 +551,10 @@ class MyApp(QMainWindow):
             update_msgbox.setIcon(QMessageBox.Information)
             update_msgbox.setWindowTitle('Ceiba Downloader By Jameshwc')
             update_msgbox.setText('There are available updates!')
-            update_button = update_msgbox.addButton('Download the latest version', QMessageBox.ActionRole)
-            cancel_button = update_msgbox.addButton('Cancel', QMessageBox.RejectRole)
-            if update_msgbox.exec() == QMessageBox.ActionRole:
+            update_msgbox.addButton('Download the latest version', QMessageBox.ActionRole)
+            update_msgbox.addButton('Cancel', QMessageBox.RejectRole)
+            update_msgbox.exec()
+            if update_msgbox.buttonRole(update_msgbox.clickedButton()) == QMessageBox.ActionRole:
                 webbrowser.open('https://github.com/jameshwc/Ceiba-Downloader/releases/latest')
         else:
             QMessageBox.information(self, 'Ceiba Downloader by Jameshwc', 'There are currently no updates available.', QMessageBox.Close)

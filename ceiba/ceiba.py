@@ -33,7 +33,11 @@ class Ceiba():
         self.password = ""
         self.course_dir_map = {}  # cname map to dir
         self.is_login = False
-        self.version = 1.0
+        try:
+            with open('version.txt') as f:
+                self.version = float(f.read())
+        except FileNotFoundError:
+            self.version = 1.0
 
     def login_user(self, username, password):
         logging.info(strings.try_to_login)
@@ -192,7 +196,6 @@ class Ceiba():
         try:
             resp = requests.get('https://raw.githubusercontent.com/jameshwc/Ceiba-Downloader/master/version.txt')
             version = float(resp.content)
-            print(version)
         except:
             raise CheckForUpdatesError
         if version > self.version:
