@@ -122,7 +122,7 @@ class About(QMainWindow):
         icon = icon.scaled(36, 36, Qt.KeepAspectRatioByExpanding)
         about_icon.setPixmap(icon)
         about_icon.show()
-        about_text = QLabel('Ceiba Downloader')
+        about_text = QLabel('Ceiba Downloader VERSION')
         about_layout = QHBoxLayout()
         about_layout.addWidget(about_icon)
         about_layout.addWidget(about_text, 1)

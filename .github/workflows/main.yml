@@ -29,6 +29,9 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       
+      - name: Add version
+        run: perl -i -pe's/VERSION/V1.3/g' gui_main.py
+      
       - name: Set up python version
         uses: actions/setup-python@v2
         with:
@@ -60,7 +63,7 @@ jobs:
       - uses: actions/download-artifact@v2
       - name: Display fetched artifacts
         run: ls -R
-      
+
       - name: Add execution permission
         run: | 
           chmod +x ceiba-downloader-ubuntu-latest/ceiba-downloader/ceiba-downloader &&
