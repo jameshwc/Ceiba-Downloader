@@ -200,7 +200,7 @@ class MyApp(QMainWindow):
         self.menu_language.addAction(self.menu_english)
 
         menu = self.menu_bar
-        if sys.platform == 'darwin':
+        if sys.platform == 'darwin':  # mac can't have one action menu
             self.menu_help = self.menu_bar.addMenu("&幫助 / Help")
             menu = self.menu_help
         
@@ -210,7 +210,7 @@ class MyApp(QMainWindow):
         self.menu_check_update = menu.addAction("&檢查更新 / Check for Updates")
         self.menu_check_update.triggered.connect(self.check_for_updates)
         
-        self.menu_about = menu.addAction("&關於 / About")
+        self.menu_about = menu.addAction("&關於 / About ")  # extra space for fixing strange mac behavior
         self.menu_about.triggered.connect(self.open_about_window)
 
     def create_login_group_box(self):
