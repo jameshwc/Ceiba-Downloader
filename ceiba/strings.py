@@ -133,7 +133,7 @@ class String:
 
     @property
     def wrong_with_object (self):
-        return self._wrong_with_alert[self.lang]
+        return self._wrong_with_object[self.lang]
     
     @property
     def wrong_with_downloading_url (self):
@@ -145,7 +145,7 @@ class String:
     
     @property
     def course_download_info(self):
-        return self._wrong_with_alert[self.lang]
+        return self._course_download_info[self.lang]
     
     @property
     def course_module_download_info(self):
