@@ -2,7 +2,6 @@ import logging
 import datetime
 import json
 from typing import List, Union, Optional, Dict
-from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
@@ -71,8 +70,9 @@ class Ceiba():
             progress.emit(1)
         try:
             trs = soup.find_all("tr")
-            self.student_name = trs[0].find('td').text
-            self.email = trs[5].find('td').text
+            self.student_name: str = trs[0].find('td').text
+            self.email: str = trs[5].find('td').text
+            self.id: str = self.email.split('@')[0]
             self.is_login = True
         except AttributeError as e:
             raise InvalidCredentials from e
@@ -122,7 +122,7 @@ class Ceiba():
         except FileNotFoundError:
             raise InvalidFilePath
 
-        self.download_ceiba_homepage(self.path, course_id_filter, progress=progress)
+        self.download_ceiba_homepage(path, course_id_filter, progress=progress)
         
         logging.info(strings.start_downloading_courses)
         for course in self.courses:
@@ -140,10 +140,16 @@ class Ceiba():
                                 progress: Optional[SignalInstance] = None):
         
         self.path = Path(path)
-
+        
+        try:
+            if type(path) == str and len(path) == 0:
+                raise FileNotFoundError
+            self.path.mkdir(parents=True, exist_ok=True)
+        except FileNotFoundError:
+            raise InvalidFilePath
+        
         logging.info(strings.start_downloading_homepage)
-        # if progress:
-        #     progress.emit(0)
+        
         resp = util.get(self.sess, util.courses_url)
         soup = BeautifulSoup(resp.content, 'html.parser')
 
@@ -206,3 +212,4 @@ class Ceiba():
     
     def set_lang(self, lang: str):
         strings.set_lang(lang)
+        

@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 import webbrowser
-import requests
+from datetime import datetime
 from pathlib import Path
 from types import TracebackType
 from typing import Dict, List
@@ -178,6 +178,7 @@ class MyApp(QMainWindow):
         self.main_layout.addWidget(self.status_group_box, 0, 1)
         self.main_layout.setColumnStretch(0, 1)
         self.main_layout.setColumnStretch(1, 1)
+        self.username_edit.setFocus()
 
     def create_menu_bar(self):
         self.menu_bar = self.menuBar()
@@ -481,13 +482,13 @@ class MyApp(QMainWindow):
         if self.only_download_homepage_checkbox.isChecked():
             worker = Worker(
                 self.ceiba.download_ceiba_homepage,
-                path=self.filepath_line_edit.text(),
+                path=Path(self.filepath_line_edit.text()) / "-".join(["ceiba", self.ceiba.id, datetime.today().strftime('%Y%m%d')]),
                 course_id_filter=course_id_list,
             )
         else:
             worker = Worker(
                 self.ceiba.download_courses,
-                path=self.filepath_line_edit.text(),
+                path=Path(self.filepath_line_edit.text()) / "-".join(["ceiba", self.ceiba.id, datetime.today().strftime('%Y%m%d')]),
                 course_id_filter=course_id_list,
                 modules_filter=items,
             )
@@ -526,9 +527,9 @@ class MyApp(QMainWindow):
         self.download_finish_msgbox.exec()
         role = self.download_finish_msgbox.buttonRole(self.download_finish_msgbox.clickedButton())
         if role == self.download_finish_msgbox.ActionRole:  # open index.html
-            open_path(Path(self.filepath_line_edit.text(), "index.html"))
+            open_path(Path(self.ceiba.path, "index.html"))
         elif role == self.download_finish_msgbox.YesRole:  # open dir
-            open_path(Path(self.filepath_line_edit.text()))
+            open_path(Path(self.ceiba.path))
 
     def update_progressbar(self, add_value: int):
         if add_value < 0:

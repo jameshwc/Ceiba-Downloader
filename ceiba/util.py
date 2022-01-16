@@ -1,3 +1,4 @@
+from http.client import RemoteDisconnected
 import logging
 import re
 import time
@@ -70,7 +71,7 @@ def loop_connect(http_method_func, url, **kwargs) -> Response:
             response: Response = http_method_func(url, **kwargs)
         # except (TimeoutError, ConnectionResetError):
         except Exception as e:
-            if type(e) == TimeoutError or type(e) == ConnectionResetError:
+            if type(e) in [TimeoutError, ConnectionResetError, RemoteDisconnected]:
                 logging.error(strings.crawler_timeour_error)
             else:
                 logging.error(e)
