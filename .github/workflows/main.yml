@@ -82,8 +82,9 @@ jobs:
         run: ls -R
 
       - name: Add execution permission
-        run: chmod +x ceiba-downloader-ubuntu-latest/ceiba-downloader/ceiba-downloader
-
+        run: |
+          chmod +x ceiba-downloader-ubuntu-latest/ceiba-downloader/ceiba-downloader
+          chmod +x ceiba-downloader-macos-latest/ceiba-downloader.app/Contents/MacOS/ceiba-downloader
       
       - name: Zip files
         run: |
