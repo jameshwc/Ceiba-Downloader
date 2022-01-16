@@ -217,7 +217,6 @@ class MyApp(QMainWindow):
         self.username_label = QLabel()
         self.username_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         self.username_edit = QLineEdit("")
-
         self.password_label = QLabel()
         self.password_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
@@ -227,6 +226,9 @@ class MyApp(QMainWindow):
         self.login_button = QPushButton()
         self.login_button.clicked.connect(self.login)
 
+        self.username_edit.returnPressed.connect(self.login_button.click)
+        self.password_edit.returnPressed.connect(self.login_button.click)
+        
         self.method_toggle = PyToggle(width=80)
 
         def switch_method():
