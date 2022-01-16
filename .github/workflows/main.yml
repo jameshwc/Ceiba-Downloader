@@ -44,8 +44,15 @@ jobs:
 
       - name: Set up python version
         uses: actions/setup-python@v2
+        if: ${{ matrix.os != 'macos-latest' }}
         with:
           python-version: '3.7'
+      
+      - name: Set up python version
+        uses: actions/setup-python@v2
+        if: ${{ matrix.os == 'macos-latest' }}
+        with:
+          python-version: '3.10'
           
       - name: Install modules
         run: pip3 install -r requirements.txt
@@ -75,15 +82,13 @@ jobs:
         run: ls -R
 
       - name: Add execution permission
-        run: | 
-          chmod +x ceiba-downloader-ubuntu-latest/ceiba-downloader/ceiba-downloader &&
-          chmod +x ceiba-downloader-macos-latest/ceiba-downloader/ceiba-downloader
+        run: chmod +x ceiba-downloader-ubuntu-latest/ceiba-downloader/ceiba-downloader
 
       
       - name: Zip files
         run: |
           cd ceiba-downloader-windows-latest && zip -r ../ceiba-downloader-windows.zip ceiba-downloader && cd ..
-          zip -r ceiba-downloader-mac.zip ceiba-downloader-macos-latest
+          cd ceiba-downloader-macos-latest && zip -r ../ceiba-downloader-mac.zip ceiba-downloader.app && cd ..
           cd ceiba-downloader-ubuntu-latest && zip -r ../ceiba-downloader-linux.zip ceiba-downloader && cd ..
 
       - name: Emit a Github Release
