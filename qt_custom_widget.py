@@ -3,7 +3,7 @@ from functools import lru_cache
 
 from PySide6.QtCore import (Property, QEasingCurve, QObject, QPoint,
                             QPropertyAnimation, QRect, Qt, Signal)
-from PySide6.QtGui import QColor, QFont, QPainter
+from PySide6.QtGui import QColor, QFont, QPainter, QStandardItem, QBrush
 from PySide6.QtWidgets import QCheckBox, QComboBox, QPlainTextEdit, QStyleOption, QStyle
 
 class PyToggle(QCheckBox):
@@ -111,7 +111,7 @@ class PyCheckableComboBox(QComboBox):
 
     def addItem(self, item, state=Qt.Unchecked, enabled=True):
         super(PyCheckableComboBox, self).addItem(item)
-        item: QCheckBox = self.model().item(self.count() - 1, 0)
+        item: QStandardItem = self.model().item(self.count() - 1, 0)
         item.setFlags(Qt.ItemIsUserCheckable)
         item.setCheckState(state)
         item.setEnabled(enabled)

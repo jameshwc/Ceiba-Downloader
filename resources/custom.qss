@@ -12,11 +12,13 @@ QGroupBox {{
     /* padding: 15px; */
 
 }}
+
 QGroupBox[class="no-padding"] {{
     padding: 0px;
     padding-top: 0px;
     padding-right: 0px;
 }}
+
 QLabel[class="hover"]:hover {{
     color: #90EE90;
     text-decoration: underline;

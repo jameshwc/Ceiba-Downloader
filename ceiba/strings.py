@@ -6,7 +6,6 @@ class String:
         self._cancel_on_object = {}
         self._wrong_with_object = {}
         self._wrong_with_downloading_url = {}
-        self._wrong_with_alert = {}
         self._course_download_info = {}
         self._course_module_download_info = {}
         self._course_finish_info = {}
@@ -29,6 +28,7 @@ class String:
         self._homepage = {}
         self._urlf = {}
         self._url_duplicate = {}
+        self._send_ticket_successfully = {}
         self._exception_invalid_login_parameters = {}
         self._exception_invalid_credentials = {}
         self._exception_invalid_filepath = {}
@@ -63,7 +63,6 @@ class String:
         self._cancel_on_object['zh-tw'] = '{} 的 {} 功能並未開啟！取消下載 {} 檔案。'
         self._wrong_with_object['zh-tw'] = '下載 {} 時遇到問題！取消下載 {} 的 {} 檔案'
         self._wrong_with_downloading_url['zh-tw'] = '下載 {} 時遇到問題！網址為 {}'
-        self._wrong_with_alert['zh-tw'] = '你可以按任意鍵以繼續下載其他檔案，或是 Ctrl+C 中斷程式運行'
         self._course_download_info['zh-tw'] = '現在正在下載 {} ...'
         self._course_module_download_info['zh-tw'] = '現在正在下載 {} 的 {} ...'
         self._course_finish_info['zh-tw'] = '{} 下載完畢！'
@@ -83,6 +82,7 @@ class String:
         self._download_courses_successfully['zh-tw'] = '下載課程完畢！'
         self._start_downloading_homepage['zh-tw'] = '開始下載 Ceiba 首頁！'
         self._download_homepage_successfully['zh-tw'] = '下載首頁完成！'
+        self._send_ticket_successfully['zh-tw'] = '傳送意見完成！'
         self._homepage['zh-tw'] = '首頁'
         self._urlf['zh-tw'] = '網址：{}'
         self._url_duplicate['zh-tw'] = 'url 重複，跳過下載：{}'
@@ -95,39 +95,38 @@ class String:
         self._exception_check_for_updates['zh-tw'] = '檢查更新時發生錯誤！'
     
     def set_en(self):
-        # TODO: translate
-        self._cancel_on_object['en'] = '{} 的 {} 功能並未開啟！取消下載 {} 檔案。'
-        self._wrong_with_object['en'] = '下載 {} 時遇到問題！取消下載 {} 的 {} 檔案'
-        self._wrong_with_downloading_url['en'] = '下載 {} 時遇到問題！網址為 {}'
-        self._wrong_with_alert['en'] = '你可以按任意鍵以繼續下載其他檔案，或是 Ctrl+C 中斷程式運行'
+        self._cancel_on_object['en'] = 'There is no {1} module in course {0}! Cancel the download of {}.'
+        self._wrong_with_object['en'] = 'Error when downloading {0}! Cancel the download of {2} in {1}.'
+        self._wrong_with_downloading_url['en'] = 'Error when downloading {} ! Url: {}'
         self._course_download_info['en'] = 'Downloading {} ...'
-        self._course_module_download_info['en'] = 'Downloading course {} {} ...'
+        self._course_module_download_info['en'] = 'Downloading {1} of course "{0}" ...'
         self._course_finish_info['en'] = '{} has been completely downloaded!'
         self._crawler_download_info['en'] = 'Downloading {} ...'
-        self._crawler_download_fail['en'] = '下載 {} 時發生問題！（網址：<a>{}</a>）'
-        self._object_download_info['en'] = '現在正在下載 {} 的 {} ...'
-        self._object_finish_info['en'] = '{} 的 {} 下載完畢！'
-        self._crawler_timeour_error['en'] = '下載遭到 Ceiba 伺服器阻止，沉睡 5 秒鐘後重試...'
-        self._skip_external_href['en'] = '外部連結 {}，取消下載'
-        self._error_skip_and_continue_download['en'] = '下載 {} 的 {} 時發生問題！繼續下載其他部分...'
-        self._error_unable_to_parse_course_sn['en'] = '無法取得《{}》的 SN 碼！取消下載 {}...'
+        self._crawler_download_fail['en'] = 'Error when downloading {}! (url: <a>{}</a)'
+        self._object_download_info['en'] = 'Downloading {1} of {0} ...'
+        self._object_finish_info['en'] = 'Finish downloading {1} of {0}!'
+        self._crawler_timeour_error['en'] = 'The Ceiba server has blocked the connection, sleep 5 seconds to continue the download...'
+        self._skip_external_href['en'] = 'Cancel the download of external link {} !'
+        self._error_skip_and_continue_download['en'] = 'Error when downloading {1} of {0}! Skip it...'
+        self._error_unable_to_parse_course_sn['en'] = 'Can\'t parse the course code of {} ! Cancel the download of {}...'
         self._try_to_login['en'] = 'Trying to log in Ceiba...'
         self._login_successfully['en'] = 'Successfully log in to Ceiba!'
         self._try_to_get_courses['en'] = 'Trying to get the courses...'
-        self._get_courses_successfully['en'] = 'Successfully get the courses!'
+        self._get_courses_successfully['en'] = 'Successfully got the courses!'
         self._start_downloading_courses['en'] = 'Downloading the courses...'
-        self._download_courses_successfully['en'] = '下載課程完畢！'
-        self._start_downloading_homepage['en'] = '開始下載 Ceiba 首頁！'
-        self._download_homepage_successfully['en'] = '下載首頁完成！'
+        self._download_courses_successfully['en'] = 'The courses has been downloaded successfully!'
+        self._start_downloading_homepage['en'] = 'Start to download Ceiba homepage!'
+        self._download_homepage_successfully['en'] = 'Ceiba'
+        self._send_ticket_successfully['en'] = 'Successfully sent the ticket!'
         self._homepage['en'] = 'homepage'
         self._urlf['en'] = 'url: {}'
         self._url_duplicate['en'] = 'duplicate url: skipping download - {}'
-        self._exception_invalid_login_parameters['en'] = '你必須提供 cookies 或計中的帳號密碼！'
-        self._exception_invalid_credentials['en'] = '登入失敗！請檢查帳號與密碼是否正確！'
-        self._exception_invalid_filepath['en'] = '路徑錯誤！請檢查路徑是否空白與錯誤！'
-        self._exception_null_ticket_content['en'] = '內容空白！你必須提供意見內容！'
-        self._exception_send_ticket_error['en'] = '傳送意見失敗！錯誤：{}'
-        self._exception_http_not_found_error['en'] = '[404 not found] 下載 {} 時發生問題！（網址：<a>{}</a>）'
+        self._exception_invalid_login_parameters['en'] = 'You must fill in the username/password or cookies!'
+        self._exception_invalid_credentials['en'] = 'Fail to log in! Please check if you fill in correct username and password!'
+        self._exception_invalid_filepath['en'] = 'The file path is incorrect! Please check if the path is empty or wrong!'
+        self._exception_null_ticket_content['en'] = 'The content is empty! You must type something to submit issues!'
+        self._exception_send_ticket_error['en'] = 'Fail to report issue! Error: {}'
+        self._exception_http_not_found_error['en'] = '[404 not found] Error when downloading {} ! (url: <a>{}</a>)'
         self._exception_check_for_updates['en'] = 'Error when checking for updates!'
         
     
@@ -142,10 +141,6 @@ class String:
     @property
     def wrong_with_downloading_url (self):
         return self._wrong_with_downloading_url[self.lang]
-    
-    @property
-    def wrong_with_alert(self):
-        return self._wrong_with_alert[self.lang]
     
     @property
     def course_download_info(self):
@@ -222,6 +217,10 @@ class String:
     @property
     def download_homepage_successfully(self):
         return self._download_homepage_successfully[self.lang]
+    
+    @property
+    def send_ticket_successfully(self):
+        return self._send_ticket_successfully[self.lang]
     
     @property
     def homepage(self):

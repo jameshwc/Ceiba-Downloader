@@ -70,7 +70,7 @@ class TicketSubmit(QMainWindow):
         self.ceiba = ceiba
         self.setCentralWidget(QWidget(self))
         main_layout = QVBoxLayout(self.centralWidget())
-        self.setWindowTitle('意見回饋')
+        self.setWindowTitle('意見回饋 / Report Issue')
         type_group_box = QGroupBox()
         self.type_button_group = QButtonGroup()
         type_layout = QHBoxLayout()
@@ -89,9 +89,9 @@ class TicketSubmit(QMainWindow):
         type_group_box.setProperty("class", "no-padding")
 
         self.content_edit = QTextEdit()
-        submit_button = QPushButton('傳送')
+        submit_button = QPushButton('傳送 / Submit')
         submit_button.clicked.connect(self.submit_ticket)
-        self.annonymous_checkbox = QCheckBox("匿名傳送")
+        self.annonymous_checkbox = QCheckBox("匿名傳送 / Anonymous")
         if not self.ceiba.is_login:
             self.annonymous_checkbox.setChecked(True)
             self.annonymous_checkbox.setDisabled(True)
@@ -107,7 +107,6 @@ class TicketSubmit(QMainWindow):
             logging.error(e)
         except SendTicketError as e:
             logging.error(e)
-        logging.info("傳送意見完成！")
         self.close()
 
 class About(QMainWindow):
@@ -239,10 +238,7 @@ class MyApp(QMainWindow):
             else:
                 self.username_label.setHidden(False)
                 self.username_edit.setHidden(False)
-                if self.language == 'zh-tw':
-                    self.password_label.setText("密碼 :")
-                elif self.language == 'en':
-                    self.password_label.setText("Password: ")
+                self.password_label.setText(self.password_label_text)
 
         self.method_toggle.clicked.connect(switch_method)
 
@@ -250,6 +246,9 @@ class MyApp(QMainWindow):
         self.login_method_right_label = QLabel()
         self.login_method_left_label.setProperty('class', 'hover')
         self.login_method_right_label.setProperty('class', 'hover')
+        
+        self.welcome_label = QLabel()
+        self.welcome_label.setProperty('class', 'welcome')
         
         self.login_layout = QGridLayout()
 
@@ -331,13 +330,10 @@ class MyApp(QMainWindow):
         self.update_progressbar(0)  # busy indicator
         for i in reversed(range(self.login_layout.count())):
             self.login_layout.itemAt(i).widget().setParent(None)
-
-        welcome_label = QLabel(self.ceiba.student_name + " " + self.ceiba.email + "，歡迎你！")
-        welcome_label.setProperty('class', 'welcome')
-
-        self.login_layout.addWidget(welcome_label, 0, 0)
+                
+        self.welcome_label.setText(self.welcome_text.format(self.ceiba.student_name, self.ceiba.email))
+        self.login_layout.addWidget(self.welcome_label, 0, 0)
         self.login_group_box.setLayout(self.login_layout)
-
         worker = Worker(self.ceiba.get_courses_list)
         worker.signals.result.connect(self.fill_course_group_box)
         worker.signals.progress.connect(self.update_progressbar)
@@ -456,13 +452,6 @@ class MyApp(QMainWindow):
 
         self.options_and_download_groupbox.setProperty("class", "no-padding")
         self.options_and_download_groupbox.setLayout(options_and_download_layout)
-        
-
-        self.download_finish_msgbox = QMessageBox(self)
-        self.download_finish_msgbox.setWindowTitle("Ceiba Downloader by Jameshwc")
-        self.download_finish_msgbox.setText("下載完成！")
-        self.download_finish_msgbox.addButton("打開檔案目錄", self.download_finish_msgbox.YesRole)
-        self.download_finish_msgbox.addButton("打開 Ceiba 網頁", self.download_finish_msgbox.ActionRole)
 
     def download(self):
         items = []
@@ -521,6 +510,11 @@ class MyApp(QMainWindow):
 
                 subprocess.call([opener, path])
         
+        self.download_finish_msgbox = QMessageBox(self)
+        self.download_finish_msgbox.setWindowTitle("Ceiba Downloader by Jameshwc")
+        self.download_finish_msgbox.setText(self.download_finish_msgbox_text)
+        self.download_finish_msgbox.addButton(self.download_finish_msgbox_open_dir_text, self.download_finish_msgbox.YesRole)
+        self.download_finish_msgbox.addButton(self.download_finish_msgbox_open_browser_text, self.download_finish_msgbox.ActionRole)
         self.download_finish_msgbox.exec()
         role = self.download_finish_msgbox.buttonRole(self.download_finish_msgbox.clickedButton())
         if role == self.download_finish_msgbox.ActionRole:  # open index.html
@@ -569,11 +563,14 @@ class MyApp(QMainWindow):
         self.login_group_box.setTitle('User')
         self.username_label.setText('Username (Student ID): ')
         self.password_label.setText('Password: ')
+        self.password_label_text = 'Password: '
         self.login_button.setText('Login')
         self.login_method_left_label.setText('Username/Password [?]')
         self.login_method_right_label.setText('Cookies [?]')
         self.courses_group_box.setTitle('Courses')
         self.status_group_box.setTitle('Status')
+        self.welcome_text = "Welcome, {} ({})!"
+        self.welcome_label.setText(self.welcome_text.format(self.ceiba.student_name, self.ceiba.email))
 
         for i in range(len(self.courses_checkboxes)):
             self.courses_checkboxes[i].setText("&" + self.courses[i].ename)
@@ -586,8 +583,10 @@ class MyApp(QMainWindow):
         self.filepath_label.setText('Path: ')
         self.file_browse_button.setText('Browse')
         self.download_item_combo_box.setPlaceholderText("<-- Click to expand -->")
-
         self.download_item_combo_box.setItemsText(util.ename_map)
+        self.download_finish_msgbox_text = 'The download has completed!'
+        self.download_finish_msgbox_open_dir_text = 'Open the Ceiba directory'
+        self.download_finish_msgbox_open_browser_text = 'Open the Ceiba homepage'
 
     
     def set_zh_tw(self):
@@ -596,6 +595,7 @@ class MyApp(QMainWindow):
         self.login_group_box.setTitle('使用者')
         self.username_label.setText('帳號 (學號) :')
         self.password_label.setText('密碼 :')
+        self.password_label_text = '密碼 :'
         self.login_button.setText('登入')
         self.login_method_left_label.setText('登入方式：帳號 / 密碼 [?]')
         self.login_method_right_label.setText('cookies [?]')
@@ -603,6 +603,8 @@ class MyApp(QMainWindow):
         self.login_method_right_label.setToolTip('透過手動登入 Ceiba 可以從瀏覽器的 F12 視窗看到 Cookies，請複製 PHPSESSID 的內容')
         self.courses_group_box.setTitle('課程')
         self.status_group_box.setTitle('狀態')
+        self.welcome_text = "{} ({})，歡迎你！"
+        self.welcome_label.setText(self.welcome_text.format(self.ceiba.student_name, self.ceiba.email))
         
         for i in range(len(self.courses_checkboxes)):
             self.courses_checkboxes[i].setText("&" + self.courses[i].cname)
@@ -616,6 +618,9 @@ class MyApp(QMainWindow):
         self.file_browse_button.setText('瀏覽')
         self.download_item_combo_box.setPlaceholderText("<-- 點我展開 -->")
         self.download_item_combo_box.setItemsText(util.cname_map)
+        self.download_finish_msgbox_text = '下載完成！'
+        self.download_finish_msgbox_open_dir_text = '打開檔案目錄'
+        self.download_finish_msgbox_open_browser_text = '打開 Ceiba 網頁'
 
 
 if __name__ == "__main__":
