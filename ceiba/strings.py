@@ -29,6 +29,7 @@ class String:
         self._urlf = {}
         self._url_duplicate = {}
         self._send_ticket_successfully = {}
+        self._retry_after_five_seconds = {}
         self._exception_invalid_login_parameters = {}
         self._exception_invalid_credentials = {}
         self._exception_invalid_filepath = {}
@@ -93,6 +94,7 @@ class String:
         self._exception_send_ticket_error['zh-tw'] = '傳送意見失敗！錯誤：{}'
         self._exception_http_not_found_error['zh-tw'] = '[404 not found] 下載 {} 時發生問題！（網址：<a>{}</a>）'
         self._exception_check_for_updates['zh-tw'] = '檢查更新時發生錯誤！'
+        self._retry_after_five_seconds['zh-tw'] = '五秒後重新連線...'
     
     def set_en(self):
         self._cancel_on_object['en'] = 'There is no {1} module in course {0}! Cancel the download of {}.'
@@ -116,7 +118,7 @@ class String:
         self._start_downloading_courses['en'] = 'Downloading the courses...'
         self._download_courses_successfully['en'] = 'The courses has been downloaded successfully!'
         self._start_downloading_homepage['en'] = 'Start to download Ceiba homepage!'
-        self._download_homepage_successfully['en'] = 'Ceiba'
+        self._download_homepage_successfully['en'] = 'Ceiba homepage has been downloaded successfully!'
         self._send_ticket_successfully['en'] = 'Successfully sent the ticket!'
         self._homepage['en'] = 'homepage'
         self._urlf['en'] = 'url: {}'
@@ -128,138 +130,142 @@ class String:
         self._exception_send_ticket_error['en'] = 'Fail to report issue! Error: {}'
         self._exception_http_not_found_error['en'] = '[404 not found] Error when downloading {} ! (url: <a>{}</a>)'
         self._exception_check_for_updates['en'] = 'Error when checking for updates!'
-        
+        self._retry_after_five_seconds['en'] = 'Retry connection after 5 seconds...'
     
     @property
-    def cancel_on_object(self):
+    def cancel_on_object(self) -> str:
         return self._cancel_on_object[self.lang]
 
     @property
-    def wrong_with_object (self):
+    def wrong_with_object (self) -> str:
         return self._wrong_with_object[self.lang]
     
     @property
-    def wrong_with_downloading_url (self):
+    def wrong_with_downloading_url (self) -> str:
         return self._wrong_with_downloading_url[self.lang]
     
     @property
-    def course_download_info(self):
+    def course_download_info(self) -> str:
         return self._course_download_info[self.lang]
     
     @property
-    def course_module_download_info(self):
+    def course_module_download_info(self) -> str:
         return self._course_module_download_info[self.lang]
     
     @property
-    def course_finish_info(self):
+    def course_finish_info(self) -> str:
         return self._course_finish_info[self.lang]
     
     @property
-    def crawler_download_info(self):
+    def crawler_download_info(self) -> str:
         return self._crawler_download_info[self.lang]
     
     @property
-    def crawler_download_fail(self):
+    def crawler_download_fail(self) -> str:
         return self._crawler_download_fail[self.lang]
     
     @property
-    def object_download_info(self):
+    def object_download_info(self) -> str:
         return self._object_download_info[self.lang]
     
     @property
-    def object_finish_info(self):
+    def object_finish_info(self) -> str:
         return self._object_finish_info[self.lang]
     
     @property
-    def crawler_timeour_error(self):
+    def crawler_timeour_error(self) -> str:
         return self._crawler_timeour_error[self.lang]
     
     @property
-    def skip_external_href(self):
+    def skip_external_href(self) -> str:
         return self._skip_external_href[self.lang]
     
     @property
-    def error_skip_and_continue_download(self):
+    def error_skip_and_continue_download(self) -> str:
         return self._error_skip_and_continue_download[self.lang]
     
     @property
-    def error_unable_to_parse_course_sn(self):
+    def error_unable_to_parse_course_sn(self) -> str:
         return self._error_unable_to_parse_course_sn[self.lang]
     
     @property
-    def try_to_login(self):
+    def try_to_login(self) -> str:
         return self._try_to_login[self.lang]
     
     @property
-    def login_successfully(self):
+    def login_successfully(self) -> str:
         return self._login_successfully[self.lang]
     
     @property
-    def try_to_get_courses(self):
+    def try_to_get_courses(self) -> str:
         return self._try_to_get_courses[self.lang]
     
     @property
-    def get_courses_successfully(self):
+    def get_courses_successfully(self) -> str:
         return self._get_courses_successfully[self.lang]
     
     @property
-    def start_downloading_courses(self):
+    def start_downloading_courses(self) -> str:
         return self._start_downloading_courses[self.lang]
     
     @property
-    def download_courses_successfully(self):
+    def download_courses_successfully(self) -> str:
         return self._download_courses_successfully[self.lang]
     
     @property
-    def start_downloading_homepage(self):
+    def start_downloading_homepage(self) -> str:
         return self._start_downloading_homepage[self.lang]
     
     @property
-    def download_homepage_successfully(self):
+    def download_homepage_successfully(self) -> str:
         return self._download_homepage_successfully[self.lang]
     
     @property
-    def send_ticket_successfully(self):
+    def send_ticket_successfully(self) -> str:
         return self._send_ticket_successfully[self.lang]
     
     @property
-    def homepage(self):
+    def homepage(self) -> str:
         return self._homepage[self.lang]
     
     @property
-    def urlf(self):
+    def urlf(self) -> str:
         return self._urlf[self.lang]
     
     @property
-    def url_duplicate(self):
+    def url_duplicate(self) -> str:
         return self._url_duplicate[self.lang]
     
     @property
-    def exception_invalid_login_parameters(self):
+    def exception_invalid_login_parameters(self) -> str:
         return self._exception_invalid_login_parameters[self.lang]
     
     @property
-    def exception_invalid_credentials(self):
+    def exception_invalid_credentials(self) -> str:
         return self._exception_invalid_credentials[self.lang]
     
     @property
-    def exception_invalid_filepath(self):
+    def exception_invalid_filepath(self) -> str:
         return self._exception_invalid_filepath[self.lang]
     
     @property
-    def exception_null_ticket_content(self):
+    def exception_null_ticket_content(self) -> str:
         return self._exception_null_ticket_content[self.lang]
     
     @property
-    def exception_send_ticket_error(self):
+    def exception_send_ticket_error(self) -> str:
         return self._exception_send_ticket_error[self.lang]
     
     @property
-    def exception_http_not_found_error(self):
+    def exception_http_not_found_error(self) -> str:
         return self._exception_http_not_found_error[self.lang]
 
     @property
-    def exception_check_for_updates(self):
+    def exception_check_for_updates(self) -> str:
         return self._exception_check_for_updates[self.lang]
+
+    @property
+    def retry_after_five_seconds(self) -> str:
+        return self._retry_after_five_seconds[self.lang]
 
 strings = String()

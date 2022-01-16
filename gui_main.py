@@ -16,15 +16,14 @@ from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox,
                                QMainWindow, QMessageBox, QProgressBar,
                                QPushButton, QRadioButton, QScrollArea,
                                QSizePolicy, QTabWidget, QTextEdit, QVBoxLayout,
-                               QWidget)
+                               QWidget, QMenu, QWidgetAction)
 from qt_material import apply_stylesheet
 
 from ceiba import util
 from ceiba.ceiba import Ceiba
 from ceiba.course import Course
-from ceiba.exceptions import (InvalidCredentials, InvalidLoginParameters,
-                              NullTicketContent, SendTicketError)
-from qt_custom_widget import PyCheckableComboBox, PyLogOutput, PyToggle
+from ceiba.exceptions import (NullTicketContent, SendTicketError)
+from qt_custom_widget import PyLogOutput, PyToggle
 
 dirname = os.path.dirname(__file__) or '.'
 
@@ -213,7 +212,7 @@ class MyApp(QMainWindow):
         self.menu_about.triggered.connect(self.open_about_window)
 
     def create_login_group_box(self):
-        self.login_group_box = QGroupBox()
+        self.login_group_box = QGroupBox(self)
 
         self.username_label = QLabel()
         self.username_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
@@ -276,9 +275,6 @@ class MyApp(QMainWindow):
         self.status_group_box = QGroupBox()
         self.status_layout = QGridLayout()
 
-        # self.ticket_button = QPushButton("意見回饋", parent=self.status_group_box)
-        # self.ticket_button.clicked.connect(self.open_ticket_window)
-
         self.log_output = PyLogOutput(self.status_group_box)
         self.log_output.setFormatter(
             logging.Formatter(
@@ -297,7 +293,6 @@ class MyApp(QMainWindow):
 
         self.status_layout.addWidget(self.log_output.widget)
         self.status_layout.addWidget(self.progress_bar)
-        # self.status_layout.addWidget(self.ticket_button)
         self.status_group_box.setLayout(self.status_layout)
 
     def login(self):
@@ -391,43 +386,52 @@ class MyApp(QMainWindow):
         self.download_button = QPushButton()
         self.download_button.clicked.connect(self.download)
 
-        self.download_item_combo_box = PyCheckableComboBox()
+        self.download_item_menu = QMenu(self)
         for item_name in util.cname_map.values():
+            checkbox = QCheckBox("&" + item_name)
+            checkable_action = QWidgetAction(self.download_item_menu)
+            checkable_action.setDefaultWidget(checkbox)
+            self.download_item_menu.addAction(checkable_action)
             if item_name == "課程資訊":
-                self.download_item_combo_box.addItem(
-                    item_name, state=Qt.Checked, enabled=False
-                )
+                checkbox.setChecked(True)
+                checkbox.setDisabled(True)
                 continue
-            self.download_item_combo_box.addItem(item_name)
-        
-        self.download_item_combo_box.setCurrentIndex(-1)
+        self.download_item_menu_button = QPushButton(self)
+        self.download_item_menu_button.setMenu(self.download_item_menu)
         self.download_item_label = QLabel()
         self.download_item_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        
         self.check_all_download_item_checkbox = QCheckBox()
-        self.check_all_download_item_checkbox.stateChanged.connect(
-            self.download_item_combo_box.checkAll
-        )
+        def download_item_menu_check_all():
+            for action in self.download_item_menu.actions():
+                # act: QWidgetAction = None
+                if not action.defaultWidget().isEnabled():
+                    continue
+                if self.check_all_download_item_checkbox.isChecked():
+                    action.defaultWidget().setChecked(True)
+                else:
+                    action.defaultWidget().setChecked(False)
+        self.check_all_download_item_checkbox.stateChanged.connect(download_item_menu_check_all)
 
         self.only_download_homepage_checkbox = QCheckBox()
-        # self.only_download_homepage_checkbox.setToolTip('Test')
-
-        def disable_download_item_combo_box():
+        self.only_download_homepage_checkbox.setProperty('class', 'hover')
+        
+        def disable_download_item_menu_button():
             if self.only_download_homepage_checkbox.isChecked():
-                self.download_item_combo_box.setDisabled(True)
+                self.download_item_menu_button.setDisabled(True)
                 self.check_all_download_item_checkbox.setDisabled(True)
                 self.download_item_label.setDisabled(True)
             else:
-                self.download_item_combo_box.setEnabled(True)
+                self.download_item_menu_button.setEnabled(True)
                 self.check_all_download_item_checkbox.setEnabled(True)
                 self.download_item_label.setEnabled(True)
-        self.only_download_homepage_checkbox.clicked.connect(disable_download_item_combo_box)
+        
+        self.only_download_homepage_checkbox.clicked.connect(disable_download_item_menu_button)
         download_item_layout = QHBoxLayout()
         download_item_layout.addWidget(self.download_item_label)
-        download_item_layout.addWidget(self.download_item_combo_box)
+        download_item_layout.addWidget(self.download_item_menu_button)
         download_item_layout.addWidget(self.check_all_download_item_checkbox)
         download_item_layout.addWidget(self.only_download_homepage_checkbox)
-        download_item_layout.setContentsMargins(0, 0, 0, 0)
-        download_item_layout.setSpacing(0)
         download_item_group_box = QGroupBox()
         download_item_group_box.setLayout(download_item_layout)
 
@@ -455,9 +459,11 @@ class MyApp(QMainWindow):
 
     def download(self):
         items = []
-        for i in range(self.download_item_combo_box.count()):
-            if self.download_item_combo_box.itemChecked(i):
-                module_name = self.download_item_combo_box.model().item(i, 0).text()
+        for action in self.download_item_menu.actions():
+            action: QWidgetAction = action
+            checkbox: QCheckBox = action.defaultWidget()
+            if checkbox.isChecked():
+                module_name = checkbox.text()[1:]  # remove '&'
                 for ename, cname in util.cname_map.items():
                     if module_name in [cname, ename]:
                         items.append(ename)
@@ -564,9 +570,11 @@ class MyApp(QMainWindow):
         self.username_label.setText('Username (Student ID): ')
         self.password_label.setText('Password: ')
         self.password_label_text = 'Password: '
-        self.login_button.setText('Login')
+        self.login_button.setText('Log in')
         self.login_method_left_label.setText('Username/Password [?]')
         self.login_method_right_label.setText('Cookies [?]')
+        self.login_method_left_label.setToolTip('It\'s unsafe to log in via a third-party program! You should use cookies as your credential instead.')
+        self.login_method_right_label.setToolTip('Log in Ceiba manually and you can view cookies using F12 in your browser. Please copy the content of PHPSESSID in your cookies.')
         self.courses_group_box.setTitle('Courses')
         self.status_group_box.setTitle('Status')
         self.welcome_text = "Welcome, {} ({})!"
@@ -580,13 +588,21 @@ class MyApp(QMainWindow):
         self.download_item_label.setText('Download Items: ')
         self.check_all_download_item_checkbox.setText('check all items ')
         self.only_download_homepage_checkbox.setText('only homepage [?]')
+        self.only_download_homepage_checkbox.setToolTip(
+        '''Download Ceiba homepage only.
+        You should use this option when you had downloaded a few courses before
+        and don\'t want to repetively download those courses.''')
         self.filepath_label.setText('Path: ')
         self.file_browse_button.setText('Browse')
-        self.download_item_combo_box.setPlaceholderText("<-- Click to expand -->")
-        self.download_item_combo_box.setItemsText(util.ename_map)
+        self.download_item_menu_button.setText("<-- Click to expand -->")
+        for action in self.download_item_menu.actions():
+            checkbox = action.defaultWidget()
+            if checkbox.text()[1:] in util.ename_map:
+                checkbox.setText("&" + util.ename_map[checkbox.text()[1:]])
+            
         self.download_finish_msgbox_text = 'The download has completed!'
-        self.download_finish_msgbox_open_dir_text = 'Open the Ceiba directory'
-        self.download_finish_msgbox_open_browser_text = 'Open the Ceiba homepage'
+        self.download_finish_msgbox_open_dir_text = 'Open Ceiba directory'
+        self.download_finish_msgbox_open_browser_text = 'Open Ceiba homepage'
 
     
     def set_zh_tw(self):
@@ -611,13 +627,19 @@ class MyApp(QMainWindow):
 
         self.download_button.setText('下載')
         self.check_all_courses_checkbox.setText('勾選所有課程')
-        self.download_item_label.setText('下載項目：')
-        self.check_all_download_item_checkbox.setText('勾選全部下載項目')
-        self.only_download_homepage_checkbox.setText('只下載首頁')
-        self.filepath_label.setText('存放路徑：')
+        self.download_item_label.setText(' 下載項目： ')
+        self.check_all_download_item_checkbox.setText(' 勾選全部下載項目 ')
+        self.only_download_homepage_checkbox.setText(' 只下載首頁[?] ')
+        self.only_download_homepage_checkbox.setToolTip(
+            '只下載 Ceiba 首頁。當你已經下載了部分課程，且不希望重複下載那些課程時，可以勾選這個選項。')
+        self.filepath_label.setText(' 存放路徑： ')
         self.file_browse_button.setText('瀏覽')
-        self.download_item_combo_box.setPlaceholderText("<-- 點我展開 -->")
-        self.download_item_combo_box.setItemsText(util.cname_map)
+        self.download_item_menu_button.setText("<-- 點我展開 -->")
+        for action in self.download_item_menu.actions():
+            checkbox: QCheckBox = action.defaultWidget()
+            if checkbox.text()[1:] in util.cname_map:
+                checkbox.setText("&" + util.cname_map[checkbox.text()[1:]])
+        
         self.download_finish_msgbox_text = '下載完成！'
         self.download_finish_msgbox_open_dir_text = '打開檔案目錄'
         self.download_finish_msgbox_open_browser_text = '打開 Ceiba 網頁'

@@ -2,7 +2,7 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import requests
 from bs4 import BeautifulSoup
@@ -16,25 +16,25 @@ from .crawler import Crawler
 class Course():
 
     def __init__(self, semester, course_num, cname, ename, teacher, href):
-        self.semester = semester
-        self.course_num = course_num
-        self.cname = cname
-        self.ename = ename
-        self.teacher = teacher
-        self.href = href
-        self.folder_name = util.get_valid_filename("_".join(
-            [self.semester, self.cname, self.teacher]))
-        self.id = self.semester + self.course_num
-        self.course_sn = 0
+        self.semester: str = semester
+        self.course_num: str = course_num
+        self.cname: str = cname
+        self.ename: str = ename
+        self.teacher: str = teacher
+        self.href: str = href
+        self.folder_name: str = util.get_valid_filename("_".join([self.semester, self.cname, self.ename, self.teacher]))
+        self.id: str = self.semester + self.course_num
+        self.course_sn: str = ""
 
     def __str__(self):
-        return " ".join([self.cname, self.teacher, self.href])
+        return " ".join([self.cname, self.ename, self.teacher, self.href])
 
     def download(self,
                  path: Path,
                  session: requests.Session,
                  modules_filter_list: Optional[List[str]] = None,
                  progress: Optional[SignalInstance] = None):
+        
         self.path = path / self.folder_name
         self.path.mkdir(exist_ok=True)
         
@@ -55,7 +55,8 @@ class Course():
                 progress.emit(modules_not_in_this_module_num)
         for module in modules:
             try:
-                self.__html_download(session, util.cname_map[module], module)
+                module_name = util.cname_map[module] if strings.lang == 'zh-tw' else module
+                self.__html_download(session, module_name, module)
             except Exception as e:
                 logging.error(e)
                 logging.debug(e, exc_info=True)

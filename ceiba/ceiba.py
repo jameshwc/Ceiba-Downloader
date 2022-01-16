@@ -1,7 +1,7 @@
 import logging
 import datetime
 import json
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Dict
 from urllib.parse import urljoin
 
 import requests
@@ -27,17 +27,17 @@ class Ceiba():
             'User-Agent':
             'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0'
         })
-        self.student_name = ""
-        self.email = "Not Login"
-        self.username = ""
-        self.password = ""
-        self.course_dir_map = {}  # cname map to dir
-        self.is_login = False
+        self.student_name: str = ""
+        self.email: str = "Not Login"
+        self.username: str = ""
+        self.password: str = ""
+        self.course_dir_map: Dict[str, str] = {}  # cname map to dir
+        self.is_login: bool = False
         try:
             with open('version.txt') as f:
-                self.version = float(f.read())
+                self.version: float = float(f.read())
         except FileNotFoundError:
-            self.version = 1.0
+            self.version: float = 1.0
 
     def login_user(self, username, password):
         logging.info(strings.try_to_login)
@@ -126,12 +126,12 @@ class Ceiba():
         
         logging.info(strings.start_downloading_courses)
         for course in self.courses:
+            course_name = course.cname if strings.lang == 'zh-tw' else course.ename
             if course_id_filter is None or course.id in course_id_filter:
-                logging.info(strings.course_download_info.format(course.cname))
+                logging.info(strings.course_download_info.format(course_name))
                 self.courses_dir.joinpath(course.folder_name).mkdir(exist_ok=True)
-                course.download(self.courses_dir, self.sess, modules_filter,
-                                progress)
-                logging.info(strings.course_finish_info.format(course.cname))
+                course.download(self.courses_dir, self.sess, modules_filter, progress)
+                logging.info(strings.course_finish_info.format(course_name))
         logging.info(strings.download_courses_successfully)
 
     def download_ceiba_homepage(self,
@@ -188,15 +188,17 @@ class Ceiba():
             payload['email'] = self.email
         resp = self.sess.post(util.ticket_url, json.dumps(payload))
         if resp.status_code == 200 and resp.content == b'"Success"':
+            logging.info(strings.send_ticket_successfully)
             return
         else:
             raise SendTicketError(resp.content)
     
     def check_for_updates(self) -> bool:
         try:
-            resp = requests.get('https://raw.githubusercontent.com/jameshwc/Ceiba-Downloader/master/version.txt')
+            resp = self.sess.get('https://raw.githubusercontent.com/jameshwc/Ceiba-Downloader/master/version.txt')
             version = float(resp.content)
-        except:
+        except Exception as e:
+            logging.error(e)
             raise CheckForUpdatesError
         if version > self.version:
             return True

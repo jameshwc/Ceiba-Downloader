@@ -100,39 +100,3 @@ class PyLogOutput(logging.Handler):
 
     def geometry(self) -> QRect:
         return self.widget.geometry()
-
-class PyCheckableComboBox(QComboBox):
-    # once there is a checkState set, it is rendered
-    # here we assume default Unchecked
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.all_checked = False
-
-    def addItem(self, item, state=Qt.Unchecked, enabled=True):
-        super(PyCheckableComboBox, self).addItem(item)
-        item: QStandardItem = self.model().item(self.count() - 1, 0)
-        item.setFlags(Qt.ItemIsUserCheckable)
-        item.setCheckState(state)
-        item.setEnabled(enabled)
-        
-    def itemChecked(self, index):
-        item = self.model().item(index, 0)
-        return item.checkState() == Qt.Checked
-
-    def checkAll(self):
-        self.all_checked = False if self.all_checked else True
-        for i in range(self.count()):
-            item: QCheckBox = self.model().item(i, 0)
-            if item.isEnabled() == False:
-                continue
-            if self.all_checked and item.checkState() != Qt.Checked:
-                item.setCheckState(Qt.Checked)
-            elif self.all_checked is False and item.checkState() == Qt.Checked:
-                item.setCheckState(Qt.Unchecked)
-
-    def setItemsText(self, name_map):
-        for i in range(self.count()):
-            item: QCheckBox = self.model().item(i, 0)
-            if item.text() in name_map:
-                item.setText(name_map[item.text()])

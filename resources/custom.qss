@@ -19,7 +19,7 @@ QGroupBox[class="no-padding"] {{
     padding-right: 0px;
 }}
 
-QLabel[class="hover"]:hover {{
+*[class="hover"]:hover {{
     color: #90EE90;
     text-decoration: underline;
 }}

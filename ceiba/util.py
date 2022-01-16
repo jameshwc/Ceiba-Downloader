@@ -2,9 +2,8 @@ import logging
 import re
 import time
 
-from requests import Session
+from requests import Session, Response
 # import appdirs
-from bs4 import BeautifulSoup
 
 from .strings import strings
 
@@ -37,7 +36,7 @@ ename_map = {v: k for k, v in cname_map.items()}
 
 ticket_url = 'https://xk4axzhtgc.execute-api.us-east-2.amazonaws.com/Practicing/message'
 
-def get_valid_filename(name: str):
+def get_valid_filename(name: str) -> str:
     s = str(name).strip().replace(' ', '_').replace('/', '-')
     s = re.sub(r'(?u)[^-\w.]', '_', s)
     return s
@@ -46,11 +45,12 @@ def get_valid_filename(name: str):
 def progress_decorator():
     def decorator(func):
         def wrap(self, *args):
+            name = self.cname if strings.lang == 'zh-tw' else self.ename
             logging.info(
-                strings.object_download_info.format(self.cname, args[1]))
+                strings.object_download_info.format(name, args[1]))
             ret = func(self, *args)
             logging.info(strings.object_finish_info.format(
-                self.cname, args[1]))
+                name, args[1]))
             return ret
 
         return wrap
@@ -58,24 +58,24 @@ def progress_decorator():
     return decorator
 
 
-def get(session: Session, url: str):
+def get(session: Session, url: str) -> Response:
     return loop_connect(session.get, url)
 
-def post(session: Session, url: str, data=None):
+def post(session: Session, url: str, data=None) -> Response:
     return loop_connect(session.post, url, data=data)
 
-def loop_connect(http_method_func, url, **kwargs):
+def loop_connect(http_method_func, url, **kwargs) -> Response:
     while True:
         try:
-            response = http_method_func(url, **kwargs)
+            response: Response = http_method_func(url, **kwargs)
         # except (TimeoutError, ConnectionResetError):
         except Exception as e:
             if type(e) == TimeoutError or type(e) == ConnectionResetError:
                 logging.error(strings.crawler_timeour_error)
             else:
                 logging.error(e)
-                logging.debug("發生錯誤的網址：{}".format(url))
-                logging.info('五秒後重新連線...')
+                logging.debug(strings.urlf.format(url))
+                logging.info(strings.retry_after_five_seconds)
             time.sleep(5)
             continue
         return response
