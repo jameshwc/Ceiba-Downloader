@@ -37,8 +37,10 @@ class Crawler():
 
     def crawl(self) -> Path:
         if self.url in Crawler.crawled_urls:
-            logging.debug(strings.url_duplicate.format(self.url))
-            return Crawler.crawled_urls[self.url]
+            # See issue #11 [https://github.com/jameshwc/Ceiba-Downloader/issues/11]
+            if Crawler.crawled_urls[self.url].is_relative_to(self.path):
+                logging.debug(strings.url_duplicate.format(self.url))
+                return Crawler.crawled_urls[self.url]
         
         response = util.get(self.session, self.url)
         if response.status_code == 404 or response.content.startswith(
