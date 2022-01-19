@@ -7,8 +7,11 @@ from requests import Session, Response
 # import appdirs
 
 from .strings import strings
+from .exceptions import CrawlerConnectionError
 
 # from pathlib import Path
+
+CONNECT_RETRY_MAX = 10
 
 home_url = 'https://ceiba.ntu.edu.tw'
 login_url = 'https://ceiba.ntu.edu.tw/ChkSessLib.php'
@@ -66,17 +69,22 @@ def post(session: Session, url: str, data=None) -> Response:
     return loop_connect(session.post, url, data=data)
 
 def loop_connect(http_method_func, url, **kwargs) -> Response:
-    while True:
+    count = 0
+    while count < CONNECT_RETRY_MAX:
         try:
             response: Response = http_method_func(url, **kwargs)
         # except (TimeoutError, ConnectionResetError):
         except Exception as e:
             if type(e) in [TimeoutError, ConnectionResetError, RemoteDisconnected]:
-                logging.error(strings.crawler_timeour_error)
+                logging.error(strings.crawler_timeout_error)
             else:
                 logging.error(e)
                 logging.debug(strings.urlf.format(url))
                 logging.info(strings.retry_after_five_seconds)
+            count += 1
             time.sleep(5)
             continue
         return response
+    
+    logging.warning(strings.warning_max_retries_exceeded)
+    raise CrawlerConnectionError(url)

@@ -159,7 +159,10 @@ class Crawler():
 
     def download_imgs(self, imgs):
         for img in imgs:
-            url = urljoin(self.url, img.get('src'))
+            src: str = img.get('src')
+            if src.startswith('http') and 'ceiba.ntu.edu.tw' not in src:
+                continue  # leave external images alone
+            url = urljoin(self.url, src)
             img['src'] = url.split('/')[-1]
             path = self.path / img['src']
             if path.exists():

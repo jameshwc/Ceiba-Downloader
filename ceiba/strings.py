@@ -13,7 +13,7 @@ class String:
         self._crawler_download_fail = {}
         self._object_download_info = {}
         self._object_finish_info = {}
-        self._crawler_timeour_error = {}
+        self._crawler_timeout_error = {}
         self._skip_external_href = {}
         self._error_skip_and_continue_download = {}
         self._error_unable_to_parse_course_sn = {}
@@ -37,6 +37,8 @@ class String:
         self._exception_send_ticket_error = {}
         self._exception_check_for_updates = {}
         self._exception_http_not_found_error = {}
+        self._exception_crawler_connection_error = {}
+        self._warning_max_retries_exceeded = {}
         
         self._qt_feedback = {}
         self._qt_submit = {}
@@ -71,7 +73,7 @@ class String:
         self._crawler_download_fail['zh-tw'] = '下載 {} 時發生問題！（網址：<a>{}</a>）'
         self._object_download_info['zh-tw'] = '現在正在下載 {} 的 {} ...'
         self._object_finish_info['zh-tw'] = '{} 的 {} 下載完畢！'
-        self._crawler_timeour_error['zh-tw'] = '下載遭到 Ceiba 伺服器阻止，沉睡 5 秒鐘後重試...'
+        self._crawler_timeout_error['zh-tw'] = '下載遭到 Ceiba 伺服器阻止，沉睡 5 秒鐘後重試...'
         self._skip_external_href['zh-tw'] = '外部連結 {}，取消下載'
         self._error_skip_and_continue_download['zh-tw'] = '下載 {} 的 {} 時發生問題！繼續下載其他部分...'
         self._error_unable_to_parse_course_sn['zh-tw'] = '無法取得《{}》的 SN 碼！取消下載 {}...'
@@ -94,6 +96,8 @@ class String:
         self._exception_send_ticket_error['zh-tw'] = '傳送意見失敗！錯誤：{}'
         self._exception_http_not_found_error['zh-tw'] = '[404 not found] 下載 {} 時發生問題！（網址：<a>{}</a>）'
         self._exception_check_for_updates['zh-tw'] = '檢查更新時發生錯誤！'
+        self._exception_crawler_connection_error['zh-tw'] = '連線時發生問題！發生錯誤的網址：{}'
+        self._warning_max_retries_exceeded['zh-tw'] = '超過最大重試連線次數！停止嘗試連線！'
         self._retry_after_five_seconds['zh-tw'] = '五秒後重新連線...'
     
     def set_en(self):
@@ -107,7 +111,7 @@ class String:
         self._crawler_download_fail['en'] = 'Error when downloading {}! (url: <a>{}</a)'
         self._object_download_info['en'] = 'Downloading {1} of {0} ...'
         self._object_finish_info['en'] = 'Finish downloading {1} of {0}!'
-        self._crawler_timeour_error['en'] = 'The Ceiba server has blocked the connection, sleep 5 seconds to continue the download...'
+        self._crawler_timeout_error['en'] = 'The Ceiba server has blocked the connection, sleep 5 seconds to continue the download...'
         self._skip_external_href['en'] = 'Cancel the download of external link {} !'
         self._error_skip_and_continue_download['en'] = 'Error when downloading {1} of {0}! Skip it...'
         self._error_unable_to_parse_course_sn['en'] = 'Can\'t parse the course code of {} ! Cancel the download of {}...'
@@ -130,6 +134,8 @@ class String:
         self._exception_send_ticket_error['en'] = 'Fail to report issue! Error: {}'
         self._exception_http_not_found_error['en'] = '[404 not found] Error when downloading {} ! (url: <a>{}</a>)'
         self._exception_check_for_updates['en'] = 'Error when checking for updates!'
+        self._exception_crawler_connection_error['en'] = 'Connection error! The url that caused the error is {}'
+        self._warning_max_retries_exceeded['en'] = 'Max retries exceeded! Stop retrying the connection!'
         self._retry_after_five_seconds['en'] = 'Retry connection after 5 seconds...'
     
     @property
@@ -173,8 +179,8 @@ class String:
         return self._object_finish_info[self.lang]
     
     @property
-    def crawler_timeour_error(self) -> str:
-        return self._crawler_timeour_error[self.lang]
+    def crawler_timeout_error(self) -> str:
+        return self._crawler_timeout_error[self.lang]
     
     @property
     def skip_external_href(self) -> str:
@@ -264,6 +270,14 @@ class String:
     def exception_check_for_updates(self) -> str:
         return self._exception_check_for_updates[self.lang]
 
+    @property
+    def exception_crawler_connection_error(self) -> str:
+        return self._exception_crawler_connection_error[self.lang]
+    
+    @property
+    def warning_max_retries_exceeded(self) -> str:
+        return self._warning_max_retries_exceeded[self.lang]
+    
     @property
     def retry_after_five_seconds(self) -> str:
         return self._retry_after_five_seconds[self.lang]

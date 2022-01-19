@@ -36,7 +36,7 @@ class Ceiba():
             with open('version.txt') as f:
                 self.version: str = f.read()
         except FileNotFoundError:
-            self.version: str = '1.0'
+            self.version: str = "1.0"
 
     def login_user(self, username, password):
         logging.info(strings.try_to_login)
@@ -70,8 +70,8 @@ class Ceiba():
             progress.emit(1)
         try:
             trs = soup.find_all("tr")
-            self.student_name: str = trs[0].find('td').text
-            self.email: str = trs[5].find('td').text
+            self.student_name = trs[0].find('td').text
+            self.email = trs[5].find('td').text
             self.id: str = self.email.split('@')[0]
             self.is_login = True
         except AttributeError as e:
@@ -202,7 +202,7 @@ class Ceiba():
     def check_for_updates(self) -> bool:
         try:
             resp = self.sess.get('https://raw.githubusercontent.com/jameshwc/Ceiba-Downloader/master/version.txt')
-            version = resp.content
+            version = str(resp.content)
         except Exception as e:
             logging.error(e)
             raise CheckForUpdatesError
