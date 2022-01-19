@@ -34,9 +34,9 @@ class Ceiba():
         self.is_login: bool = False
         try:
             with open('version.txt') as f:
-                self.version: float = float(f.read())
+                self.version: str = f.read()
         except FileNotFoundError:
-            self.version: float = 1.0
+            self.version: str = '1.0'
 
     def login_user(self, username, password):
         logging.info(strings.try_to_login)
@@ -202,7 +202,7 @@ class Ceiba():
     def check_for_updates(self) -> bool:
         try:
             resp = self.sess.get('https://raw.githubusercontent.com/jameshwc/Ceiba-Downloader/master/version.txt')
-            version = float(resp.content)
+            version = resp.content
         except Exception as e:
             logging.error(e)
             raise CheckForUpdatesError
