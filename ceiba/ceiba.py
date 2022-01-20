@@ -28,12 +28,10 @@ class Ceiba():
         })
         self.student_name: str = ""
         self.email: str = "Not Login"
-        self.username: str = ""
-        self.password: str = ""
         self.course_dir_map: Dict[str, str] = {}  # cname map to dir
         self.is_login: bool = False
         try:
-            with open('version.txt') as f:
+            with open('version.txt', 'r', encoding='utf-8') as f:
                 self.version: str = f.read()
         except FileNotFoundError:
             self.version: str = "1.0"
@@ -56,7 +54,6 @@ class Ceiba():
         
         if cookie_PHPSESSID:
             self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
-            # self.sess.cookies.set("user", cookie_user)
         elif username and password:
             self.login_user(username, password)
             if progress:

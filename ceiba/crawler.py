@@ -115,9 +115,9 @@ class Crawler():
             if a.text in skip_href_texts:
                 a.replaceWithChildren()
                 continue
-            if a['href'].startswith('mailto') or a['href'].startswith('javascript') or (a['href'].startswith('http') and 'ceiba.ntu.edu.tw' not in a['href']) or len(a.text) == 0:
-                continue
             url = urljoin(resp_url, a.get('href'))
+            if not url.startswith('http') or 'ceiba.ntu.edu.tw' not in url or len(a.text) == 0:
+                continue
             filename = a.text
             text = a.text
             
@@ -159,10 +159,9 @@ class Crawler():
 
     def download_imgs(self, imgs):
         for img in imgs:
-            src: str = img.get('src')
-            if src.startswith('http') and 'ceiba.ntu.edu.tw' not in src:
-                continue  # leave external images alone
-            url = urljoin(self.url, src)
+            url = urljoin(self.url, img.get('src'))
+            if 'ceiba.ntu.edu.tw' not in url:
+                continue  # skip downloading external images
             img['src'] = url.split('/')[-1]
             path = self.path / img['src']
             if path.exists():
