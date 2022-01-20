@@ -34,11 +34,13 @@ class Crawler():
         self.module = module
         self.filename = util.get_valid_filename(filename)
         self.text = text
+        self._board_dir: Dict[str, Path] = {}
+        self._is_board = False
 
     def crawl(self) -> Path:
         if self.url in Crawler.crawled_urls:
             # See issue #11 [https://github.com/jameshwc/Ceiba-Downloader/issues/11]
-            if Crawler.crawled_urls[self.url].is_relative_to(self.path):
+            if util.is_relative_to(Crawler.crawled_urls[self.url], self.path):
                 logging.debug(strings.url_duplicate.format(self.url))
                 return Crawler.crawled_urls[self.url]
         
@@ -71,7 +73,6 @@ class Crawler():
         for op in soup.find_all('option'):
             op.extract()
 
-        self.is_board = False
         if self.module == 'board':
             self.__handle_board(soup.find_all('caption'))  # special case for board
         
@@ -130,8 +131,8 @@ class Crawler():
                 text = filename
             
             crawler_path = self.path
-            if self.is_board and a.text in self.board_dir:
-                crawler_path = self.board_dir[a.text]
+            if self._is_board and a.text in self._board_dir:
+                crawler_path = self._board_dir[a.text]
             try:
                 filename = Crawler(self.session, url, crawler_path, self.module, filename, text).crawl()
             except NotFound as e:
@@ -144,7 +145,6 @@ class Crawler():
         return soup
 
     def __handle_board(self, captions):
-        self.board_dir: Dict[str, Path] = {}
         for caption in captions:
             caption_text: str = caption.get_text()
             if caption_text.startswith('看板列表'):
@@ -152,9 +152,9 @@ class Crawler():
                 for row in rows:
                     a_tag = row.find("p", {"class": "fname"}).find('a')
                     dir_name = util.get_valid_filename(a_tag.text)
-                    self.board_dir[a_tag.text] = self.path / dir_name
-                    self.board_dir[a_tag.text].mkdir(exist_ok=True)
-                self.is_board = True
+                    self._board_dir[a_tag.text] = self.path / dir_name
+                    self._board_dir[a_tag.text].mkdir(exist_ok=True)
+                self._is_board = True
                 break
 
     def download_imgs(self, imgs):

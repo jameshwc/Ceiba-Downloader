@@ -8,6 +8,7 @@ from requests import Session, Response
 
 from .strings import strings
 from .exceptions import CrawlerConnectionError
+from pathlib import Path
 
 # from pathlib import Path
 
@@ -61,6 +62,13 @@ def progress_decorator():
 
     return decorator
 
+# alternative function for python3.10 pathlib.Path.is_relative_to
+def is_relative_to(self: Path, other: Path) -> bool:
+    try:
+        self.relative_to(other)
+        return True
+    except ValueError:
+        return False
 
 def get(session: Session, url: str) -> Response:
     return loop_connect(session.get, url)
