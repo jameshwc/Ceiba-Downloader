@@ -28,15 +28,13 @@ class Ceiba():
         })
         self.student_name: str = ""
         self.email: str = "Not Login"
-        self.username: str = ""
-        self.password: str = ""
         self.course_dir_map: Dict[str, str] = {}  # cname map to dir
         self.is_login: bool = False
         try:
-            with open('version.txt') as f:
-                self.version: float = float(f.read())
+            with open('version.txt', 'r', encoding='utf-8') as f:
+                self.version: str = f.read()
         except FileNotFoundError:
-            self.version: float = 1.0
+            self.version: str = "1.0"
 
     def login_user(self, username, password):
         logging.info(strings.try_to_login)
@@ -56,7 +54,6 @@ class Ceiba():
         
         if cookie_PHPSESSID:
             self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
-            # self.sess.cookies.set("user", cookie_user)
         elif username and password:
             self.login_user(username, password)
             if progress:
@@ -70,8 +67,8 @@ class Ceiba():
             progress.emit(1)
         try:
             trs = soup.find_all("tr")
-            self.student_name: str = trs[0].find('td').text
-            self.email: str = trs[5].find('td').text
+            self.student_name = trs[0].find('td').text
+            self.email = trs[5].find('td').text
             self.id: str = self.email.split('@')[0]
             self.is_login = True
         except AttributeError as e:
@@ -202,7 +199,7 @@ class Ceiba():
     def check_for_updates(self) -> bool:
         try:
             resp = self.sess.get('https://raw.githubusercontent.com/jameshwc/Ceiba-Downloader/master/version.txt')
-            version = float(resp.content)
+            version = str(resp.content)
         except Exception as e:
             logging.error(e)
             raise CheckForUpdatesError

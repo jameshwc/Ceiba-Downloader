@@ -37,3 +37,10 @@ class NotFound(Exception):
 
     def __str__(self):
         return strings.exception_http_not_found_error.format(self.text, self.url) 
+
+class CrawlerConnectionError(Exception):
+    def __init__(self, url):
+        self.url = url
+        
+    def __str__(self):
+        return strings.exception_crawler_connection_error.format(self.url)
