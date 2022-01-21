@@ -153,7 +153,8 @@ class Crawler():
                 self._is_board = True
                 break
 
-    def download_imgs(self, imgs: ResultSet[Tag]):
+    def download_imgs(self, imgs: ResultSet):
+        img: Tag
         for img in imgs:
             url = urljoin(self.url, img.get('src'))
             if 'ceiba.ntu.edu.tw' not in url:
@@ -165,7 +166,8 @@ class Crawler():
             img_response = util.get(self.session, url)
             path.write_bytes(img_response.content)
 
-    def download_css(self, links: ResultSet[Tag]):
+    def download_css(self, links: ResultSet):
+        css: Tag
         for css in links:
             url = urljoin(self.url, css.get('href'))
             if url.startswith('http') and 'ceiba.ntu.edu.tw' not in url:
