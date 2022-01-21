@@ -1,16 +1,15 @@
 import logging
-import os
 import re
 from pathlib import Path
-from typing import List, Optional, Dict
+from typing import List, Optional
 
 import requests
 from bs4 import BeautifulSoup
 from PySide6.QtCore import SignalInstance
 
 from . import util
-from .strings import strings
 from .crawler import Crawler
+from .strings import strings
 
 
 class Course():
@@ -25,6 +24,7 @@ class Course():
         self.folder_name: str = util.get_valid_filename("_".join([self.semester, self.cname, self.ename, self.teacher]))
         self.id: str = self.semester + self.course_num
         self.course_sn: str = ""
+        self.path: Path = None
 
     def __str__(self):
         return " ".join([self.cname, self.ename, self.teacher, self.href])
@@ -38,57 +38,57 @@ class Course():
         self.path = path / self.folder_name
         self.path.mkdir(exist_ok=True)
         
-        current_url = util.get(session, self.href).url
-        m = re.search(r'course/([0-9a-f]*)+',current_url)
+        course_name = self.cname if strings.lang == 'zh-tw' else self.ename
+        
+        course_url = util.get(session, self.href).url
+        m = re.search(r'course/([0-9a-f]*)+', course_url)
         if m:
             if m.group(0).startswith('course/'):
                 self.course_sn = m.group(0)[7:]
         else:
-            logging.error(strings.error_unable_to_parse_course_sn.format(self.cname, self.cname))
-            logging.debug(strings.urlf.format(current_url))
+            logging.error(strings.error_unable_to_parse_course_sn.format(course_name, course_name))
+            logging.debug(strings.urlf.format(course_url))
             return
-        modules = self.homepage_download(session, strings.homepage, modules_filter_list)
+        modules = self.download_homepage(session, strings.homepage, modules_filter_list)
         if progress and modules_filter_list:
-            modules_not_in_this_module_num = len(modules_filter_list) - len(
-                modules)
+            modules_not_in_this_module_num = len(modules_filter_list) - len(modules)
             if modules_not_in_this_module_num > 0:
                 progress.emit(modules_not_in_this_module_num)
         for module in modules:
             try:
                 module_name = util.cname_map[module] if strings.lang == 'zh-tw' else module
-                self.__html_download(session, module_name, module)
+                self.download_module(session, module_name, module)
             except Exception as e:
                 logging.error(e)
                 logging.debug(e, exc_info=True)
-                logging.warning(strings.error_skip_and_continue_download.format(self.cname, module))
+                logging.warning(strings.error_skip_and_continue_download_modules.format(course_name, module))
             if progress:
                 progress.emit(1)
 
     @util.progress_decorator()
-    def __html_download(self, session: requests.Session, obj_cname: str,
-                        module: str):
+    def download_module(self, session: requests.Session, obj_name: str, module: str):
         url = util.module_url + "?csn=" + self.course_sn + "&default_fun=" + module + "&current_lang=chinese"  # TODO:language
 
         module_dir = self.path / module
         module_dir.mkdir(exist_ok=True)
 
-        Crawler(session, url, module_dir, module, module).crawl()
+        Crawler(session, url, module_dir, module=module, filename=module).crawl()
 
     @util.progress_decorator()
-    def homepage_download(self,
+    def download_homepage(self,
                           session: requests.Session,
-                          cname: str = strings.homepage,
+                          name: str = strings.homepage,
                           modules_filter_list: List[str] = None):
-        url_gen = lambda x: x + "?csn=" + self.course_sn + "&default_fun=info&current_lang=chinese"  # TODO:language
-        button_url = url_gen(util.button_url)
-        banner_url = url_gen(util.banner_url)
-        homepage_url = url_gen(util.homepage_url)
+        param = "?csn=" + self.course_sn + "&default_fun=info&current_lang=chinese"  # TODO:language
+        button_url = util.button_url + param
+        banner_url = util.banner_url + param
+        homepage_url = util.homepage_url + param
         Crawler(session, banner_url, self.path, filename="banner").crawl()
-        self.__download_homepage(session, homepage_url)
+        self.__download_homepage_frame(session, homepage_url)
         return self.__download_button(session, button_url, 'button.html',
                                       modules_filter_list)
 
-    def __download_homepage(self,
+    def __download_homepage_frame(self,
                             session: requests.Session,
                             url: str,
                             filename: str = 'index.html'):
@@ -116,7 +116,7 @@ class Course():
             if m:
                 item = m.group(1)
             else:
-                logging.debug('abnormal onclick value: ' + a['onclick'])  
+                logging.debug('Abnormal onclick value: ' + a['onclick'])  
                 # Only found out such case in '108-1 Machine Learning Foundations'
                 item = a.next_element['id']
             if item in ['logout', 'calendar'] or \

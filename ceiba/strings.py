@@ -15,7 +15,8 @@ class String:
         self._object_finish_info = {}
         self._crawler_timeout_error = {}
         self._skip_external_href = {}
-        self._error_skip_and_continue_download = {}
+        self._error_skip_and_continue_download_modules = {}
+        self._error_skip_and_continue_download_courses = {}
         self._error_unable_to_parse_course_sn = {}
         self._try_to_login = {}
         self._login_successfully = {}
@@ -75,7 +76,8 @@ class String:
         self._object_finish_info['zh-tw'] = '{} 的 {} 下載完畢！'
         self._crawler_timeout_error['zh-tw'] = '下載遭到 Ceiba 伺服器阻止，沉睡 5 秒鐘後重試...'
         self._skip_external_href['zh-tw'] = '外部連結 {}，取消下載'
-        self._error_skip_and_continue_download['zh-tw'] = '下載 {} 的 {} 時發生問題！繼續下載其他部分...'
+        self._error_skip_and_continue_download_modules['zh-tw'] = '下載 {} 的 {} 時發生問題！繼續下載其他部分...'
+        self._error_skip_and_continue_download_courses['zh-tw'] = '下載課程 {} 時發生問題！跳過並下載其他課程...'
         self._error_unable_to_parse_course_sn['zh-tw'] = '無法取得《{}》的 SN 碼！取消下載 {}...'
         self._try_to_login['zh-tw'] = '正在嘗試登入 Ceiba...'
         self._login_successfully['zh-tw'] = '登入 Ceiba 成功！'
@@ -113,7 +115,8 @@ class String:
         self._object_finish_info['en'] = 'Finish downloading {1} of {0}!'
         self._crawler_timeout_error['en'] = 'The Ceiba server has blocked the connection, sleep 5 seconds to continue the download...'
         self._skip_external_href['en'] = 'Cancel the download of external link {} !'
-        self._error_skip_and_continue_download['en'] = 'Error when downloading {1} of {0}! Skip it...'
+        self._error_skip_and_continue_download_modules['en'] = 'Error when downloading {1} of {0}! Skip it and continue downloading...'
+        self._error_skip_and_continue_download_courses['en'] = 'Error when downloading the course {}! Skip it and continue downloading...'
         self._error_unable_to_parse_course_sn['en'] = 'Can\'t parse the course code of {} ! Cancel the download of {}...'
         self._try_to_login['en'] = 'Trying to log in Ceiba...'
         self._login_successfully['en'] = 'Successfully log in to Ceiba!'
@@ -187,9 +190,13 @@ class String:
         return self._skip_external_href[self.lang]
     
     @property
-    def error_skip_and_continue_download(self) -> str:
-        return self._error_skip_and_continue_download[self.lang]
+    def error_skip_and_continue_download_modules(self) -> str:
+        return self._error_skip_and_continue_download_modules[self.lang]
     
+    @property
+    def error_skip_and_continue_download_courses(self) -> str:
+        return self._error_skip_and_continue_download_courses[self.lang]
+        
     @property
     def error_unable_to_parse_course_sn(self) -> str:
         return self._error_unable_to_parse_course_sn[self.lang]

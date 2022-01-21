@@ -1,5 +1,4 @@
 import logging
-from functools import lru_cache
 
 from PySide6.QtCore import (Property, QEasingCurve, QObject, QPoint,
                             QPropertyAnimation, QRect, Qt, Signal)
@@ -83,19 +82,14 @@ class PyLogOutput(logging.Handler):
         super().__init__()
         self.widget = QPlainTextEdit(parent)
         self.widget.setReadOnly(True)
+        self.signal = PyQtSignal()
         self.signal.log.connect(self.widget.appendHtml)
-
-    @property
-    @lru_cache()
-    # @cached_property
-    def signal(self):
-        return PyQtSignal()
+        self.color = {logging.ERROR: 'red', logging.INFO: 'white',
+                 logging.WARNING: 'orange', logging.DEBUG: 'gray'}
 
     def emit(self, record: logging.LogRecord):
         msg = self.format(record)
-        color = {logging.ERROR: 'red', logging.INFO: 'white',
-                 logging.WARNING: 'orange', logging.DEBUG: 'gray'}
-        msg = '<span style="color:' + color[record.levelno] + ';">' + msg + "</span>"
+        msg = '<span style="color:' + self.color[record.levelno] + ';">' + msg + "</span>"
         self.signal.log.emit(msg)
 
     def geometry(self) -> QRect:

@@ -37,6 +37,13 @@ cname_map = {
     'student': '修課學生'
 }
 
+default_skip_href_texts = ['友善列印', '分頁顯示']
+board_skip_href_texts = default_skip_href_texts + [
+                '看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄',
+                ' 新增主題', '引用', ' 回覆', '分頁顯示', '上個主題', '下個主題',
+                '修改', '上一頁', '下一頁', ' 我要評分', ' 我要推薦']
+student_skip_href_texts = default_skip_href_texts + ['上頁', '下頁']
+
 ename_map = {v: k for k, v in cname_map.items()}
 
 ticket_url = 'https://xk4axzhtgc.execute-api.us-east-2.amazonaws.com/Practicing/message'
@@ -80,19 +87,16 @@ def loop_connect(http_method_func, url, **kwargs) -> Response:
     count = 0
     while count < CONNECT_RETRY_MAX:
         try:
-            response: Response = http_method_func(url, **kwargs)
-        # except (TimeoutError, ConnectionResetError):
+            return http_method_func(url, **kwargs)
         except Exception as e:
             if type(e) in [TimeoutError, ConnectionResetError, RemoteDisconnected]:
                 logging.error(strings.crawler_timeout_error)
             else:
                 logging.error(e)
                 logging.debug(strings.urlf.format(url))
-                logging.info(strings.retry_after_five_seconds)
+                logging.warning(strings.retry_after_five_seconds)
             count += 1
             time.sleep(5)
-            continue
-        return response
     
     logging.warning(strings.warning_max_retries_exceeded)
     raise CrawlerConnectionError(url)

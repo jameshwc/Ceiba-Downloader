@@ -42,13 +42,14 @@ class CeibaSignals(QObject):
 
 
 class Worker(QRunnable):
-    def __init__(self, fn, *args, **kwargs):
+    def __init__(self, fn, progress=False, *args, **kwargs):
         super(Worker, self).__init__()
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
         self.signals = CeibaSignals()
-        self.kwargs["progress"] = self.signals.progress
+        if progress:
+            self.kwargs["progress"] = self.signals.progress
 
     def run(self):
         try:
@@ -64,9 +65,10 @@ class Worker(QRunnable):
             self.signals.finished.emit()
 
 class TicketSubmit(QMainWindow):
-    def __init__(self, ceiba: Ceiba, parent=None):
+    def __init__(self, ceiba: Ceiba, thread_pool: QThreadPool, parent=None):
         super().__init__(parent)
         self.ceiba = ceiba
+        self.thread_pool = thread_pool
         self.setCentralWidget(QWidget(self))
         main_layout = QVBoxLayout(self.centralWidget())
         self.setWindowTitle('意見回饋 / Report Issue')
@@ -88,25 +90,24 @@ class TicketSubmit(QMainWindow):
         type_group_box.setProperty("class", "no-padding")
 
         self.content_edit = QTextEdit()
-        submit_button = QPushButton('傳送 / Submit')
-        submit_button.clicked.connect(self.submit_ticket)
-        self.annonymous_checkbox = QCheckBox("匿名傳送 / Anonymous")
+        self.submit_button = QPushButton('傳送 / Submit')
+        self.submit_button.clicked.connect(self.submit_ticket)
+        self.anonymous_checkbox = QCheckBox("匿名傳送 / Anonymous")
         if not self.ceiba.is_login:
-            self.annonymous_checkbox.setChecked(True)
-            self.annonymous_checkbox.setDisabled(True)
+            self.anonymous_checkbox.setChecked(True)
+            self.anonymous_checkbox.setDisabled(True)
         main_layout.addWidget(type_group_box, 1)
         main_layout.addWidget(self.content_edit, 8)
-        main_layout.addWidget(self.annonymous_checkbox, 1)
-        main_layout.addWidget(submit_button, 1)
+        main_layout.addWidget(self.anonymous_checkbox, 1)
+        main_layout.addWidget(self.submit_button, 1)
     
     def submit_ticket(self):
-        try:
-            self.ceiba.send_ticket(self.type_button_group.checkedButton().text(), self.content_edit.toPlainText())
-        except NullTicketContent as e:
-            logging.error(e)
-        except SendTicketError as e:
-            logging.error(e)
-        self.close()
+        worker = Worker(self.ceiba.send_ticket, progress=False, ticket_type=self.type_button_group.checkedButton().text(),
+                        content=self.content_edit.toPlainText(), anonymous=self.anonymous_checkbox.isChecked())
+        worker.signals.failed.connect(self.close)
+        worker.signals.success.connect(self.close)
+        self.thread_pool.start(worker)
+        self.submit_button.setDisabled(True)
 
 class About(QMainWindow):
     def __init__(self, parent=None):
@@ -301,12 +302,12 @@ class MyApp(QMainWindow):
     def login(self):
 
         if self.method_toggle.isChecked():
-            worker = Worker(self.ceiba.login, 
+            worker = Worker(self.ceiba.login, progress=True,
                     cookie_PHPSESSID=self.password_edit.text(),
                 )
             self.progress_bar.setMaximum(1)
         else:
-            worker = Worker(self.ceiba.login,
+            worker = Worker(self.ceiba.login, progress=True,
                             username=self.username_edit.text(),
                             password=self.password_edit.text(),
                         )
@@ -334,7 +335,6 @@ class MyApp(QMainWindow):
         self.login_group_box.setLayout(self.login_layout)
         worker = Worker(self.ceiba.get_courses_list)
         worker.signals.result.connect(self.fill_course_group_box)
-        worker.signals.progress.connect(self.update_progressbar)
         self.thread_pool.start(worker)
         self.progress_bar.setMaximum(1)
 
@@ -398,7 +398,8 @@ class MyApp(QMainWindow):
             if item_name == "課程資訊":
                 checkbox.setChecked(True)
                 checkbox.setDisabled(True)
-                continue
+            elif item_name == "課程行事曆":
+                checkbox.setDisabled(True)
         self.download_item_menu_button = QPushButton(self)
         self.download_item_menu_button.setMenu(self.download_item_menu)
         self.download_item_label = QLabel()
@@ -488,11 +489,12 @@ class MyApp(QMainWindow):
         else:
             worker = Worker(
                 self.ceiba.download_courses,
+                progress=True,
                 path=Path(self.filepath_line_edit.text()) / "-".join(["ceiba", self.ceiba.id, datetime.today().strftime('%Y%m%d')]),
                 course_id_filter=course_id_list,
                 modules_filter=items,
             )
-        worker.signals.progress.connect(self.update_progressbar)
+            worker.signals.progress.connect(self.update_progressbar)
         worker.signals.success.connect(self.after_download_successfully)
         worker.signals.finished.connect(self.after_download)
         self.thread_pool.start(worker)
@@ -544,16 +546,21 @@ class MyApp(QMainWindow):
             self.progress_bar.setValue(self.progress_bar.value() + add_value)
 
     def open_ticket_window(self):
-        ticket_window = TicketSubmit(self.ceiba, self)
-        ticket_window.move(self.log_output.geometry().center())
-        ticket_window.show()
+        self.ticket_window = TicketSubmit(self.ceiba, self.thread_pool, self)
+        self.ticket_window.move(self.log_output.geometry().center())
+        self.ticket_window.show()
     
     def open_about_window(self):
         about_window = About(self)
         about_window.show()
     
     def check_for_updates(self):
-        if self.ceiba.check_for_updates():
+        worker = Worker(self.ceiba.check_for_updates)
+        worker.signals.result.connect(self.open_check_for_updates_msgbox)
+        self.thread_pool.start(worker)
+
+    def open_check_for_updates_msgbox(self, has_new_version: bool):
+        if has_new_version:
             update_msgbox = QMessageBox(self)
             update_msgbox.setIcon(QMessageBox.Information)
             update_msgbox.setWindowTitle('Ceiba Downloader By Jameshwc')

@@ -1,17 +1,16 @@
 import logging
-import os
 import re
 from pathlib import Path
+from typing import Dict, Set
 from urllib.parse import urljoin
-from typing import Dict, Union, Set
 
 import requests
 from bs4 import BeautifulSoup
-from bs4.element import ResultSet
+from bs4.element import ResultSet, Tag
 
 from . import util
-from .strings import strings
 from .exceptions import NotFound
+from .strings import strings
 
 
 class Crawler():
@@ -19,7 +18,7 @@ class Crawler():
     crawled_files_path: Set[Path] = set()
     crawled_urls: Dict[str, Path] = {}
 
-    # TODO: we should move css/img to root folder instead of download them every time in each course
+    # Dicuss: should we move css/img to root folder instead of download them every time in each course?
 
     def __init__(self,
                  session: requests.Session,
@@ -102,15 +101,12 @@ class Crawler():
 
     def crawl_hrefs(self, soup: BeautifulSoup, resp_url: str) -> BeautifulSoup:
 
-        skip_href_texts = ['友善列印', '分頁顯示']
+        skip_href_texts = util.default_skip_href_texts
         if self.module == 'board':
-            skip_href_texts.extend([
-                '看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄', ' 新增主題', '引用',
-                ' 回覆', '分頁顯示', '上個主題', '下個主題', '修改'])
-            # '修改' may be an indicator to only download the owner's article?
-            skip_href_texts.extend(['上一頁', '下一頁', ' 我要評分', ' 我要推薦'])
+            skip_href_texts = util.board_skip_href_texts
         elif self.module == 'student':
-            skip_href_texts.extend(['上頁', '下頁'])
+            skip_href_texts = util.student_skip_href_texts
+        
         hrefs = soup.find_all('a')
         for a in hrefs:
             if a.text in skip_href_texts:
@@ -157,7 +153,7 @@ class Crawler():
                 self._is_board = True
                 break
 
-    def download_imgs(self, imgs):
+    def download_imgs(self, imgs: ResultSet[Tag]):
         for img in imgs:
             url = urljoin(self.url, img.get('src'))
             if 'ceiba.ntu.edu.tw' not in url:
@@ -169,10 +165,10 @@ class Crawler():
             img_response = util.get(self.session, url)
             path.write_bytes(img_response.content)
 
-    def download_css(self, links: ResultSet):
+    def download_css(self, links: ResultSet[Tag]):
         for css in links:
             url = urljoin(self.url, css.get('href'))
-            if url.startswith('http') and 'ceiba' not in url:
+            if url.startswith('http') and 'ceiba.ntu.edu.tw' not in url:
                 continue  # skip downloading external css
             filename = url.split('/')[-1]
             css['href'] = 'static/' + filename

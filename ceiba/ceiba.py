@@ -1,20 +1,21 @@
-import logging
 import datetime
 import json
-from typing import List, Union, Optional, Dict
+import logging
+import uuid
+from pathlib import Path
+from typing import Dict, List, Optional, Union
 
 import requests
 from bs4 import BeautifulSoup
 from PySide6.QtCore import SignalInstance
-from pathlib import Path
-import uuid
 
 from . import util
-from .strings import strings
 from .course import Course
 from .crawler import Crawler
-from .exceptions import (CheckForUpdatesError, InvalidCredentials, InvalidFilePath,
-                        InvalidLoginParameters, NullTicketContent, SendTicketError)
+from .exceptions import (CheckForUpdatesError, InvalidCredentials,
+                         InvalidFilePath, InvalidLoginParameters,
+                         NullTicketContent, SendTicketError)
+from .strings import strings
 
 
 class Ceiba():
@@ -41,10 +42,9 @@ class Ceiba():
         resp = util.get(self.sess, util.login_url)
         payload = {'user': username, 'pass': password}
         resp = util.post(self.sess, resp.url, data=payload)  # will get resp that redirect to /ChkSessLib.php
-        if '登入失敗' in resp.content.decode('utf-8'):
+        if any(x in resp.content.decode('utf-8') for x in ['登入失敗', '更改密碼']):
             raise InvalidCredentials
         resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice
-        logging.info(strings.login_successfully)
 
     def login(self, 
               cookie_PHPSESSID: Optional[str] = None, 
@@ -71,10 +71,11 @@ class Ceiba():
             self.email = trs[5].find('td').text
             self.id: str = self.email.split('@')[0]
             self.is_login = True
-        except AttributeError as e:
+        except (AttributeError, IndexError) as e:
             raise InvalidCredentials from e
+        logging.info(strings.login_successfully)
 
-    def get_courses_list(self, progress: Optional[SignalInstance] = None):
+    def get_courses_list(self):
 
         logging.info(strings.try_to_get_courses)
         soup = BeautifulSoup(
@@ -99,7 +100,7 @@ class Ceiba():
                             teacher=cols[5],
                             href=href)
             self.courses.append(course)
-            self.course_dir_map[cname] = course.folder_name
+            self.course_dir_map[course.id] = course.folder_name
         logging.info(strings.get_courses_successfully)
         return self.courses
 
@@ -119,7 +120,7 @@ class Ceiba():
         except FileNotFoundError:
             raise InvalidFilePath
 
-        self.download_ceiba_homepage(path, course_id_filter, progress=progress)
+        self.download_ceiba_homepage(path, course_id_filter)
         
         logging.info(strings.start_downloading_courses)
         for course in self.courses:
@@ -127,14 +128,18 @@ class Ceiba():
             if course_id_filter is None or course.id in course_id_filter:
                 logging.info(strings.course_download_info.format(course_name))
                 self.courses_dir.joinpath(course.folder_name).mkdir(exist_ok=True)
-                course.download(self.courses_dir, self.sess, modules_filter, progress)
+                try:
+                    course.download(self.courses_dir, self.sess, modules_filter, progress)
+                except Exception as e:
+                    logging.error(e, exc_info=True)
+                    logging.warning(strings.error_skip_and_continue_download_courses.format(course_name))
+                    continue
                 logging.info(strings.course_finish_info.format(course_name))
         logging.info(strings.download_courses_successfully)
 
     def download_ceiba_homepage(self,
                                 path: Union[Path,str],
-                                course_id_filter=None,
-                                progress: Optional[SignalInstance] = None):
+                                course_id_filter=None):
         
         self.path = Path(path)
         
@@ -165,8 +170,7 @@ class Ceiba():
                 course.replaceWithChildren()
                 row['style'] = 'background: silver;'
                 continue
-            course['href'] = "courses/" + self.course_dir_map[
-                course.text] + '/index.html'
+            course['href'] = "courses/" + self.course_dir_map[course_id] + '/index.html'
             valid_a_tag.add(course)
 
         for a in soup.find_all('a'):
@@ -193,8 +197,7 @@ class Ceiba():
         if resp.status_code == 200 and resp.content == b'"Success"':
             logging.info(strings.send_ticket_successfully)
             return
-        else:
-            raise SendTicketError(resp.content)
+        raise SendTicketError(resp.content)
     
     def check_for_updates(self) -> bool:
         try:
