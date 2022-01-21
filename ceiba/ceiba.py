@@ -199,7 +199,7 @@ class Ceiba():
     def check_for_updates(self) -> bool:
         try:
             resp = self.sess.get('https://raw.githubusercontent.com/jameshwc/Ceiba-Downloader/master/version.txt')
-            version = str(resp.content)
+            version = str(resp.content, 'utf-8')
         except Exception as e:
             logging.error(e)
             raise CheckForUpdatesError
