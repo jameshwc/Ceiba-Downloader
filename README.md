@@ -1,5 +1,7 @@
 # Ceiba 備份下載軟體 Ceiba Downloader
 
+[README in English](https://github.com/jameshwc/Ceiba-Downloader/blob/master/README-en.md)
+
 > 歡迎任何的 issue/pull request，或 star 本專案與開啟 notification 以收到最新消息。
 
 ![](https://i.imgur.com/z7bqTNs.gif)
