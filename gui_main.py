@@ -483,14 +483,14 @@ class MyApp(QMainWindow):
         if self.only_download_homepage_checkbox.isChecked():
             worker = Worker(
                 self.ceiba.download_ceiba_homepage,
-                path=Path(self.filepath_line_edit.text()) / "-".join(["ceiba", self.ceiba.id, datetime.today().strftime('%Y%m%d')]),
+                path=Path(self.filepath_line_edit.text()),
                 course_id_filter=course_id_list,
             )
         else:
             worker = Worker(
                 self.ceiba.download_courses,
                 progress=True,
-                path=Path(self.filepath_line_edit.text()) / "-".join(["ceiba", self.ceiba.id, datetime.today().strftime('%Y%m%d')]),
+                path=Path(self.filepath_line_edit.text()),
                 course_id_filter=course_id_list,
                 modules_filter=items,
             )

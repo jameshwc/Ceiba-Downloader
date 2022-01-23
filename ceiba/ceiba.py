@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import json
 import logging
 import uuid
@@ -110,8 +110,9 @@ class Ceiba():
                          modules_filter=None,
                          progress: Optional[SignalInstance] = None):
 
-        self.path = Path(path)
+        self.path = Path(path) / "-".join(["ceiba", self.id, datetime.today().strftime('%Y%m%d')])
         self.courses_dir = self.path / "courses"
+        
         try:
             if type(path) == str and len(path) == 0 or path == Path():
                 raise FileNotFoundError
@@ -140,10 +141,10 @@ class Ceiba():
                                 path: Union[Path,str],
                                 course_id_filter=None):
         
-        self.path = Path(path)
+        self.path = Path(path) / "-".join(["ceiba", self.id, datetime.today().strftime('%Y%m%d')])
         
         try:
-            if type(path) == str and len(path) == 0 or path == Path():
+            if (type(path) == str and len(path) == 0) or path == Path():
                 raise FileNotFoundError
             self.path.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
@@ -186,7 +187,7 @@ class Ceiba():
     def send_ticket(self, ticket_type: str, content: str, anonymous=False):
         if len(content.strip()) == 0:
             raise NullTicketContent
-        timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+        timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
         mac_addr = hex(uuid.getnode())
         id = timestamp + "-" + mac_addr
         payload = {'id': id, 'type': ticket_type, 'content': content, 'timestamp': timestamp, 'mac_addr': mac_addr}
