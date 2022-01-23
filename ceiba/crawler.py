@@ -136,11 +136,11 @@ class Crawler():
                 a.string = a.text + " [404 not found]"
                 a['href'] = url
                 # a.replaceWithChildren()  # discuss: when 404 happens, should it link to original url?
-                continue
             except Exception as e:
                 logging.warning(strings.crawler_download_fail.format(text, url))
                 a.string = a.text + " [ERROR]"
-            a['href'] = crawler_path.relative_to(self.path) / filename
+            else:
+                a['href'] = crawler_path.relative_to(self.path) / filename
         return soup
 
     def __handle_board(self, captions):
