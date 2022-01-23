@@ -42,14 +42,14 @@ class Crawler():
             if util.is_relative_to(Crawler.crawled_urls[self.url], self.path):
                 logging.debug(strings.url_duplicate.format(self.url))
                 return Crawler.crawled_urls[self.url]
-
-        if self.module != "grade" and len(self.text.strip()) > 0:  # grade module has many 'show' and 'hide' pages to download
-            logging.info(strings.crawler_download_info.format(self.text))
         
         response = util.get(self.session, self.url)
         if response.status_code == 404 or response.content.startswith(
                 bytes('<html><head><title>Request Rejected</title>', encoding='utf-8')):
             raise NotFound(self.text, response.url)
+
+        if self.module != "grade" and len(self.text.strip()) > 0:  # grade module has many 'show' and 'hide' pages to download
+            logging.info(strings.crawler_download_info.format(self.text))
 
         if 'text/html' not in response.headers['content-type']:  # files (e.g. pdf, docs)
             files_dir = self.path / "files"
@@ -137,9 +137,6 @@ class Crawler():
                 a['href'] = url
                 # a.replaceWithChildren()  # discuss: when 404 happens, should it link to original url?
                 continue
-            except Exception as e:
-                logging.warning(strings.crawler_download_fail.format(text, url))
-                a.string = a.text + " [ERROR]"
             a['href'] = crawler_path.relative_to(self.path) / filename
         return soup
 
