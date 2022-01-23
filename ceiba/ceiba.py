@@ -112,8 +112,9 @@ class Ceiba():
 
         self.path = Path(path)
         self.courses_dir = self.path / "courses"
+        
         try:
-            if type(path) == str and len(path) == 0 or path == Path():
+            if type(path) == str and len(path) == 0:
                 raise FileNotFoundError
             self.courses_dir.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
@@ -143,7 +144,7 @@ class Ceiba():
         self.path = Path(path)
         
         try:
-            if type(path) == str and len(path) == 0 or path == Path():
+            if type(path) == str and len(path) == 0:
                 raise FileNotFoundError
             self.path.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
