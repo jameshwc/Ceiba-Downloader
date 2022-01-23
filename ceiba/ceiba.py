@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Union
 
 import requests
 from bs4 import BeautifulSoup
+from bs4.element import Tag, ResultSet
 from PySide6.QtCore import SignalInstance
 
 from . import util
@@ -75,16 +76,29 @@ class Ceiba():
             raise InvalidCredentials from e
         logging.info(strings.login_successfully)
 
+    def __get_courses_rows_from_homepage_table(self, soup) -> ResultSet:
+        table: Tag = soup.find_all("table")[0]
+        rows = table.find_all('tr')[1:]
+        
+        try:
+            second_table: Tag = soup.find_all("table")[1] 
+            # tables[1] may be audit courses or not-set-up-in-ceiba courses
+            if '旁聽' in second_table.find_previous_sibling('h2'):
+                rows.extend(second_table.find_all('tr')[1:])
+        except IndexError:
+            pass
+        
+        return rows
+            
     def get_courses_list(self):
 
         logging.info(strings.try_to_get_courses)
         soup = BeautifulSoup(
             util.get(self.sess, util.courses_url).content, 'html.parser')
 
-        # tables[1] is the courses not set up in ceiba
-        table = soup.find_all("table")[0]
-        rows = table.find_all('tr')
-        for row in rows[1:]:
+        rows = self.__get_courses_rows_from_homepage_table(soup)
+        
+        for row in rows:
             cols = row.find_all('td')
             href = cols[4].find('a').get('href')
             cols = [ele.text.strip() for ele in cols]
@@ -157,9 +171,10 @@ class Ceiba():
 
         Crawler(self.sess, resp.url, self.path).download_css(soup.find_all('link'))
 
-        rows = soup.find_all("table")[0].find_all('tr')
+        rows = self.__get_courses_rows_from_homepage_table(soup)
+        
         valid_a_tag = set()
-        for row in rows[1:]:
+        for row in rows:
             cols = row.find_all('td')
             course = cols[4].find('a')
             cols = [ele.text.strip() for ele in cols]
