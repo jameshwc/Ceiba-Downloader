@@ -2,7 +2,7 @@ import logging
 import re
 from pathlib import Path
 from typing import Dict, Set
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -113,7 +113,7 @@ class Crawler():
                 a.replaceWithChildren()
                 continue
             url = urljoin(resp_url, a.get('href'))
-            if not url.startswith('http') or 'ceiba.ntu.edu.tw' not in url or len(a.text) == 0:
+            if not url.startswith('http') or urlparse(url).netloc != 'ceiba.ntu.edu.tw' or len(a.text) == 0:
                 continue
             filename = a.text
             text = a.text
@@ -136,8 +136,11 @@ class Crawler():
                 a.string = a.text + " [404 not found]"
                 a['href'] = url
                 # a.replaceWithChildren()  # discuss: when 404 happens, should it link to original url?
-                continue
-            a['href'] = crawler_path.relative_to(self.path) / filename
+            except Exception as e:
+                logging.warning(strings.crawler_download_fail.format(text, url))
+                a.string = a.text + " [ERROR]"
+            else:
+                a['href'] = crawler_path.relative_to(self.path) / filename
         return soup
 
     def __handle_board(self, captions):
@@ -157,7 +160,7 @@ class Crawler():
         img: Tag
         for img in imgs:
             url = urljoin(self.url, img.get('src'))
-            if 'ceiba.ntu.edu.tw' not in url:
+            if urlparse(url).netloc != 'ceiba.ntu.edu.tw':
                 continue  # skip downloading external images
             img['src'] = url.split('/')[-1]
             path = self.path / img['src']
