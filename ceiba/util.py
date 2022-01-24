@@ -13,11 +13,15 @@ from pathlib import Path
 # from pathlib import Path
 
 CONNECT_RETRY_MAX = 10
+REQUESTS_TIMEOUT = 300
 
 home_url = 'https://ceiba.ntu.edu.tw'
 login_url = 'https://ceiba.ntu.edu.tw/ChkSessLib.php'
+login_alternative_url = 'https://ceiba.ntu.edu.tw/index.php?error_check=OK'
 module_url = 'https://ceiba.ntu.edu.tw/modules/main.php'
 courses_url = 'https://ceiba.ntu.edu.tw/student/index.php?seme_op=all'
+alternative_courses_url = 'https://ceiba.ntu.edu.tw/ta/index.php?seme_op=all'
+alternative_info_url = 'https://ceiba.ntu.edu.tw/ta/?op=personal'
 info_url = 'https://ceiba.ntu.edu.tw/student/?op=personal'
 button_url = 'https://ceiba.ntu.edu.tw/modules/button.php'
 banner_url = 'https://ceiba.ntu.edu.tw/modules/banner.php'
@@ -87,7 +91,7 @@ def loop_connect(http_method_func, url, **kwargs) -> Response:
     count = 0
     while count < CONNECT_RETRY_MAX:
         try:
-            return http_method_func(url, **kwargs)
+            return http_method_func(url, timeout=REQUESTS_TIMEOUT, **kwargs)
         except Exception as e:
             if type(e) in [TimeoutError, ConnectionResetError, RemoteDisconnected]:
                 logging.error(strings.crawler_timeout_error)
