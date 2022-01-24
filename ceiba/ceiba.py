@@ -32,6 +32,8 @@ class Ceiba():
         self.email: str = "Not Login"
         self.course_dir_map: Dict[str, str] = {}  # cname map to dir
         self.is_login: bool = False
+        self.is_alternative: bool = False
+        # alternative users including ta, outside instructors & students, etc.
         try:
             with open('version.txt', 'r', encoding='utf-8') as f:
                 self.version: str = f.read()
@@ -47,7 +49,13 @@ class Ceiba():
             raise InvalidCredentials
         resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice
 
-    def login(self, 
+    def login_alternative_user(self, username: str, password: str):
+        payload = {'loginid': username, 'password': password, 'op': 'login'}
+        resp = util.post(self.sess, util.login_alternative_url, data=payload)  # will get resp that redirect to /ChkSessLib.php
+        if '登出' not in resp.content.decode('utf-8'):
+            raise InvalidCredentials
+        
+    def login(self, alternative=True,
               cookie_PHPSESSID: Optional[str] = None, 
               username: Optional[str] = None,
               password: Optional[str] = None,
@@ -56,20 +64,29 @@ class Ceiba():
         if cookie_PHPSESSID:
             self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
         elif username and password:
-            self.login_user(username, password)
+            if not alternative:
+                self.login_user(username, password)
+            else:
+                self.login_alternative_user(username, password)
             if progress:
                 progress.emit(1)
         else:
             raise InvalidLoginParameters
-        
         # check if user credential is correct
-        soup = BeautifulSoup(util.get(self.sess, util.info_url).content, 'html.parser')
+        self.is_alternative = alternative
+        info_url = util.info_url
+        if alternative:
+            info_url = util.alternative_info_url
+
+        soup = BeautifulSoup(util.get(self.sess, info_url).content, 'html.parser')
         if progress:
             progress.emit(1)
         try:
             trs = soup.find_all("tr")
             self.student_name = trs[0].find('td').text
             self.email = trs[5].find('td').text
+            if alternative:
+                self.email = trs[4].find('td').text
             self.id: str = self.email.split('@')[0]
             self.is_login = True
         except (AttributeError, IndexError) as e:
@@ -93,20 +110,26 @@ class Ceiba():
     def get_courses_list(self):
 
         logging.info(strings.try_to_get_courses)
+        courses_url = util.courses_url
+        if self.is_alternative:
+            courses_url = util.alternative_courses_url
+        
         soup = BeautifulSoup(
-            util.get(self.sess, util.courses_url).content, 'html.parser')
+            util.get(self.sess, courses_url).content, 'html.parser')
 
         rows = self.__get_courses_rows_from_homepage_table(soup)
         
         for row in rows:
             cols = row.find_all('td')
             href = cols[4].find('a').get('href')
+            name = cols[4].get_text(strip=True, separator='\n').splitlines()
             cols = [ele.text.strip() for ele in cols]
-            name = cols[4].split('\xa0')
-            cname = name[0].strip()
+            cname = name[0]
             if cname in util.skip_courses_list:
                 continue
             ename = name[1] if len(name) > 1 else ""
+            if ename.startswith('http'):  # some courses have no ename but show their url (in ta's page)
+                ename = cname  # use cname instead
             course = Course(semester=cols[0],
                             course_num=cols[2],
                             cname=cname,
@@ -158,7 +181,7 @@ class Ceiba():
         self.path = Path(path) / "-".join(["ceiba", self.id, datetime.today().strftime('%Y%m%d')])
         
         try:
-            if (type(path) == str and len(path) == 0) or path == Path():
+            if type(path) == str and len(path) == 0:
                 raise FileNotFoundError
             self.path.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
@@ -166,7 +189,11 @@ class Ceiba():
         
         logging.info(strings.start_downloading_homepage)
         
-        resp = util.get(self.sess, util.courses_url)
+        courses_url = util.courses_url
+        if self.is_alternative:
+            courses_url = util.alternative_courses_url
+
+        resp = util.get(self.sess, courses_url)
         soup = BeautifulSoup(resp.content, 'html.parser')
 
         Crawler(self.sess, resp.url, self.path).download_css(soup.find_all('link'))
