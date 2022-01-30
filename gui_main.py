@@ -224,6 +224,8 @@ class MyApp(QMainWindow):
         self.password_edit = QLineEdit("")
         self.password_edit.setEchoMode(QLineEdit.Password)
 
+        self.login_alternative_checkbox = QCheckBox(self)
+
         self.login_button = QPushButton()
         self.login_button.clicked.connect(self.login)
 
@@ -262,6 +264,7 @@ class MyApp(QMainWindow):
         self.login_layout.addWidget(self.username_edit, 1, 1, 1, 2)
         self.login_layout.addWidget(self.password_label, 2, 0)
         self.login_layout.addWidget(self.password_edit, 2, 1, 1, 2)
+        self.login_layout.addWidget(self.login_alternative_checkbox, 3, 0, 1, 1)
         self.login_layout.addWidget(self.login_button, 3, 1, 1, 2)
         self.login_layout.setColumnStretch(0, 0)
         self.login_layout.setColumnStretch(1, 1)
@@ -299,16 +302,18 @@ class MyApp(QMainWindow):
         self.status_group_box.setLayout(self.status_layout)
 
     def login(self):
-
+        alternative=self.login_alternative_checkbox.isChecked()
         if self.method_toggle.isChecked():
             worker = Worker(self.ceiba.login, progress=True,
                     cookie_PHPSESSID=self.password_edit.text(),
+                    alternative=alternative
                 )
             self.progress_bar.setMaximum(1)
         else:
             worker = Worker(self.ceiba.login, progress=True,
                             username=self.username_edit.text(),
                             password=self.password_edit.text(),
+                            alternative=alternative
                         )
             self.progress_bar.setMaximum(2)
 
@@ -482,14 +487,14 @@ class MyApp(QMainWindow):
         if self.only_download_homepage_checkbox.isChecked():
             worker = Worker(
                 self.ceiba.download_ceiba_homepage,
-                path=Path(self.filepath_line_edit.text()),
+                path=self.filepath_line_edit.text(),
                 course_id_filter=course_id_list,
             )
         else:
             worker = Worker(
                 self.ceiba.download_courses,
                 progress=True,
-                path=Path(self.filepath_line_edit.text()),
+                path=self.filepath_line_edit.text(),
                 course_id_filter=course_id_list,
                 modules_filter=items,
             )
@@ -584,6 +589,8 @@ class MyApp(QMainWindow):
         self.login_method_right_label.setText('Cookies [?]')
         self.login_method_left_label.setToolTip('It\'s unsafe to log in via a third-party program! You should use cookies as your credential instead.')
         self.login_method_right_label.setToolTip('Log in Ceiba manually and you can view cookies using F12 in your browser. Please copy the content of PHPSESSID in your cookies.')
+        self.login_alternative_checkbox.setText('TAs, outside instructors && students')
+        self.login_alternative_checkbox.setStyleSheet('font-size: 12px;')
         self.courses_group_box.setTitle('Courses')
         self.status_group_box.setTitle('Status')
         self.welcome_text = "Welcome, {} ({})!"
@@ -626,6 +633,8 @@ class MyApp(QMainWindow):
         self.login_method_right_label.setText('cookies [?]')
         self.login_method_left_label.setToolTip('除非你信任本程式作者，否則不應該在計中網站以外的地方輸入自己的帳密！')
         self.login_method_right_label.setToolTip('透過手動登入 Ceiba 可以從瀏覽器的 F12 視窗看到 Cookies，請複製 PHPSESSID 的內容')
+        self.login_alternative_checkbox.setText('助教、外校師生')
+        self.login_alternative_checkbox.setStyleSheet('font-size: 16px;')
         self.courses_group_box.setTitle('課程')
         self.status_group_box.setTitle('狀態')
         self.welcome_text = "{} ({})，歡迎你！"

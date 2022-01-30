@@ -68,14 +68,17 @@ class Crawler():
         soup = BeautifulSoup(response.content, 'html.parser')
         self.download_css(soup.find_all('link'))
         self.download_imgs(soup.find_all('img'))
-        
-        for op in soup.find_all('option'):
-            op.extract()
 
         if self.module == 'board':
             self.__handle_board(soup.find_all('caption'))  # special case for board
         
         soup = self.crawl_hrefs(soup, response.url)
+        
+        if self.module == 'bulletin':
+            soup = self.__handle_bulletin(soup, response.url)
+        
+        for op in soup.find_all('option'):
+            op.extract()  # TODO: we should use <a> to replace <option>
 
         filepath.write_text(str(soup), encoding='utf-8')
         return filepath
@@ -137,7 +140,7 @@ class Crawler():
                 a['href'] = url
                 # a.replaceWithChildren()  # discuss: when 404 happens, should it link to original url?
             except Exception as e:
-                logging.warning(strings.crawler_download_fail.format(text, url))
+                logging.warning(strings.crawler_download_fail.format(text, url), exc_info=True)
                 a.string = a.text + " [ERROR]"
             else:
                 a['href'] = crawler_path.relative_to(self.path) / filename
@@ -155,6 +158,21 @@ class Crawler():
                     self._board_dir[a_tag.text].mkdir(exist_ok=True)
                 self._is_board = True
                 break
+    
+    def __handle_bulletin(self, soup: BeautifulSoup, resp_url: str):
+        op: Tag
+        for op in soup.find_all('option'):
+            url = urljoin(resp_url, op['value'])
+            text = op.get_text()
+            filename = Crawler(self.session, url, self.path, self.module, text, text).crawl()
+            op.name = 'a'
+            op['href'] = filename
+            del op['value']
+            del op['selected']
+        select = soup.find('select')
+        if select:
+            select.replaceWithChildren()
+        return soup
 
     def download_imgs(self, imgs: ResultSet):
         img: Tag

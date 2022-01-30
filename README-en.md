@@ -24,3 +24,7 @@ If you don't want to run the binary, you can run the code with Python.
 1. `python 3.7+` required (`3.9+` required in `mac`, and the reason is still unknown)
 2. `pip3 install -r requirements.txt`
 3. `python3 gui_main.py`
+
+## Known Issue
+
+- May not work in Windows 7/8/8.1

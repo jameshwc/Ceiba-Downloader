@@ -24,3 +24,7 @@
 1. `python` 使用 `3.7+` 版本（`mac` 需要 `3.9+` 版本，理由未知）
 2. `pip3 install -r requirements.txt`
 3. `python3 gui_main.py`
+
+## 已知問題
+
+- Windows 7/8/8.1 可能無法正常運作
