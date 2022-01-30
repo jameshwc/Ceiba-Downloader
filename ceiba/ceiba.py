@@ -119,25 +119,32 @@ class Ceiba():
 
         rows = self.__get_courses_rows_from_homepage_table(soup)
         
+        count: int = 0
+        
         for row in rows:
-            cols = row.find_all('td')
-            href = cols[4].find('a').get('href')
-            name = cols[4].get_text(strip=True, separator='\n').splitlines()
-            cols = [ele.text.strip() for ele in cols]
-            cname = name[0]
-            if cname in util.skip_courses_list:
-                continue
-            ename = name[1] if len(name) > 1 else ""
-            if ename.startswith('http'):  # some courses have no ename but show their url (in ta's page)
-                ename = cname  # use cname instead
-            course = Course(semester=cols[0],
-                            course_num=cols[2],
-                            cname=cname,
-                            ename=ename,
-                            teacher=cols[5],
-                            href=href)
-            self.courses.append(course)
-            self.course_dir_map[course.id] = course.folder_name
+            count += 1
+            try:
+                cols = row.find_all('td')
+                href = cols[4].find('a').get('href')
+                name = cols[4].get_text(strip=True, separator='\n').splitlines()
+                cols = [ele.text.strip() for ele in cols]
+                cname = name[0]
+                if cname in util.skip_courses_list:
+                    continue
+                ename = name[1] if len(name) > 1 else cname
+                if ename.startswith('http'):  # some courses have no ename but show their url (in ta's page)
+                    ename = cname  # use cname instead
+                course = Course(semester=cols[0],
+                                course_num=cols[2],
+                                cname=cname,
+                                ename=ename,
+                                teacher=cols[5],
+                                href=href)
+                self.courses.append(course)
+                self.course_dir_map[course.id] = course.folder_name
+            except (IndexError, AttributeError) as e:
+                logging.error(e, exc_info=True)
+                logging.warning(strings.warning_fail_to_get_course.format(count))
         logging.info(strings.get_courses_successfully)
         return self.courses
 
@@ -202,18 +209,22 @@ class Ceiba():
         
         valid_a_tag = set()
         for row in rows:
-            cols = row.find_all('td')
-            course = cols[4].find('a')
-            cols = [ele.text.strip() for ele in cols]
-            course_id = cols[0] + cols[2]
-            if course.text in util.skip_courses_list or (
-                    course_id_filter is not None
-                    and course_id not in course_id_filter):
-                course.replaceWithChildren()
-                row['style'] = 'background: silver;'
-                continue
-            course['href'] = "courses/" + self.course_dir_map[course_id] + '/index.html'
-            valid_a_tag.add(course)
+            try:
+                cols = row.find_all('td')
+                course = cols[4].find('a')
+                cols = [ele.text.strip() for ele in cols]
+                course_id = cols[0] + cols[2]
+                if course.text in util.skip_courses_list or (
+                        course_id_filter is not None
+                        and course_id not in course_id_filter):
+                    course.replaceWithChildren()
+                    row['style'] = 'background: silver;'
+                    continue
+                course['href'] = "courses/" + self.course_dir_map[course_id] + '/index.html'
+                valid_a_tag.add(course)
+            except (IndexError, AttributeError) as e:
+                logging.error(e, exc_info=True)
+                logging.warning(strings.warning_partial_failure_on_homepage)
 
         for a in soup.find_all('a'):
             if a not in valid_a_tag:
@@ -246,7 +257,7 @@ class Ceiba():
             resp = self.sess.get('https://raw.githubusercontent.com/jameshwc/Ceiba-Downloader/master/version.txt')
             version = str(resp.content, 'utf-8')
         except Exception as e:
-            logging.error(e)
+            logging.error(e, exc_info=True)
             raise CheckForUpdatesError
         if version > self.version:
             return True
