@@ -59,8 +59,7 @@ class Course():
                 module_name = util.cname_map[module] if strings.lang == 'zh-tw' else module
                 self.download_module(session, module_name, module)
             except Exception as e:
-                logging.error(e)
-                logging.debug(e, exc_info=True)
+                logging.error(e, exc_info=True)
                 logging.warning(strings.error_skip_and_continue_download_modules.format(course_name, module))
             if progress:
                 progress.emit(1)

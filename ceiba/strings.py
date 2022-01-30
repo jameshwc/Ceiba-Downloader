@@ -39,6 +39,8 @@ class String:
         self._exception_check_for_updates = {}
         self._exception_http_not_found_error = {}
         self._exception_crawler_connection_error = {}
+        self._warning_fail_to_get_course = {}
+        self._warning_partial_failure_on_homepage = {}
         self._warning_max_retries_exceeded = {}
         
         self._qt_feedback = {}
@@ -99,6 +101,8 @@ class String:
         self._exception_http_not_found_error['zh-tw'] = '[404 not found] 下載 {} 時發生問題！（網址：{}）'
         self._exception_check_for_updates['zh-tw'] = '檢查更新時發生錯誤！'
         self._exception_crawler_connection_error['zh-tw'] = '連線時發生問題！發生錯誤的網址：{}'
+        self._warning_fail_to_get_course['zh-tw'] = '取得第 {} 堂課程資訊錯誤！跳過並取得其他堂課程...'
+        self._warning_partial_failure_on_homepage['zh-tw'] = '下載首頁時發生部分錯誤！首頁有可能無法正常顯示...'
         self._warning_max_retries_exceeded['zh-tw'] = '超過最大重試連線次數！停止嘗試連線！'
         self._retry_after_five_seconds['zh-tw'] = '五秒後重新連線...'
     
@@ -138,7 +142,9 @@ class String:
         self._exception_http_not_found_error['en'] = '[404 not found] Error when downloading {} ! (url: {})'
         self._exception_check_for_updates['en'] = 'Error when checking for updates!'
         self._exception_crawler_connection_error['en'] = 'Connection error! The url that caused the error is {}'
+        self._warning_fail_to_get_course['en'] = 'Error when getting no.{} course! Skip it to get the other courses...'
         self._warning_max_retries_exceeded['en'] = 'Max retries exceeded! Stop retrying the connection!'
+        self._warning_partial_failure_on_homepage['en'] = 'Partially fail to download homepage! It may not show correctly...'
         self._retry_after_five_seconds['en'] = 'Retry connection after 5 seconds...'
     
     @property
@@ -280,6 +286,14 @@ class String:
     @property
     def exception_crawler_connection_error(self) -> str:
         return self._exception_crawler_connection_error[self.lang]
+    
+    @property
+    def warning_fail_to_get_course(self) -> str:
+        return self._warning_fail_to_get_course[self.lang]
+    
+    @property
+    def warning_partial_failure_on_homepage(self) -> str:
+        return self._warning_partial_failure_on_homepage[self.lang]
     
     @property
     def warning_max_retries_exceeded(self) -> str:
