@@ -55,7 +55,7 @@ class Worker(QRunnable):
         try:
             result = self.fn(*self.args, **self.kwargs)
         except Exception as e:
-            logging.error(e, exc_info=True)
+            logging.error(e)
             self.signals.failed.emit()
         else:
             self.signals.result.emit(result)
@@ -79,12 +79,10 @@ class TicketSubmit(QMainWindow):
         self.feedback_radio_button = QRadioButton('Feedback', type_group_box)
         self.others_radio_button = QRadioButton('Others', type_group_box)
         self.issue_radio_button.setChecked(True)
-        type_layout.addWidget(self.issue_radio_button)
-        type_layout.addWidget(self.feedback_radio_button)
-        type_layout.addWidget(self.others_radio_button)
-        self.type_button_group.addButton(self.issue_radio_button)
-        self.type_button_group.addButton(self.feedback_radio_button)
-        self.type_button_group.addButton(self.others_radio_button)
+        for button in [self.issue_radio_button, self.feedback_radio_button, self.others_radio_button]:
+            type_layout.addWidget(button)
+            self.type_button_group.addButton(button)
+        
         type_group_box.setLayout(type_layout)
         type_group_box.setProperty("class", "no-padding")
 
@@ -582,15 +580,16 @@ class MyApp(QMainWindow):
         self.language = 'en'
         self.login_group_box.setTitle('User')
         self.username_label.setText('Username (Student ID): ')
-        self.password_label.setText('Password: ')
+        if not self.method_toggle.isChecked():
+            self.password_label.setText('Password: ')
         self.password_label_text = 'Password: '
+            
         self.login_button.setText('Log in')
         self.login_method_left_label.setText('Username/Password [?]')
         self.login_method_right_label.setText('Cookies [?]')
         self.login_method_left_label.setToolTip('It\'s unsafe to log in via a third-party program! You should use cookies as your credential instead.')
         self.login_method_right_label.setToolTip('Log in Ceiba manually and you can view cookies using F12 in your browser. Please copy the content of PHPSESSID in your cookies.')
-        self.login_alternative_checkbox.setText('TAs, outside instructors && students')
-        self.login_alternative_checkbox.setStyleSheet('font-size: 12px;')
+        self.login_alternative_checkbox.setText('TAs')
         self.courses_group_box.setTitle('Courses')
         self.status_group_box.setTitle('Status')
         self.welcome_text = "Welcome, {} ({})!"
@@ -600,10 +599,10 @@ class MyApp(QMainWindow):
             self.courses_checkboxes[i].setText("&" + self.courses[i].ename)
         
         self.download_button.setText('Download')
-        self.check_all_courses_checkbox.setText('check all courses')
+        self.check_all_courses_checkbox.setText('Check All Courses')
         self.download_item_label.setText('Download Items: ')
-        self.check_all_download_item_checkbox.setText('check all items ')
-        self.only_download_homepage_checkbox.setText('only homepage [?]')
+        self.check_all_download_item_checkbox.setText('Check All Items ')
+        self.only_download_homepage_checkbox.setText('Only Homepage [?]')
         self.only_download_homepage_checkbox.setToolTip(
         '''Download Ceiba homepage only.
         You should use this option when you had downloaded a few courses before
@@ -626,15 +625,16 @@ class MyApp(QMainWindow):
         self.language = 'zh-tw'
         self.login_group_box.setTitle('使用者')
         self.username_label.setText('帳號 (學號) :')
-        self.password_label.setText('密碼 :')
+        if not self.method_toggle.isChecked():
+            self.password_label.setText('密碼 :')
         self.password_label_text = '密碼 :'
+        
         self.login_button.setText('登入')
         self.login_method_left_label.setText('登入方式：帳號 / 密碼 [?]')
         self.login_method_right_label.setText('cookies [?]')
         self.login_method_left_label.setToolTip('除非你信任本程式作者，否則不應該在計中網站以外的地方輸入自己的帳密！')
         self.login_method_right_label.setToolTip('透過手動登入 Ceiba 可以從瀏覽器的 F12 視窗看到 Cookies，請複製 PHPSESSID 的內容')
-        self.login_alternative_checkbox.setText('助教、外校師生')
-        self.login_alternative_checkbox.setStyleSheet('font-size: 16px;')
+        self.login_alternative_checkbox.setText('助教')
         self.courses_group_box.setTitle('課程')
         self.status_group_box.setTitle('狀態')
         self.welcome_text = "{} ({})，歡迎你！"

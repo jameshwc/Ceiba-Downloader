@@ -9,6 +9,7 @@ from requests import Session, Response
 from .strings import strings
 from .exceptions import CrawlerConnectionError
 from pathlib import Path
+from abc import abstractclassmethod
 
 # from pathlib import Path
 
@@ -27,19 +28,13 @@ button_url = 'https://ceiba.ntu.edu.tw/modules/button.php'
 banner_url = 'https://ceiba.ntu.edu.tw/modules/banner.php'
 homepage_url = 'https://ceiba.ntu.edu.tw/modules/index.php'
 skip_courses_list = ['中文系大學國文網站']
+
 cname_map = {
-    'bulletin': '公佈欄',
-    'syllabus': '課程大綱',
-    'hw': '作業',
-    'info': '課程資訊',
-    'personal': '教師資訊',
-    'grade': '學習成績',
-    'board': '討論看板',
-    'calendar': '課程行事曆',
-    'share': '資源分享',
-    'vote': '投票區',
-    'student': '修課學生'
-}
+    'bulletin': '公佈欄', 'syllabus': '課程大綱', 'hw': '作業',
+    'info': '課程資訊', 'personal': '教師資訊', 'grade': '學習成績',
+    'board': '討論看板', 'calendar': '課程行事曆', 'share': '資源分享',
+    'vote': '投票區', 'student': '修課學生'}
+ename_map = {v: k for k, v in cname_map.items()}
 
 default_skip_href_texts = ['友善列印', '分頁顯示']
 board_skip_href_texts = default_skip_href_texts + [
@@ -48,15 +43,12 @@ board_skip_href_texts = default_skip_href_texts + [
                 '修改', '上一頁', '下一頁', ' 我要評分', ' 我要推薦']
 student_skip_href_texts = default_skip_href_texts + ['上頁', '下頁']
 
-ename_map = {v: k for k, v in cname_map.items()}
-
 ticket_url = 'https://xk4axzhtgc.execute-api.us-east-2.amazonaws.com/Practicing/message'
 
 def get_valid_filename(name: str) -> str:
     s = str(name).strip().replace(' ', '_').replace('/', '-')
     s = re.sub(r'(?u)[^-\w.]', '_', s)
     return s
-
 
 def progress_decorator():
     def decorator(func):
