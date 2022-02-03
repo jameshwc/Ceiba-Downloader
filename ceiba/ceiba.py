@@ -8,7 +8,6 @@ from typing import Dict, List, Optional, Union
 import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag, ResultSet
-from PySide6.QtCore import SignalInstance
 
 from . import util
 from .course import Course
@@ -59,7 +58,7 @@ class Ceiba():
               cookie_PHPSESSID: Optional[str] = None, 
               username: Optional[str] = None,
               password: Optional[str] = None,
-              progress: Optional[SignalInstance] = None):
+              progress = None):
         
         if cookie_PHPSESSID:
             self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
@@ -152,7 +151,7 @@ class Ceiba():
                          path: Union[Path, str],
                          course_id_filter=None,
                          modules_filter=None,
-                         progress: Optional[SignalInstance] = None):
+                         progress = None):
 
         self.path = Path(path) / "-".join(["ceiba", self.id, datetime.today().strftime('%Y%m%d')])
         self.courses_dir = self.path / "courses"
@@ -243,7 +242,8 @@ class Ceiba():
         timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
         mac_addr = hex(uuid.getnode())
         id = timestamp + "-" + mac_addr
-        payload = {'id': id, 'type': ticket_type, 'content': content, 'timestamp': timestamp, 'mac_addr': mac_addr}
+        payload = {'id': id, 'type': ticket_type, 'content': content, 'timestamp': timestamp, 
+                   'mac_addr': mac_addr, 'version': self.version}
         if not anonymous:
             payload['email'] = self.email
         resp = self.sess.post(util.ticket_url, json.dumps(payload))

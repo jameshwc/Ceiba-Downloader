@@ -5,7 +5,6 @@ from typing import List, Optional
 
 import requests
 from bs4 import BeautifulSoup
-from PySide6.QtCore import SignalInstance
 
 from . import util
 from .crawler import Crawler
@@ -33,7 +32,7 @@ class Course():
                  path: Path,
                  session: requests.Session,
                  modules_filter_list: Optional[List[str]] = None,
-                 progress: Optional[SignalInstance] = None):
+                 progress = None):
         
         self.path = path / self.folder_name
         self.path.mkdir(exist_ok=True)
@@ -42,25 +41,27 @@ class Course():
         
         course_url = util.get(session, self.href).url
         m = re.search(r'course/([0-9a-f]*)+', course_url)
-        if m:
-            if m.group(0).startswith('course/'):
-                self.course_sn = m.group(0)[7:]
+        if m and m.group(0).startswith('course/'):
+            self.course_sn = m.group(0)[7:]
         else:
             logging.error(strings.error_unable_to_parse_course_sn.format(course_name, course_name))
             logging.debug(strings.urlf.format(course_url))
             return
+        
         modules = self.download_homepage(session, strings.homepage, modules_filter_list)
+        
         if progress and modules_filter_list:
             modules_not_in_this_module_num = len(modules_filter_list) - len(modules)
             if modules_not_in_this_module_num > 0:
                 progress.emit(modules_not_in_this_module_num)
+        
         for module in modules:
+            module_name = util.cname_map[module] if strings.lang == 'zh-tw' else module
             try:
-                module_name = util.cname_map[module] if strings.lang == 'zh-tw' else module
                 self.download_module(session, module_name, module)
             except Exception as e:
                 logging.error(e, exc_info=True)
-                logging.warning(strings.error_skip_and_continue_download_modules.format(course_name, module))
+                logging.warning(strings.error_skip_and_continue_download_modules.format(course_name, module_name))
             if progress:
                 progress.emit(1)
 

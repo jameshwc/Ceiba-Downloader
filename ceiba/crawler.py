@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import Dict, Set
+from typing import Dict, Match, Optional, Set, List
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -52,13 +52,7 @@ class Crawler():
             logging.info(strings.crawler_download_info.format(self.text))
 
         if 'text/html' not in response.headers['content-type']:  # files (e.g. pdf, docs)
-            files_dir = self.path / "files"
-            files_dir.mkdir(exist_ok=True)
-            filepath = self.__get_uniq_filepath(files_dir.joinpath(self.filename))
-            filepath.write_bytes(response.content)
-            Crawler.crawled_files_path.add(filepath)
-            Crawler.crawled_urls[self.url] = filepath
-            return filepath
+            return self.__save_files(response.content)
 
         self.filename += ".html"
         filepath = self.__get_uniq_filepath(self.path.joinpath(self.filename))
@@ -68,18 +62,18 @@ class Crawler():
         soup = BeautifulSoup(response.content, 'html.parser')
         self.download_css(soup.find_all('link'))
         self.download_imgs(soup.find_all('img'))
+        
 
         if self.module == 'board':
             self.__handle_board(soup.find_all('caption'))  # special case for board
-        
-        soup = self.crawl_hrefs(soup, response.url)
-        
-        if self.module == 'bulletin':
+        elif self.module == 'bulletin':
             soup = self.__handle_bulletin(soup, response.url)
         
+        soup = self.crawl_hrefs(soup, response.url)
+
         for op in soup.find_all('option'):
             op.extract()  # TODO: we should use <a> to replace <option>
-
+        
         filepath.write_text(str(soup), encoding='utf-8')
         return filepath
 
@@ -89,7 +83,7 @@ class Crawler():
         if path.exists():
             return
         new_content = response.content
-        resources = re.findall(r'url\((.*?)\)', str(response.content))
+        resources: List[str] = re.findall(r'url\((.*?)\)', str(response.content))
         if len(resources) > 0:
             resources_path = self.path / "resources"
             resources_path.mkdir(exist_ok=True)
@@ -111,6 +105,7 @@ class Crawler():
             skip_href_texts = util.student_skip_href_texts
         
         hrefs = soup.find_all('a')
+        a: Tag
         for a in hrefs:
             if a.text in skip_href_texts:
                 a.replaceWithChildren()
@@ -146,13 +141,13 @@ class Crawler():
                 a['href'] = crawler_path.relative_to(self.path) / filename
         return soup
 
-    def __handle_board(self, captions):
+    def __handle_board(self, captions: List[Tag]):
         for caption in captions:
             caption_text: str = caption.get_text()
             if caption_text.startswith('看板列表'):
                 rows = caption.parent.find('tbody').find_all('tr')
                 for row in rows:
-                    a_tag = row.find("p", {"class": "fname"}).find('a')
+                    a_tag: Tag = row.find("p", {"class": "fname"}).find('a')
                     dir_name = util.get_valid_filename(a_tag.text)
                     self._board_dir[a_tag.text] = self.path / dir_name
                     self._board_dir[a_tag.text].mkdir(exist_ok=True)
@@ -163,10 +158,8 @@ class Crawler():
         op: Tag
         for op in soup.find_all('option'):
             url = urljoin(resp_url, op['value'])
-            text = op.get_text()
-            filename = Crawler(self.session, url, self.path, self.module, text, text).crawl()
             op.name = 'a'
-            op['href'] = filename
+            op['href'] = url
             del op['value']
             del op['selected']
         select = soup.find('select')
@@ -191,7 +184,7 @@ class Crawler():
         css: Tag
         for css in links:
             url = urljoin(self.url, css.get('href'))
-            if url.startswith('http') and 'ceiba.ntu.edu.tw' not in url:
+            if urlparse(url).netloc != 'ceiba.ntu.edu.tw':
                 continue  # skip downloading external css
             filename = url.split('/')[-1]
             css['href'] = 'static/' + filename
@@ -200,6 +193,15 @@ class Crawler():
             Crawler(self.session, url, static_dir, self.module, filename,
                     css['href']).crawl_css_and_resources()
 
+    def __save_files(self, content: bytes) -> Path:
+        files_dir = self.path / "files"
+        files_dir.mkdir(exist_ok=True)
+        filepath = self.__get_uniq_filepath(files_dir.joinpath(self.filename))
+        filepath.write_bytes(content)
+        Crawler.crawled_files_path.add(filepath)
+        Crawler.crawled_urls[self.url] = filepath
+        return filepath
+        
     def __get_uniq_filepath(self, path: Path):
         if path not in Crawler.crawled_files_path:
             return path
