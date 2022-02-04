@@ -138,7 +138,7 @@ class Crawler():
                 logging.warning(strings.crawler_download_fail.format(text, url), exc_info=True)
                 a.string = a.text + " [ERROR]"
             else:
-                a['href'] = crawler_path.relative_to(self.path) / filename
+                a['href'] = util.relative_path(self.path, filename)
         return soup
 
     def __handle_board(self, captions: List[Tag]):
