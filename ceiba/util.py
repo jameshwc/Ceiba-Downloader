@@ -9,9 +9,7 @@ from requests import Session, Response
 from .strings import strings
 from .exceptions import CrawlerConnectionError
 from pathlib import Path
-from abc import abstractclassmethod
-
-# from pathlib import Path
+from os.path import relpath
 
 CONNECT_RETRY_MAX = 10
 REQUESTS_TIMEOUT = 300
@@ -72,6 +70,9 @@ def is_relative_to(self: Path, other: Path) -> bool:
         return True
     except ValueError:
         return False
+
+def relative_path(self: Path, other: Path) -> str:
+    return Path(relpath(other.resolve(), self.resolve())).as_posix()
 
 def get(session: Session, url: str) -> Response:
     return loop_connect(session.get, url)
