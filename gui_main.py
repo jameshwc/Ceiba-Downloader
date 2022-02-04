@@ -176,6 +176,7 @@ class MyApp(QMainWindow):
         self.main_layout.addWidget(self.status_group_box, 0, 1)
         self.main_layout.setColumnStretch(0, 1)
         self.main_layout.setColumnStretch(1, 1)
+        self.check_for_updates()
         self.username_edit.setFocus()
 
     def create_menu_bar(self):
@@ -206,6 +207,7 @@ class MyApp(QMainWindow):
         
         self.menu_check_update = menu.addAction("&檢查更新 / Check for Updates")
         self.menu_check_update.triggered.connect(self.check_for_updates)
+        self.has_checked_onstart = False  # check updates when onstart
         
         self.menu_about = menu.addAction("&關於 / About ")  # extra space for fixing strange mac behavior
         self.menu_about.triggered.connect(self.open_about_window)
@@ -572,8 +574,10 @@ class MyApp(QMainWindow):
             update_msgbox.exec()
             if update_msgbox.buttonRole(update_msgbox.clickedButton()) == QMessageBox.ActionRole:
                 webbrowser.open('https://github.com/jameshwc/Ceiba-Downloader/releases/latest')
-        else:
+        elif self.has_checked_onstart:
             QMessageBox.information(self, 'Ceiba Downloader by Jameshwc', 'There are currently no updates available.', QMessageBox.Close)
+        else:
+            self.has_checked_onstart = True
 
     def set_en(self):
         self.ceiba.set_lang('en')
