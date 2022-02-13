@@ -2,8 +2,8 @@ import logging
 
 from PySide6.QtCore import (Property, QEasingCurve, QObject, QPoint,
                             QPropertyAnimation, QRect, Qt, Signal)
-from PySide6.QtGui import QColor, QFont, QPainter, QStandardItem, QBrush
-from PySide6.QtWidgets import QCheckBox, QComboBox, QPlainTextEdit, QStyleOption, QStyle
+from PySide6.QtGui import QColor, QFont, QPainter
+from PySide6.QtWidgets import QCheckBox, QPlainTextEdit
 
 class PyToggle(QCheckBox):
     def __init__(self,

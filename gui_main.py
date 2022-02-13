@@ -22,7 +22,6 @@ from qt_material import apply_stylesheet
 from ceiba import util
 from ceiba.ceiba import Ceiba
 from ceiba.course import Course
-from ceiba.exceptions import (NullTicketContent, SendTicketError)
 from qt_custom_widget import PyLogOutput, PyToggle
 
 dirname = os.path.dirname(__file__) or '.'
