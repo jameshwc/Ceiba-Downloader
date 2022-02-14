@@ -1,8 +1,24 @@
+from enum import Enum
+
+
+class Role(Enum):
+    NTUer = 0
+    TA = 1
+    Professor = 2
+    Outside_NTU = 3
+
+    def __str__(self):
+        return self.name.replace("_", " ")
+
 class String:
 
     def __init__(self):
         self.lang = "zh-tw"
-
+        
+        self._role = {}
+        for role in Role:
+            self._role[role] = {}
+        
         self._cancel_on_object = {}
         self._wrong_with_object = {}
         self._wrong_with_downloading_url = {}
@@ -66,6 +82,11 @@ class String:
         self.lang = lang
     
     def set_zh_tw(self):
+        self._role[Role.NTUer]['zh-tw'] = '台大學生'
+        self._role[Role.TA]['zh-tw'] = '助教'
+        self._role[Role.Professor]['zh-tw'] = '教授'
+        self._role[Role.Outside_NTU]['zh-tw'] = '校外師生'
+
         self._cancel_on_object['zh-tw'] = '{} 的 {} 功能並未開啟！取消下載 {} 檔案。'
         self._wrong_with_object['zh-tw'] = '下載 {} 時遇到問題！取消下載 {} 的 {} 檔案'
         self._wrong_with_downloading_url['zh-tw'] = '下載 {} 時遇到問題！網址為 {}'
@@ -107,6 +128,11 @@ class String:
         self._retry_after_five_seconds['zh-tw'] = '五秒後重新連線...'
     
     def set_en(self):
+        self._role[Role.NTUer]['en'] = 'NTU Students'
+        self._role[Role.TA]['en'] = 'TA'
+        self._role[Role.Professor]['en'] = 'Professor'
+        self._role[Role.Outside_NTU]['en'] = 'Outside NTU'
+
         self._cancel_on_object['en'] = 'There is no {1} module in course {0}! Cancel the download of {}.'
         self._wrong_with_object['en'] = 'Error when downloading {0}! Cancel the download of {2} in {1}.'
         self._wrong_with_downloading_url['en'] = 'Error when downloading {} ! Url: {}'
@@ -147,6 +173,9 @@ class String:
         self._warning_partial_failure_on_homepage['en'] = 'Partially fail to download homepage! It may not show correctly...'
         self._retry_after_five_seconds['en'] = 'Retry connection after 5 seconds...'
     
+    def role(self, role: int) -> str:
+        return self._role[role][self.lang]
+        
     @property
     def cancel_on_object(self) -> str:
         return self._cancel_on_object[self.lang]
