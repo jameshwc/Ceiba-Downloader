@@ -92,7 +92,7 @@ def loop_connect(http_method_func, url, **kwargs) -> Response:
                 logging.error(strings.crawler_timeout_error)
             else:
                 logging.error(e, exc_info=True)
-                logging.debug(strings.urlf.format(url))
+                logging.error(strings.urlf.format(url))
                 logging.warning(strings.retry_after_five_seconds)
             count += 1
             time.sleep(5)

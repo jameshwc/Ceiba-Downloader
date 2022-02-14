@@ -114,7 +114,10 @@ class Crawler():
                 a.replaceWithChildren()
                 continue
             url = urljoin(resp_url, a.get('href'))
-            if not url.startswith('http') or urlparse(url).netloc != 'ceiba.ntu.edu.tw' or len(a.text) == 0:
+            if not url.startswith('http') or \
+               urlparse(url).netloc != 'ceiba.ntu.edu.tw' or \
+               urlparse(url).path == '' or \
+               len(a.text) == 0:
                 continue
             filename = a.text
             text = a.text
