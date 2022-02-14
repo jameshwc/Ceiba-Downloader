@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 
 from . import util
 from .crawler import Crawler
-from .strings import strings
+from .const import strings
 
 
 class Course():

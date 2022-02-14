@@ -1,4 +1,4 @@
-from .strings import strings
+from .const import strings
 
 class InvalidLoginParameters(Exception):
     def __str__(self):

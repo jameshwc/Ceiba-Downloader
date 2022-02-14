@@ -10,7 +10,7 @@ from bs4.element import ResultSet, Tag
 
 from . import util
 from .exceptions import NotFound
-from .strings import strings
+from .const import strings
 
 
 class Crawler():
