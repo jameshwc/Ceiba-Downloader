@@ -15,8 +15,7 @@ from .crawler import Crawler
 from .exceptions import (CheckForUpdatesError, InvalidCredentials,
                          InvalidFilePath, InvalidLoginParameters,
                          NullTicketContent, SendTicketError)
-from .strings import strings
-
+from .const import strings, Role
 
 class Ceiba():
     def __init__(self):
@@ -48,34 +47,38 @@ class Ceiba():
             raise InvalidCredentials
         resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice
 
-    def login_alternative_user(self, username: str, password: str):
+    def login_ta(self, username: str, password: str):
         payload = {'loginid': username, 'password': password, 'op': 'login'}
         resp = util.post(self.sess, util.login_alternative_url, data=payload)  # will get resp that redirect to /ChkSessLib.php
         if '登出' not in resp.content.decode('utf-8'):
             raise InvalidCredentials
         
-    def login(self, alternative=True,
+    def login(self, role: Role = Role.NTUer,
               cookie_PHPSESSID: Optional[str] = None, 
               username: Optional[str] = None,
               password: Optional[str] = None,
               progress = None):
+        '''
+        :param role: Integer. 0: NTUer, 1: TA, 2: Professor, 3: Outside NTU
+        '''
+        self.role = role
         
         if cookie_PHPSESSID:
             self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
         elif username and password:
-            if not alternative:
+            if self.role == Role.NTUer:
                 self.login_user(username, password)
-            else:
-                self.login_alternative_user(username, password)
+            elif self.role == Role.TA:
+                self.login_ta(username, password)
             if progress:
                 progress.emit(1)
         else:
             raise InvalidLoginParameters
         # check if user credential is correct
-        self.is_alternative = alternative
+        
         info_url = util.info_url
-        if alternative:
-            info_url = util.alternative_info_url
+        if self.role == Role.TA:
+            info_url = util.ta_info_url
 
         soup = BeautifulSoup(util.get(self.sess, info_url).content, 'html.parser')
         if progress:
@@ -84,7 +87,7 @@ class Ceiba():
             trs = soup.find_all("tr")
             self.student_name = trs[0].find('td').text
             self.email = trs[5].find('td').text
-            if alternative:
+            if self.role == Role.TA:  # ta
                 self.email = trs[4].find('td').text
             self.id: str = self.email.split('@')[0]
             self.is_login = True
@@ -110,8 +113,8 @@ class Ceiba():
 
         logging.info(strings.try_to_get_courses)
         courses_url = util.courses_url
-        if self.is_alternative:
-            courses_url = util.alternative_courses_url
+        if self.role == Role.TA:
+            courses_url = util.ta_courses_url
         
         soup = BeautifulSoup(
             util.get(self.sess, courses_url).content, 'html.parser')
