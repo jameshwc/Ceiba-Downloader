@@ -45,9 +45,9 @@ class Ceiba():
         resp = util.post(self.sess, resp.url, data=payload)  # will get resp that redirect to /ChkSessLib.php
         if any(x in resp.content.decode('utf-8') for x in ['登入失敗', '更改密碼']):
             raise InvalidCredentials
-        resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice
+        resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice or self.role == Role.Outside_Teacher or self.role == Role.Outside_Student
 
-    def login_ta(self, username: str, password: str):
+    def login_alternative_user(self, username: str, password: str):
         payload = {'loginid': username, 'password': password, 'op': 'login'}
         resp = util.post(self.sess, util.login_alternative_url, data=payload)  # will get resp that redirect to /ChkSessLib.php
         if '登出' not in resp.content.decode('utf-8'):
@@ -68,17 +68,17 @@ class Ceiba():
         elif username and password:
             if self.role == Role.NTUer:
                 self.login_user(username, password)
-            elif self.role == Role.TA:
-                self.login_ta(username, password)
+            elif self.role == Role.TA or \
+                 self.role == Role.Outside_Teacher or \
+                 self.role == Role.Outside_Student:
+                self.login_alternative_user(username, password)
             if progress:
                 progress.emit(1)
         else:
             raise InvalidLoginParameters
         # check if user credential is correct
         
-        info_url = util.info_url
-        if self.role == Role.TA:
-            info_url = util.ta_info_url
+        info_url = util.info_url(self.role)
 
         soup = BeautifulSoup(util.get(self.sess, info_url).content, 'html.parser')
         if progress:
@@ -112,9 +112,7 @@ class Ceiba():
     def get_courses_list(self):
 
         logging.info(strings.try_to_get_courses)
-        courses_url = util.courses_url
-        if self.role == Role.TA:
-            courses_url = util.ta_courses_url
+        courses_url = util.courses_url(self.role)
         
         soup = BeautifulSoup(
             util.get(self.sess, courses_url).content, 'html.parser')
