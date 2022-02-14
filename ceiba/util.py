@@ -6,7 +6,7 @@ import time
 from requests import Session, Response
 # import appdirs
 
-from .strings import strings
+from .const import strings
 from .exceptions import CrawlerConnectionError
 from pathlib import Path
 from os.path import relpath
@@ -19,8 +19,8 @@ login_url = 'https://ceiba.ntu.edu.tw/ChkSessLib.php'
 login_alternative_url = 'https://ceiba.ntu.edu.tw/index.php?error_check=OK'
 module_url = 'https://ceiba.ntu.edu.tw/modules/main.php'
 courses_url = 'https://ceiba.ntu.edu.tw/student/index.php?seme_op=all'
-alternative_courses_url = 'https://ceiba.ntu.edu.tw/ta/index.php?seme_op=all'
-alternative_info_url = 'https://ceiba.ntu.edu.tw/ta/?op=personal'
+ta_courses_url = 'https://ceiba.ntu.edu.tw/ta/index.php?seme_op=all'
+ta_info_url = 'https://ceiba.ntu.edu.tw/ta/?op=personal'
 info_url = 'https://ceiba.ntu.edu.tw/student/?op=personal'
 button_url = 'https://ceiba.ntu.edu.tw/modules/button.php'
 banner_url = 'https://ceiba.ntu.edu.tw/modules/banner.php'
