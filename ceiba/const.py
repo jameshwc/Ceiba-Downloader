@@ -1,6 +1,5 @@
 from enum import Enum
 
-
 class Role(Enum):
     NTUer = 0
     TA = 1
