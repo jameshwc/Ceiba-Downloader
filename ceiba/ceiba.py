@@ -196,9 +196,7 @@ class Ceiba():
         
         logging.info(strings.start_downloading_homepage)
         
-        courses_url = util.courses_url
-        if self.is_alternative:
-            courses_url = util.alternative_courses_url
+        courses_url = util.courses_url(self.role)
 
         resp = util.get(self.sess, courses_url)
         soup = BeautifulSoup(resp.content, 'html.parser')
