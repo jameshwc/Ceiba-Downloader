@@ -5,7 +5,8 @@ class Role(Enum):
     NTUer = 0
     TA = 1
     Professor = 2
-    Outside_NTU = 3
+    Outside_Teacher = 3
+    Outside_Student = 4
 
     def __str__(self):
         return self.name.replace("_", " ")
@@ -85,7 +86,8 @@ class String:
         self._role[Role.NTUer]['zh-tw'] = '台大學生'
         self._role[Role.TA]['zh-tw'] = '助教'
         self._role[Role.Professor]['zh-tw'] = '教授'
-        self._role[Role.Outside_NTU]['zh-tw'] = '校外師生'
+        self._role[Role.Outside_Teacher]['zh-tw'] = '校外老師'
+        self._role[Role.Outside_Student]['zh-tw'] = '校外學生'
 
         self._cancel_on_object['zh-tw'] = '{} 的 {} 功能並未開啟！取消下載 {} 檔案。'
         self._wrong_with_object['zh-tw'] = '下載 {} 時遇到問題！取消下載 {} 的 {} 檔案'
@@ -131,7 +133,8 @@ class String:
         self._role[Role.NTUer]['en'] = 'NTU Students'
         self._role[Role.TA]['en'] = 'TA'
         self._role[Role.Professor]['en'] = 'Professor'
-        self._role[Role.Outside_NTU]['en'] = 'Outside NTU'
+        self._role[Role.Outside_Teacher]['en'] = 'Outside Teacher'
+        self._role[Role.Outside_Student]['en'] = 'Outside Student'
 
         self._cancel_on_object['en'] = 'There is no {1} module in course {0}! Cancel the download of {}.'
         self._wrong_with_object['en'] = 'Error when downloading {0}! Cancel the download of {2} in {1}.'
@@ -175,7 +178,7 @@ class String:
     
     def role(self, role: int) -> str:
         return self._role[role][self.lang]
-        
+
     @property
     def cancel_on_object(self) -> str:
         return self._cancel_on_object[self.lang]
