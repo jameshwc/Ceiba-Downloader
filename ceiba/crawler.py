@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import Dict, Match, Optional, Set, List
+from typing import Dict, Set, List
 from urllib.parse import urljoin, urlparse
 
 import requests
