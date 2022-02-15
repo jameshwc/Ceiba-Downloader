@@ -24,9 +24,8 @@ role_short = {Role.NTUer: 'student', Role.TA: 'ta',
 courses_url = lambda role: 'https://ceiba.ntu.edu.tw/{}/index.php?seme_op=all'.format(role_short[role])
 info_url = lambda role: 'https://ceiba.ntu.edu.tw/{}/?op=personal'.format(role_short[role])
 
-admin_module_urls = {
-    'ftp': 'https://ceiba.ntu.edu.tw/course_admin/ftp/?fsw=ftp'
-}
+admin_module_urlgen = lambda module: 'https://ceiba.ntu.edu.tw/course_admin/{}/?fsw={}'.format(module, module)
+
 button_url = 'https://ceiba.ntu.edu.tw/modules/button.php'
 banner_url = 'https://ceiba.ntu.edu.tw/modules/banner.php'
 homepage_url = 'https://ceiba.ntu.edu.tw/modules/index.php'
@@ -49,6 +48,7 @@ admin_cname_map = {
     'share': '資源分享', 'vote': '投票', 'grade': '成績'
 }
 admin_ename_map = {v: k for k, v in admin_cname_map.items()}
+admin_ename_map['討論看板'] = 'board'
 
 default_skip_href_texts = ['友善列印', '分頁顯示']
 board_skip_href_texts = default_skip_href_texts + [
