@@ -24,9 +24,15 @@ role_short = {Role.NTUer: 'student', Role.TA: 'ta',
 courses_url = lambda role: 'https://ceiba.ntu.edu.tw/{}/index.php?seme_op=all'.format(role_short[role])
 info_url = lambda role: 'https://ceiba.ntu.edu.tw/{}/?op=personal'.format(role_short[role])
 
+admin_module_urls = {
+    'ftp': 'https://ceiba.ntu.edu.tw/course_admin/ftp/?fsw=ftp'
+}
 button_url = 'https://ceiba.ntu.edu.tw/modules/button.php'
 banner_url = 'https://ceiba.ntu.edu.tw/modules/banner.php'
 homepage_url = 'https://ceiba.ntu.edu.tw/modules/index.php'
+
+ta_admin_url = 'https://ceiba.ntu.edu.tw/course_ta_adm/?csno='
+
 skip_courses_list = ['中文系大學國文網站']
 
 cname_map = {
@@ -35,6 +41,14 @@ cname_map = {
     'board': '討論看板', 'calendar': '課程行事曆', 'share': '資源分享',
     'vote': '投票區', 'student': '修課學生'}
 ename_map = {v: k for k, v in cname_map.items()}
+
+admin_cname_map = {
+    'ftp': '檔案上傳', 'user': '使用者', 'theme': '主題首頁',
+    'info': '課程資訊', 'syllabus': '大綱內容', 'bulletin': '公佈欄',
+    'calendar': '行事曆', 'board': '討論區', 'hw': '作業', 
+    'share': '資源分享', 'vote': '投票', 'grade': '成績'
+}
+admin_ename_map = {v: k for k, v in admin_cname_map.items()}
 
 default_skip_href_texts = ['友善列印', '分頁顯示']
 board_skip_href_texts = default_skip_href_texts + [
@@ -64,6 +78,9 @@ def progress_decorator():
         return wrap
 
     return decorator
+
+def is_admin(role: Role) -> bool:
+    return role == Role.TA or role == Role.Professor or role == Role.Outside_Teacher
 
 # alternative function for python3.10 pathlib.Path.is_relative_to
 def is_relative_to(self: Path, other: Path) -> bool:
