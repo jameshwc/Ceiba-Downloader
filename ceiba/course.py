@@ -9,17 +9,19 @@ from bs4 import BeautifulSoup
 from . import util
 from .crawler import Crawler
 from .const import strings
+from .course_admin import Admin
 
 
 class Course():
 
-    def __init__(self, semester, course_num, cname, ename, teacher, href):
+    def __init__(self, semester, course_num, cname, ename, teacher, href, admin: Admin):
         self.semester: str = semester
         self.course_num: str = course_num
         self.cname: str = cname
         self.ename: str = ename
         self.teacher: str = teacher
         self.href: str = href
+        self.admin = admin
         self.folder_name: str = util.get_valid_filename("_".join([self.semester, self.cname, self.ename, self.teacher]))
         self.id: str = self.semester + self.course_num
         self.course_sn: str = ""
@@ -27,6 +29,20 @@ class Course():
 
     def __str__(self):
         return " ".join([self.cname, self.ename, self.teacher, self.href])
+
+    def download_admin(self,
+                       path: Path,
+                       session: requests.Session,
+                       progress = None):
+        
+        self.path = path / self.folder_name
+        self.path.mkdir(exist_ok=True)
+        
+        self.admin_path = self.path / "admin"
+        self.admin_path.mkdir(exist_ok=True)
+
+        course_name = self.cname if strings.lang == 'zh-tw' else self.ename
+        self.admin.crawl(self.admin_path)
 
     def download(self,
                  path: Path,
