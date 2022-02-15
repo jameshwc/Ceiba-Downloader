@@ -2,12 +2,15 @@ from datetime import datetime
 import json
 import logging
 import uuid
+import re
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag, ResultSet
+
+from ceiba.course_admin import Admin
 
 from . import util
 from .course import Course
@@ -120,13 +123,22 @@ class Ceiba():
         rows = self.__get_courses_rows_from_homepage_table(soup)
         
         count: int = 0
-        
+        row: Tag
         for row in rows:
             count += 1
             try:
                 cols = row.find_all('td')
                 href = cols[4].find('a').get('href')
                 name = cols[4].get_text(strip=True, separator='\n').splitlines()
+                
+                admin = None
+                if self.role == Role.TA:
+                    onclick_val = cols[6].find('input').get('onclick')
+                    m = re.search(r"\'([0-9a-f]*)\'", onclick_val)
+                    if m:
+                        course_sn = m.group(1)
+                    admin = Admin(self.sess, course_sn, util.ta_admin_url)
+
                 cols = [ele.text.strip() for ele in cols]
                 cname = name[0]
                 if cname in util.skip_courses_list:
@@ -134,12 +146,14 @@ class Ceiba():
                 ename = name[1] if len(name) > 1 else cname
                 if ename.startswith('http'):  # some courses have no ename but show their url (in ta's page)
                     ename = cname  # use cname instead
+
                 course = Course(semester=cols[0],
                                 course_num=cols[2],
                                 cname=cname,
                                 ename=ename,
                                 teacher=cols[5],
-                                href=href)
+                                href=href,
+                                admin=admin)
                 self.courses.append(course)
                 self.course_dir_map[course.id] = course.folder_name
             except (IndexError, AttributeError) as e:
@@ -173,7 +187,12 @@ class Ceiba():
                 logging.info(strings.course_download_info.format(course_name))
                 self.courses_dir.joinpath(course.folder_name).mkdir(exist_ok=True)
                 try:
-                    course.download(self.courses_dir, self.sess, modules_filter, progress)
+                    if self.role == Role.Professor or \
+                        self.role == Role.Outside_Teacher or \
+                        self.role == Role.TA:
+                        course.download_admin(self.courses_dir, self.sess, progress)
+                    else:
+                        course.download(self.courses_dir, self.sess, modules_filter, progress)
                 except Exception as e:
                     logging.error(e, exc_info=True)
                     logging.warning(strings.error_skip_and_continue_download_courses.format(course_name))
@@ -206,6 +225,7 @@ class Ceiba():
         rows = self.__get_courses_rows_from_homepage_table(soup)
         
         valid_a_tag = set()
+        row: Tag
         for row in rows:
             try:
                 cols = row.find_all('td')
@@ -219,6 +239,14 @@ class Ceiba():
                     row['style'] = 'background: silver;'
                     continue
                 course['href'] = "courses/" + self.course_dir_map[course_id] + '/index.html'
+                if util.is_admin(self.role):
+                    op = row.find('input', {'value': '管理'})
+                    op.name = 'a'
+                    op.string = '管理'
+                    op['href'] = "courses/" + self.course_dir_map[course_id] + "/admin/index.html"
+                    for attr in ['class', 'name', 'onclick', 'type', 'value']:
+                        del op[attr]
+                    valid_a_tag.add(op)
                 valid_a_tag.add(course)
             except (IndexError, AttributeError) as e:
                 logging.error(e, exc_info=True)
