@@ -18,7 +18,7 @@ login_url = 'https://ceiba.ntu.edu.tw/ChkSessLib.php'
 login_alternative_url = 'https://ceiba.ntu.edu.tw/index.php?error_check=OK'
 module_url = 'https://ceiba.ntu.edu.tw/modules/main.php'
 
-role_short = {Role.NTUer: 'student', Role.TA: 'ta', 
+role_short = {Role.NTUer: 'student', Role.TA: 'ta',
               Role.Outside_Student: 'student', Role.Outside_Teacher: 'outside_teacher'}
 courses_url: Callable[[Role], str] = lambda role: 'https://ceiba.ntu.edu.tw/{}/index.php?seme_op=all'.format(role_short[role])
 info_url: Callable[[Role], str] = lambda role: 'https://ceiba.ntu.edu.tw/{}/?op=personal'.format(role_short[role])
@@ -43,7 +43,7 @@ ename_map = {v: k for k, v in cname_map.items()}
 admin_cname_map = {
     'ftp': '檔案上傳', 'user': '使用者', 'theme': '主題首頁',
     'info': '課程資訊', 'syllabus': '大綱內容', 'bulletin': '公佈欄',
-    'calendar': '行事曆', 'board': '討論區', 'hw': '作業', 
+    'calendar': '行事曆', 'board': '討論區', 'hw': '作業',
     'share': '資源分享', 'vote': '投票', 'grade': '成績'
 }
 admin_ename_map = {v: k for k, v in admin_cname_map.items()}
@@ -129,7 +129,7 @@ def loop_connect(http_method_func, url, **kwargs) -> Response:
                 logging.warning(strings.retry_after_five_seconds)
             count += 1
             time.sleep(5)
-    
+
     logging.warning(strings.warning_max_retries_exceeded)
     raise CrawlerConnectionError(url)
 
