@@ -231,13 +231,8 @@ class Crawler():
         self.__class__.crawled_files_path.add(filepath)
         self.__class__.crawled_urls[self.url] = filepath
         return filepath
-<<<<<<< HEAD
 
-    def __get_uniq_filepath(self, path: Path):
-=======
-        
     def _get_uniq_filepath(self, path: Path):
->>>>>>> 4c8b316 (ceiba: Finish download admin page)
         if path not in Crawler.crawled_files_path:
             return path
 
