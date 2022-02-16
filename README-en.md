@@ -1,5 +1,7 @@
 # Ceiba Downloader
 
+[![GitHub stars](https://img.shields.io/github/stars/jameshwc/Ceiba-Downloader)](https://github.com/jameshwc/Ceiba-Downloader/stargazers) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/jameshwc/Ceiba-Downloader?sort=semver) ![GitHub all releases](https://img.shields.io/github/downloads/jameshwc/Ceiba-Downloader/total) [![wakatime](https://wakatime.com/badge/user/2e96fba1-4706-4851-b24f-13b1d9f5e5e0/project/b4b2c09f-879d-4d9d-8815-90aa4c171ce0.svg)](https://wakatime.com/badge/user/2e96fba1-4706-4851-b24f-13b1d9f5e5e0/project/b4b2c09f-879d-4d9d-8815-90aa4c171ce0) [![GitHub license](https://img.shields.io/github/license/jameshwc/Ceiba-Downloader)](https://github.com/jameshwc/Ceiba-Downloader/blob/master/LICENSE) 
+
 > Contributions are welcome! Open a pull request to fix a bug, or open an issue to discuss a new feature or change.
 
 ![](https://i.imgur.com/z7bqTNs.gif)
