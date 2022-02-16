@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import Dict, Set, List
+from typing import Dict, Set, List, Tuple
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -24,12 +24,14 @@ class Crawler():
                  session: requests.Session,
                  url: str,
                  path: Path,
+                 course_name: str = "",
                  module: str = "",
                  filename: str = "",
                  text: str = ""):
         self.session = session
         self.url = url
         self.path = path
+        self.course_name = course_name
         self.module = module
         self.filename = util.get_valid_filename(filename)
         self.text = text
@@ -49,7 +51,8 @@ class Crawler():
             raise NotFound(self.text, response.url)
 
         if self.module != "grade" and len(self.text.strip()) > 0:  # grade module has many 'show' and 'hide' pages to download
-            logging.info(strings.crawler_download_info.format(self.text))
+            module_name = util.cname_map[self.module] if strings.lang == 'zh-tw' else self.module
+            logging.info(strings.crawler_download_info.format(self.course_name, module_name, self.text))
 
         if 'text/html' not in response.headers['content-type']:  # files (e.g. pdf, docs)
             return self._save_files(response.content)
@@ -97,12 +100,7 @@ class Crawler():
 
     def crawl_hrefs(self, soup: BeautifulSoup, resp_url: str) -> BeautifulSoup:
 
-        skip_href_texts = util.default_skip_href_texts
-        if self.module == 'board':
-            skip_href_texts = util.board_skip_href_texts
-        elif self.module == 'student':
-            skip_href_texts = util.student_skip_href_texts
-
+        skip_href_texts = util.skip_href_texts(self.module, False)
         hrefs = soup.find_all('a')
         a: Tag
         for a in hrefs:
@@ -130,7 +128,7 @@ class Crawler():
             if self._is_board and a.text in self._board_dir:
                 crawler_path = self._board_dir[a.text]
             try:
-                filename = Crawler(self.session, url, crawler_path, self.module, filename, text).crawl()
+                filename = Crawler(self.session, url, crawler_path, self.course_name, self.module, filename, text).crawl()
             except NotFound as e:
                 logging.warning(e)
                 a.string = a.text + " [404 not found]"

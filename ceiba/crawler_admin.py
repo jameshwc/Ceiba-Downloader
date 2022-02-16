@@ -20,8 +20,8 @@ class Admin(Crawler):
     crawled_files_path: Set[Path] = set()
     crawled_urls: Dict[str, Path] = {}
 
-    def __init__(self, sess: requests.Session, url: str, path: Path, module: str, filename: str = "", text: str = ""):
-        super().__init__(sess, url, path, module, filename, text)
+    def __init__(self, sess: requests.Session, url: str, path: Path, course, module: str, filename: str = "", text: str = ""):
+        super().__init__(sess, url, path, course, module, filename, text)
 
     def crawl(self) -> Path:
 
@@ -35,7 +35,8 @@ class Admin(Crawler):
             raise NotFound(self.text, resp.url)
 
         if len(self.text.strip()) > 0:
-            logging.info(strings.crawler_download_info.format(self.text))
+            module_name = util.admin_cname_map[self.module] if strings.lang == 'zh-tw' else self.module
+            logging.info(strings.crawler_download_info.format(self.course_name, module_name, self.text))
 
         if 'text/html' not in resp.headers['content-type']:
             return self._save_files(resp.content)
@@ -60,8 +61,8 @@ class Admin(Crawler):
 
     def parse_frame(self, soup: BeautifulSoup, url: str) -> BeautifulSoup:
         nav = soup.find('div', {"id": "majornav"})
-        a: Tag
         try:
+            a: Tag
             for a in nav.find_all('a'):
                 if a.get_text() == '主功能表':
                     a['href'] = "../index.html"
@@ -80,13 +81,6 @@ class Admin(Crawler):
                 a.extract()
         except AttributeError as e:
             logging.error(e, exc_info=True)
-            while True:
-                try:
-                    eval(input())
-                except KeyboardInterrupt:
-                    break
-                except:
-                    continue
         return soup
 
     def crawl_hrefs(self, soup: BeautifulSoup, resp_url: str) -> BeautifulSoup:
@@ -94,7 +88,7 @@ class Admin(Crawler):
         try:
             hrefs = soup.find('div', {'id': 'section'}).find_all('a')
         except AttributeError:
-            logging.warning()
+            logging.warning(" ".join([self.text, resp_url]))
         a: Tag
         for a in hrefs:
             if a.text in skip_href_texts:
@@ -115,7 +109,7 @@ class Admin(Crawler):
             if self._is_board and a.text in self._board_dir:
                 crawler_path = self._board_dir[a.text]
             try:
-                filename = Admin(self.session, url, crawler_path, self.module, filename, text).crawl()
+                filename = Admin(self.session, url, crawler_path, self.course_name, self.module, filename, text).crawl()
             except NotFound as e:
                 logging.warning(e)
                 a.string = a.text + " [404 not found]"
@@ -127,5 +121,3 @@ class Admin(Crawler):
             else:
                 a['href'] = util.relative_path(self.path, filename)
         return soup
-    def __crawl_section(self, soup: BeautifulSoup):
-        ...
