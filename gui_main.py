@@ -339,6 +339,8 @@ class MyApp(QMainWindow):
         self.welcome_label.setText(self.welcome_text.format(self.ceiba.student_name, self.ceiba.email))
         self.login_layout.addWidget(self.welcome_label, 0, 0)
         self.login_group_box.setLayout(self.login_layout)
+        if not util.is_admin(self.ceiba.role):
+            self.download_admin_checkbox.setHidden(True)
         worker = Worker(self.ceiba.get_courses_list)
         worker.signals.result.connect(self.fill_course_group_box)
         self.thread_pool.start(worker)
@@ -404,7 +406,7 @@ class MyApp(QMainWindow):
             if item_name == "課程資訊":
                 checkbox.setChecked(True)
                 checkbox.setDisabled(True)
-            elif item_name == "課程行事曆":
+            elif item_name in ["課程行事曆", "修課學生"]:
                 checkbox.setDisabled(True)
         self.download_item_menu_button = QPushButton(self)
         self.download_item_menu_button.setMenu(self.download_item_menu)
@@ -423,6 +425,9 @@ class MyApp(QMainWindow):
                     action.defaultWidget().setChecked(False)
         self.check_all_download_item_checkbox.stateChanged.connect(download_item_menu_check_all)
 
+        self.download_admin_checkbox = QCheckBox()
+        self.download_admin_checkbox.setProperty('class', 'hover')
+
         self.only_download_homepage_checkbox = QCheckBox()
         self.only_download_homepage_checkbox.setProperty('class', 'hover')
 
@@ -431,16 +436,19 @@ class MyApp(QMainWindow):
                 self.download_item_menu_button.setDisabled(True)
                 self.check_all_download_item_checkbox.setDisabled(True)
                 self.download_item_label.setDisabled(True)
+                self.download_admin_checkbox.setDisabled(True)
             else:
                 self.download_item_menu_button.setEnabled(True)
                 self.check_all_download_item_checkbox.setEnabled(True)
                 self.download_item_label.setEnabled(True)
+                self.download_admin_checkbox.setEnabled(True)
 
         self.only_download_homepage_checkbox.clicked.connect(disable_download_item_menu_button)
         download_item_layout = QHBoxLayout()
         download_item_layout.addWidget(self.download_item_label)
         download_item_layout.addWidget(self.download_item_menu_button)
         download_item_layout.addWidget(self.check_all_download_item_checkbox)
+        download_item_layout.addWidget(self.download_admin_checkbox)
         download_item_layout.addWidget(self.only_download_homepage_checkbox)
         download_item_group_box = QGroupBox()
         download_item_group_box.setLayout(download_item_layout)
@@ -497,6 +505,7 @@ class MyApp(QMainWindow):
                 self.ceiba.download_courses,
                 progress=True,
                 path=self.filepath_line_edit.text(),
+                admin=self.download_admin_checkbox.isChecked(),
                 course_id_filter=course_id_list,
                 modules_filter=items,
             )
@@ -610,6 +619,8 @@ class MyApp(QMainWindow):
         self.check_all_courses_checkbox.setText('Check All Courses')
         self.download_item_label.setText('Download Items: ')
         self.check_all_download_item_checkbox.setText('Check All Items ')
+        self.download_admin_checkbox.setText('Download Admin Pages [?]')
+        self.download_admin_checkbox.setToolTip('Download Ceiba Admin Pages (only available for TAs, Professors, and Outside Teachers.')
         self.only_download_homepage_checkbox.setText('Only Homepage [?]')
         self.only_download_homepage_checkbox.setToolTip(
         '''Download Ceiba homepage only.
@@ -657,6 +668,8 @@ class MyApp(QMainWindow):
         self.check_all_courses_checkbox.setText('勾選所有課程')
         self.download_item_label.setText(' 下載項目： ')
         self.check_all_download_item_checkbox.setText(' 勾選全部下載項目 ')
+        self.download_admin_checkbox.setText('下載管理後台 [?]')
+        self.download_admin_checkbox.setToolTip('下載 Ceiba 管理後臺（只有助教、教授與校外老師適用）')
         self.only_download_homepage_checkbox.setText(' 只下載首頁[?] ')
         self.only_download_homepage_checkbox.setToolTip(
             '只下載 Ceiba 首頁。當你已經下載了部分課程，且不希望重複下載那些課程時，可以勾選這個選項。')
@@ -674,6 +687,11 @@ class MyApp(QMainWindow):
 
 
 if __name__ == "__main__":
+    from PySide6.QtCore import Qt
+    if hasattr(Qt, 'AA_EnableHighDpiScaling'):
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = QApplication([])
 
     window = MyApp()
