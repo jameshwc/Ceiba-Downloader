@@ -44,7 +44,7 @@ admin_cname_map = {
     'ftp': '檔案上傳', 'user': '使用者', 'theme': '主題首頁',
     'info': '課程資訊', 'syllabus': '大綱內容', 'bulletin': '公佈欄',
     'calendar': '行事曆', 'board': '討論區', 'hw': '作業',
-    'share': '資源分享', 'vote': '投票', 'grade': '成績'
+    'share': '資源分享', 'vote': '投票', 'grade': '成績', 'mail': '寄信'
 }
 admin_ename_map = {v: k for k, v in admin_cname_map.items()}
 admin_ename_map['討論看板'] = 'board'
@@ -56,7 +56,17 @@ board_skip_href_texts = default_skip_href_texts + [
                 '修改', '上一頁', '下一頁', ' 我要評分', ' 我要推薦']
 student_skip_href_texts = default_skip_href_texts + ['上頁', '下頁']
 
-admin_skip_mod = ['calendar', 'user', 'theme', 'grade']
+admin_skip_mod = ['calendar', 'user', 'theme', 'grade', 'mail']
+
+def skip_href_texts(mod: str, admin: bool):
+    if admin:
+        return admin_skip_href_texts(mod)
+    if mod == 'board':
+        return board_skip_href_texts
+    elif mod == 'student':
+        return student_skip_href_texts
+    return default_skip_href_texts
+
 def admin_skip_href_texts(mod: str):
     if mod == 'syllabus':
         return ['新增一週']

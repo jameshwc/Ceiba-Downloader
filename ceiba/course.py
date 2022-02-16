@@ -61,7 +61,7 @@ class Course():
         for module in modules:
             module_name = util.cname_map[module] if strings.lang == 'zh-tw' else module
             try:
-                self.download_module(session, module_name, module)
+                self.download_module(session, module_name, course_name, module)
             except Exception as e:
                 logging.error(e, exc_info=True)
                 logging.warning(strings.error_skip_and_continue_download_modules.format(course_name, module_name))
@@ -69,13 +69,13 @@ class Course():
                 progress.emit(1)
 
     @util.progress_decorator()
-    def download_module(self, session: requests.Session, obj_name: str, module: str):
+    def download_module(self, session: requests.Session, obj_name: str, course_name: str, module: str):
         url = util.module_url + "?csn=" + self.course_sn + "&default_fun=" + module + "&current_lang=chinese"  # TODO:language
 
         module_dir = self.path / module
         module_dir.mkdir(exist_ok=True)
 
-        Crawler(session, url, module_dir, module=module, filename=module).crawl()
+        Crawler(session, url, module_dir, course_name=course_name, module=module, filename=module).crawl()
 
     @util.progress_decorator()
     def download_homepage(self,
@@ -141,15 +141,15 @@ class Course():
         self.admin_path = self.path / "admin"
         self.admin_path.mkdir(exist_ok=True, parents=True)
 
-        # course_name = self.cname if strings.lang == 'zh-tw' else self.ename
-        admin_modules = self.download_admin_main_page(session)
+        course_name = self.cname if strings.lang == 'zh-tw' else self.ename
+        admin_modules = self.download_admin_main_page(session, strings.homepage)
         for mod in admin_modules:
             if mod in util.admin_skip_mod:
                 continue
             url = util.admin_module_urlgen(mod)
             path = self.admin_path / mod
             path.mkdir(exist_ok=True)
-            Admin(session, url, path, mod, mod).crawl()
+            Admin(session, url, path, course_name, mod, mod).crawl()
 
     @util.progress_decorator()
     def download_admin_main_page(self, session: requests.Session, name: str = strings.homepage):
@@ -167,6 +167,9 @@ class Course():
                 if not m:
                     continue
                 module = m.group(1)
+                if module in util.admin_skip_mod:
+                    link_button.extract()
+                    continue
                 link_button['href'] = module + "/" + module + ".html"
                 modules.append(module)
             else:

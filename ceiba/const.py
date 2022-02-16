@@ -39,10 +39,9 @@ class String:
 
     def load_json(self, lang):
         try:
-            fp = open(Path(f'ceiba/i18n/{lang}.json'), 'r')
-            data = json.load(fp)
-            fp.close()
-        except FileNotFoundError:
+            with open(list(Path().glob(f'**/i18n/{lang}.json'))[0], 'r', encoding='utf-8') as fp:
+                data = json.load(fp)
+        except (FileNotFoundError, IndexError):
             raise
 
         for role in Role:
