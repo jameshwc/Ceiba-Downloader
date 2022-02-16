@@ -10,8 +10,6 @@ import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag, ResultSet
 
-from ceiba.course_admin import Admin
-
 from . import util
 from .course import Course
 from .crawler import Crawler
