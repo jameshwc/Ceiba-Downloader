@@ -10,7 +10,7 @@ from bs4.element import Tag
 from . import util
 from .crawler import Crawler
 from .const import strings
-from .course_admin import Admin
+from .crawler_admin import Admin
 
 
 class Course():
