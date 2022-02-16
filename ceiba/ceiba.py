@@ -165,6 +165,7 @@ class Ceiba():
 
     def download_courses(self,
                          path: Union[Path, str],
+                         admin=False,
                          course_id_filter=None,
                          modules_filter=None,
                          progress = None):
@@ -187,13 +188,15 @@ class Ceiba():
             if course_id_filter is None or course.id in course_id_filter:
                 logging.info(strings.course_download_info.format(course_name))
                 self.courses_dir.joinpath(course.folder_name).mkdir(exist_ok=True)
-                try:
-                    if self.role == Role.Professor or \
-                        self.role == Role.Outside_Teacher or \
-                        self.role == Role.TA:
+                if util.is_admin(self.role) and admin:
+                    try:
                         course.download_admin(self.courses_dir, self.sess, progress)
-                    else:
-                        course.download(self.courses_dir, self.sess, modules_filter, progress)
+                    except Exception as e:
+                        logging.error(e, exc_info=True)
+                        # TODO: add warning (new string)
+                        # logging.warning(strings.error_skip_and_continue_download_courses.format(course_name))
+                try:
+                    course.download(self.courses_dir, self.sess, modules_filter, progress)
                 except Exception as e:
                     logging.error(e, exc_info=True)
                     logging.warning(strings.error_skip_and_continue_download_courses.format(course_name))

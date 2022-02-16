@@ -67,8 +67,6 @@ class Crawler():
             self.__handle_board(soup.find_all('caption'))  # special case for board
         elif self.module == 'bulletin':
             soup = self.__handle_bulletin(soup, response.url)
-        elif self.module == 'hw':
-            soup = self.__handle_hw(soup, response.url)
 
         soup = self.crawl_hrefs(soup, response.url)
 
@@ -223,13 +221,8 @@ class Crawler():
         self.__class__.crawled_files_path.add(filepath)
         self.__class__.crawled_urls[self.url] = filepath
         return filepath
-<<<<<<< HEAD
 
-    def __get_uniq_filepath(self, path: Path):
-=======
-        
     def _get_uniq_filepath(self, path: Path):
->>>>>>> 4c8b316 (ceiba: Finish download admin page)
         if path not in Crawler.crawled_files_path:
             return path
 
