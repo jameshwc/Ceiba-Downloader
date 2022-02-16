@@ -48,7 +48,7 @@ class Ceiba():
         resp = util.post(self.sess, resp.url, data=payload)  # will get resp that redirect to /ChkSessLib.php
         if any(x in resp.content.decode('utf-8') for x in ['登入失敗', '更改密碼']):
             raise InvalidCredentials
-        resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice or self.role == Role.Outside_Teacher or self.role == Role.Outside_Student
+        resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice
 
     def login_alternative_user(self, username: str, password: str):
         payload = {'loginid': username, 'password': password, 'op': 'login'}
@@ -131,13 +131,16 @@ class Ceiba():
                 href = cols[4].find('a').get('href')
                 name = cols[4].get_text(strip=True, separator='\n').splitlines()
                 
-                admin = None
-                if self.role == Role.TA:
-                    onclick_val = cols[6].find('input').get('onclick')
+                admin_url = None
+                if util.is_admin(self.role):
+                    onclick_val = cols[len(cols)-1].find('input').get('onclick')
                     m = re.search(r"\'([0-9a-f]*)\'", onclick_val)
                     if m:
                         course_sn = m.group(1)
-                    admin = Admin(self.sess, course_sn, util.ta_admin_url)
+                    if self.role == Role.TA:
+                        admin_url = util.ta_admin_url + course_sn
+                    else:
+                        admin_url = util.admin_url + course_sn
 
                 cols = [ele.text.strip() for ele in cols]
                 cname = name[0]
@@ -153,7 +156,7 @@ class Ceiba():
                                 ename=ename,
                                 teacher=cols[5],
                                 href=href,
-                                admin=admin)
+                                admin_url=admin_url)
                 self.courses.append(course)
                 self.course_dir_map[course.id] = course.folder_name
             except (IndexError, AttributeError) as e:
