@@ -42,7 +42,7 @@ class Crawler():
             if util.is_relative_to(Crawler.crawled_urls[self.url], self.path):
                 logging.debug(strings.url_duplicate.format(self.url))
                 return Crawler.crawled_urls[self.url]
-        
+
         response = util.get(self.session, self.url)
         if response.status_code == 404 or response.content.startswith(
                 bytes('<html><head><title>Request Rejected</title>', encoding='utf-8')):
@@ -62,18 +62,18 @@ class Crawler():
         soup = BeautifulSoup(response.content, 'html.parser')
         self.download_css(soup.find_all('link'))
         self.download_imgs(soup.find_all('img'))
-        
+
 
         if self.module == 'board':
             self.__handle_board(soup.find_all('caption'))  # special case for board
         elif self.module == 'bulletin':
             soup = self.__handle_bulletin(soup, response.url)
-        
+
         soup = self.crawl_hrefs(soup, response.url)
 
         for op in soup.find_all('option'):
             op.extract()  # TODO: we should use <a> to replace <option>
-        
+
         filepath.write_text(str(soup), encoding='utf-8')
         return filepath
 
@@ -103,7 +103,7 @@ class Crawler():
             skip_href_texts = util.board_skip_href_texts
         elif self.module == 'student':
             skip_href_texts = util.student_skip_href_texts
-        
+
         hrefs = soup.find_all('a')
         a: Tag
         for a in hrefs:
@@ -118,7 +118,7 @@ class Crawler():
                 continue
             filename = a.text
             text = a.text
-            
+
             if self.module == 'vote' and a.get('href') == "#" and a.get('onclick'):
                 m = re.search(r"window\.open\(\'(.*?)\'.*", a.get('onclick'))
                 if m:
@@ -126,7 +126,7 @@ class Crawler():
                     del a['onclick']
                 filename = a.parent.parent.find_all('td')[1].text.strip()
                 text = filename
-            
+
             crawler_path = self.path
             if self._is_board and a.text in self._board_dir:
                 crawler_path = self._board_dir[a.text]
@@ -156,7 +156,7 @@ class Crawler():
                     self._board_dir[a_tag.text].mkdir(exist_ok=True)
                 self._is_board = True
                 break
-    
+
     def __handle_bulletin(self, soup: BeautifulSoup, resp_url: str):
         op: Tag
         for op in soup.find_all('option'):
@@ -204,7 +204,7 @@ class Crawler():
         self.__class__.crawled_files_path.add(filepath)
         self.__class__.crawled_urls[self.url] = filepath
         return filepath
-        
+
     def _get_uniq_filepath(self, path: Path):
         if path not in Crawler.crawled_files_path:
             return path

@@ -14,11 +14,11 @@ class String:
 
     def __init__(self):
         self.lang = "zh-tw"
-        
+
         self._role = {}
         for role in Role:
             self._role[role] = {}
-        
+
         self._cancel_on_object = {}
         self._wrong_with_object = {}
         self._wrong_with_downloading_url = {}
@@ -58,7 +58,7 @@ class String:
         self._warning_fail_to_get_course = {}
         self._warning_partial_failure_on_homepage = {}
         self._warning_max_retries_exceeded = {}
-        
+
         self._qt_feedback = {}
         self._qt_submit = {}
         self._qt_anonymous = {}
@@ -80,7 +80,7 @@ class String:
         if lang not in ['zh-tw', 'en']:
             raise
         self.lang = lang
-    
+
     def set_zh_tw(self):
         self._role[Role.NTUer]['zh-tw'] = '台大學生'
         self._role[Role.TA]['zh-tw'] = '助教'
@@ -127,7 +127,7 @@ class String:
         self._warning_partial_failure_on_homepage['zh-tw'] = '下載首頁時發生部分錯誤！首頁有可能無法正常顯示...'
         self._warning_max_retries_exceeded['zh-tw'] = '超過最大重試連線次數！停止嘗試連線！'
         self._retry_after_five_seconds['zh-tw'] = '五秒後重新連線...'
-    
+
     def set_en(self):
         self._role[Role.NTUer]['en'] = 'NTU Students'
         self._role[Role.TA]['en'] = 'TA'
@@ -174,7 +174,7 @@ class String:
         self._warning_max_retries_exceeded['en'] = 'Max retries exceeded! Stop retrying the connection!'
         self._warning_partial_failure_on_homepage['en'] = 'Partially fail to download homepage! It may not show correctly...'
         self._retry_after_five_seconds['en'] = 'Retry connection after 5 seconds...'
-    
+
     def role(self, role: int) -> str:
         return self._role[role][self.lang]
 
@@ -185,127 +185,127 @@ class String:
     @property
     def wrong_with_object (self) -> str:
         return self._wrong_with_object[self.lang]
-    
+
     @property
     def wrong_with_downloading_url (self) -> str:
         return self._wrong_with_downloading_url[self.lang]
-    
+
     @property
     def course_download_info(self) -> str:
         return self._course_download_info[self.lang]
-    
+
     @property
     def course_module_download_info(self) -> str:
         return self._course_module_download_info[self.lang]
-    
+
     @property
     def course_finish_info(self) -> str:
         return self._course_finish_info[self.lang]
-    
+
     @property
     def crawler_download_info(self) -> str:
         return self._crawler_download_info[self.lang]
-    
+
     @property
     def crawler_download_fail(self) -> str:
         return self._crawler_download_fail[self.lang]
-    
+
     @property
     def object_download_info(self) -> str:
         return self._object_download_info[self.lang]
-    
+
     @property
     def object_finish_info(self) -> str:
         return self._object_finish_info[self.lang]
-    
+
     @property
     def crawler_timeout_error(self) -> str:
         return self._crawler_timeout_error[self.lang]
-    
+
     @property
     def skip_external_href(self) -> str:
         return self._skip_external_href[self.lang]
-    
+
     @property
     def error_skip_and_continue_download_modules(self) -> str:
         return self._error_skip_and_continue_download_modules[self.lang]
-    
+
     @property
     def error_skip_and_continue_download_courses(self) -> str:
         return self._error_skip_and_continue_download_courses[self.lang]
-        
+
     @property
     def error_unable_to_parse_course_sn(self) -> str:
         return self._error_unable_to_parse_course_sn[self.lang]
-    
+
     @property
     def try_to_login(self) -> str:
         return self._try_to_login[self.lang]
-    
+
     @property
     def login_successfully(self) -> str:
         return self._login_successfully[self.lang]
-    
+
     @property
     def try_to_get_courses(self) -> str:
         return self._try_to_get_courses[self.lang]
-    
+
     @property
     def get_courses_successfully(self) -> str:
         return self._get_courses_successfully[self.lang]
-    
+
     @property
     def start_downloading_courses(self) -> str:
         return self._start_downloading_courses[self.lang]
-    
+
     @property
     def download_courses_successfully(self) -> str:
         return self._download_courses_successfully[self.lang]
-    
+
     @property
     def start_downloading_homepage(self) -> str:
         return self._start_downloading_homepage[self.lang]
-    
+
     @property
     def download_homepage_successfully(self) -> str:
         return self._download_homepage_successfully[self.lang]
-    
+
     @property
     def send_ticket_successfully(self) -> str:
         return self._send_ticket_successfully[self.lang]
-    
+
     @property
     def homepage(self) -> str:
         return self._homepage[self.lang]
-    
+
     @property
     def urlf(self) -> str:
         return self._urlf[self.lang]
-    
+
     @property
     def url_duplicate(self) -> str:
         return self._url_duplicate[self.lang]
-    
+
     @property
     def exception_invalid_login_parameters(self) -> str:
         return self._exception_invalid_login_parameters[self.lang]
-    
+
     @property
     def exception_invalid_credentials(self) -> str:
         return self._exception_invalid_credentials[self.lang]
-    
+
     @property
     def exception_invalid_filepath(self) -> str:
         return self._exception_invalid_filepath[self.lang]
-    
+
     @property
     def exception_null_ticket_content(self) -> str:
         return self._exception_null_ticket_content[self.lang]
-    
+
     @property
     def exception_send_ticket_error(self) -> str:
         return self._exception_send_ticket_error[self.lang]
-    
+
     @property
     def exception_http_not_found_error(self) -> str:
         return self._exception_http_not_found_error[self.lang]
@@ -317,19 +317,19 @@ class String:
     @property
     def exception_crawler_connection_error(self) -> str:
         return self._exception_crawler_connection_error[self.lang]
-    
+
     @property
     def warning_fail_to_get_course(self) -> str:
         return self._warning_fail_to_get_course[self.lang]
-    
+
     @property
     def warning_partial_failure_on_homepage(self) -> str:
         return self._warning_partial_failure_on_homepage[self.lang]
-    
+
     @property
     def warning_max_retries_exceeded(self) -> str:
         return self._warning_max_retries_exceeded[self.lang]
-    
+
     @property
     def retry_after_five_seconds(self) -> str:
         return self._retry_after_five_seconds[self.lang]

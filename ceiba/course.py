@@ -36,12 +36,12 @@ class Course():
                  session: requests.Session,
                  modules_filter_list: Optional[List[str]] = None,
                  progress = None):
-        
+
         self.path = path / self.folder_name
         self.path.mkdir(exist_ok=True)
-        
+
         course_name = self.cname if strings.lang == 'zh-tw' else self.ename
-        
+
         course_url = util.get(session, self.href).url
         m = re.search(r'course/([0-9a-f]*)+', course_url)
         if m and m.group(0).startswith('course/'):
@@ -50,14 +50,14 @@ class Course():
             logging.error(strings.error_unable_to_parse_course_sn.format(course_name, course_name))
             logging.debug(strings.urlf.format(course_url))
             return
-        
+
         modules = self.download_homepage(session, strings.homepage, modules_filter_list)
-        
+
         if progress and modules_filter_list:
             modules_not_in_this_module_num = len(modules_filter_list) - len(modules)
             if modules_not_in_this_module_num > 0:
                 progress.emit(modules_not_in_this_module_num)
-        
+
         for module in modules:
             module_name = util.cname_map[module] if strings.lang == 'zh-tw' else module
             try:
@@ -119,7 +119,7 @@ class Course():
             if m:
                 item = m.group(1)
             else:
-                logging.debug('Abnormal onclick value: ' + a['onclick'])  
+                logging.debug('Abnormal onclick value: ' + a['onclick'])
                 # Only found out such case in '108-1 Machine Learning Foundations'
                 item = a.next_element['id']
             if item in ['logout', 'calendar'] or \
@@ -136,7 +136,7 @@ class Course():
                        path: Path,
                        session: requests.Session,
                        progress = None):
-        
+
         self.path = path / self.folder_name
         self.admin_path = self.path / "admin"
         self.admin_path.mkdir(exist_ok=True, parents=True)
@@ -150,10 +150,9 @@ class Course():
             path = self.admin_path / mod
             path.mkdir(exist_ok=True)
             Admin(session, url, path, mod, mod).crawl()
-        # self.admin.crawl(self.admin_path)
-        
-    
-    def download_admin_main_page(self, session: requests.Session):
+
+    @util.progress_decorator()
+    def download_admin_main_page(self, session: requests.Session, name: str = strings.homepage):
         resp = util.get(session, self.admin_url)
         soup = BeautifulSoup(resp.content, 'html.parser')
         modules = []
@@ -174,4 +173,4 @@ class Course():
                 link_button.replaceWithChildren()
         Crawler(session, resp.url, self.admin_path).download_css(soup.find_all('link'))
         self.admin_path.joinpath('index.html').write_text(str(soup), encoding='utf-8')
-        return modules 
+        return modules

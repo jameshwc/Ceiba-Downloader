@@ -19,24 +19,24 @@ class Admin(Crawler):
 
     crawled_files_path: Set[Path] = set()
     crawled_urls: Dict[str, Path] = {}
-    
+
     def __init__(self, sess: requests.Session, url: str, path: Path, module: str, filename: str = "", text: str = ""):
         super().__init__(sess, url, path, module, filename, text)
-    
+
     def crawl(self) -> Path:
-        
+
         if self.url in Admin.crawled_urls:
             if util.is_relative_to(Admin.crawled_urls[self.url], self.path):
                 return Admin.crawled_urls[self.url]
-        
+
         resp = util.get(self.session, self.url)
         if resp.status_code == 404 or resp.content.startswith(
                 bytes('<html><head><title>Request Rejected</title>', encoding='utf-8')):
             raise NotFound(self.text, resp.url)
-        
+
         if len(self.text.strip()) > 0:
             logging.info(strings.crawler_download_info.format(self.text))
-        
+
         if 'text/html' not in resp.headers['content-type']:
             return self._save_files(resp.content)
 
@@ -72,10 +72,10 @@ class Admin(Crawler):
                         # a.extract()
                     else:
                         a['href'] = "../" + module + "/" + module + ".html"
-            
+
             for a in soup.find('ul', {"id": "nav-top"}).find_all('a'):
                 a.extract()
-            
+
             for a in soup.find('div', {'id': 'footer'}).find_all('a'):
                 a.extract()
         except AttributeError as e:
@@ -126,6 +126,6 @@ class Admin(Crawler):
                 a.string = a.text + " [ERROR]"
             else:
                 a['href'] = util.relative_path(self.path, filename)
-        return soup 
+        return soup
     def __crawl_section(self, soup: BeautifulSoup):
         ...
