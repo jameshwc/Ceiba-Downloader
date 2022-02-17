@@ -51,7 +51,9 @@
         "resume_download": "Resume download...",
         "try_to_pause_download": "Try to PAUSE download...",
         "wait_to_completely_download_module": "Will PAUSE after the module/link to be completely downloaded...",
-        "pause_download": "The download has PAUSED!"
+        "pause_download": "The download has PAUSED!",
+        "try_to_stop_download": "Try to STOP download... Will STOP after the module/link to be completely downloaded...",
+        "stop_download": "The download has STOPPED!"
     },
 
     "qt": {
