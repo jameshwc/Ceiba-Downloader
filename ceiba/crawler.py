@@ -55,6 +55,7 @@ class Crawler():
             module_name = util.full_cname_map[self.module] if strings.lang == 'zh-tw' else self.module
             logging.info(strings.crawler_download_info.format(self.course_name, module_name, self.text))
 
+
         if 'text/html' not in response.headers['content-type']:  # files (e.g. pdf, docs)
             return self._save_files(response.content)
 
@@ -77,6 +78,7 @@ class Crawler():
             soup = self.__handle_share(soup)
 
         if self.is_admin:
+            soup = self.remove_nav_and_footer(soup)
             soup = self.parse_frame(soup)
         soup = self.crawl_hrefs(soup, response.url)
 
@@ -116,6 +118,7 @@ class Crawler():
 
         a: Tag
         for a in hrefs:
+            util.check_pause()
             if a.text in skip_href_texts or \
                 (self.module == 'ftp' and a.text.endswith('.htm')):
                 a.replaceWithChildren()
@@ -244,17 +247,21 @@ class Crawler():
                         # a.extract()
                     else:
                         a['href'] = "../" + module + "/" + module + ".html"
-
-            for a in soup.find('ul', {"id": "nav-top"}).find_all('a'):
-                a.extract()
-
-            for a in soup.find('div', {'id': 'footer'}).find_all('a'):
-                a.extract()
-
-            courses_list_a_tag = soup.find('li', {'id': 'clist'})
-            courses_list_a_tag['href'] =
         except AttributeError as e:
             logging.error(e, exc_info=True)
+        return soup
+
+    def remove_nav_and_footer(self, soup: BeautifulSoup) -> BeautifulSoup:
+        for a in soup.find('ul', {"id": "nav-top"}).find_all('a'):
+            a.extract()
+
+        for a in soup.find('div', {'id': 'footer'}).find_all('a'):
+            a.extract()
+
+        courses_list_a_tag = soup.find('li', {'id': 'clist'}).find('a')
+        href_path = Path(courses_list_a_tag['href']).parent / '../../index.html'
+        courses_list_a_tag['href'] = href_path.as_posix()
+        soup.find('li', {'id': 'uinfo'}).extract()  # TODO: keep info page
         return soup
 
     def _save_files(self, content: bytes) -> Path:

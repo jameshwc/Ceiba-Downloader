@@ -47,6 +47,15 @@
         "warning_fail_to_get_course": "取得第 {} 堂課程資訊錯誤！跳過並取得其他堂課程...",
         "warning_partial_failure_on_homepage": "下載首頁時發生部分錯誤！首頁有可能無法正常顯示...",
         "warning_max_retries_exceeded": "超過最大重試連線次數！停止嘗試連線！",
-        "retry_after_five_seconds": "五秒後重新連線..."
+        "retry_after_five_seconds": "五秒後重新連線...",
+        "try_to_pause_download": "正在暫停下載...",
+        "resume_download": "繼續下載...",
+        "wait_to_completely_download_module": "將在目前的連結或檔案下載完畢後暫停下載！",
+        "pause_download": "暫停下載！"
+    },
+
+    "qt": {
+        "pause_button": "暫停下載",
+        "resume_button": "繼續下載"
     }
 }

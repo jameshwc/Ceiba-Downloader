@@ -47,6 +47,15 @@
         "warning_fail_to_get_course": "Error when getting no.{} course! Skip it to get the other courses...",
         "warning_max_retries_exceeded": "Max retries exceeded! Stop retrying the connection!",
         "warning_partial_failure_on_homepage": "Partially fail to download homepage! It may not show correctly...",
-        "retry_after_five_seconds": "Retry connection after 5 seconds..."
+        "retry_after_five_seconds": "Retry connection after 5 seconds...",
+        "resume_download": "Resume download...",
+        "try_to_pause_download": "Try to PAUSE download...",
+        "wait_to_completely_download_module": "Will PAUSE after the module/link to be completely downloaded...",
+        "pause_download": "The download has PAUSED!"
+    },
+
+    "qt": {
+        "pause_button": "Pause Download",
+        "resume_button": "Resume Download"
     }
 }

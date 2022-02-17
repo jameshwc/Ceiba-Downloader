@@ -1,6 +1,7 @@
 import logging
 import re
 from pathlib import Path
+import time
 from typing import List, Optional
 
 import requests
@@ -68,6 +69,7 @@ class Course():
 
     def download_modules(self, modules, session, progress, admin: bool):
         for module in modules:
+            util.check_pause()
             module_name = util.full_cname_map[module] if strings.lang == 'zh-tw' else module
             try:
                 self.download_module(session, module_name, self.course_name, module, admin=admin)
@@ -148,6 +150,7 @@ class Course():
     def download_admin_main_page(self, session: requests.Session, name: str = strings.homepage):
         resp = util.get(session, self.admin_url)
         soup = BeautifulSoup(resp.content, 'html.parser')
+        soup = Crawler(session, resp.url, self.admin_path).remove_nav_and_footer(soup)
         modules = []
         link_button: Tag
         for link_button in soup.find_all('input'):
