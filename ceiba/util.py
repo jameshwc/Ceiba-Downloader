@@ -46,6 +46,8 @@ admin_cname_map = {
     'calendar': '行事曆', 'board': '討論區', 'hw': '作業',
     'share': '資源分享', 'vote': '投票', 'grade': '成績', 'mail': '寄信'
 }
+
+full_cname_map = {**admin_cname_map, **cname_map}
 admin_ename_map = {v: k for k, v in admin_cname_map.items()}
 admin_ename_map['討論看板'] = 'board'
 

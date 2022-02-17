@@ -24,6 +24,7 @@ class Crawler():
                  session: requests.Session,
                  url: str,
                  path: Path,
+                 is_admin=False,
                  course_name: str = "",
                  module: str = "",
                  filename: str = "",
@@ -31,6 +32,7 @@ class Crawler():
         self.session = session
         self.url = url
         self.path = path
+        self.is_admin = is_admin
         self.course_name = course_name
         self.module = module
         self.filename = util.get_valid_filename(filename)
@@ -51,7 +53,7 @@ class Crawler():
             raise NotFound(self.text, response.url)
 
         if self.module != "grade" and len(self.text.strip()) > 0:  # grade module has many 'show' and 'hide' pages to download
-            module_name = util.cname_map[self.module] if strings.lang == 'zh-tw' else self.module
+            module_name = util.full_cname_map[self.module] if strings.lang == 'zh-tw' else self.module
             logging.info(strings.crawler_download_info.format(self.course_name, module_name, self.text))
 
         if 'text/html' not in response.headers['content-type']:  # files (e.g. pdf, docs)
@@ -104,11 +106,17 @@ class Crawler():
 
     def crawl_hrefs(self, soup: BeautifulSoup, resp_url: str) -> BeautifulSoup:
 
-        skip_href_texts = util.skip_href_texts(self.module, False)
-        hrefs = soup.find_all('a')
+        skip_href_texts = util.skip_href_texts(self.module, self.is_admin)
+
+        if self.is_admin:
+            hrefs = soup.find('div', {'id': 'section'}).find_all('a')
+        else:
+            hrefs = soup.find_all('a')
+
         a: Tag
         for a in hrefs:
-            if a.text in skip_href_texts:
+            if a.text in skip_href_texts or \
+                (self.module == 'ftp' and a.text.endswith('.htm')):
                 a.replaceWithChildren()
                 continue
             url = urljoin(resp_url, a.get('href'))
@@ -132,7 +140,7 @@ class Crawler():
             if self._is_board and a.text in self._board_dir:
                 crawler_path = self._board_dir[a.text]
             try:
-                filename = Crawler(self.session, url, crawler_path, self.course_name, self.module, filename, text).crawl()
+                filename = Crawler(self.session, url, crawler_path, self.is_admin, self.course_name, self.module, filename, text).crawl()
             except NotFound as e:
                 logging.warning(e)
                 a.string = a.text + " [404 not found]"
@@ -218,8 +226,33 @@ class Crawler():
             css['href'] = 'static/' + filename
             static_dir = self.path / 'static'
             static_dir.mkdir(exist_ok=True)
-            Crawler(self.session, url, static_dir, self.module, filename,
-                    css['href']).crawl_css_and_resources()
+            Crawler(self.session, url, static_dir, self.is_admin, self.module,
+                    filename, css['href']).crawl_css_and_resources()
+
+
+    def parse_frame(self, soup: BeautifulSoup, url: str) -> BeautifulSoup:
+        nav = soup.find('div', {"id": "majornav"})
+        try:
+            a: Tag
+            for a in nav.find_all('a'):
+                if a.get_text() == '主功能表':
+                    a['href'] = "../index.html"
+                else:
+                    module = util.admin_ename_map[a.get_text()]
+                    if module in util.admin_skip_mod:
+                        a.parent.parent.extract()
+                        # a.extract()
+                    else:
+                        a['href'] = "../" + module + "/" + module + ".html"
+
+            for a in soup.find('ul', {"id": "nav-top"}).find_all('a'):
+                a.extract()
+
+            for a in soup.find('div', {'id': 'footer'}).find_all('a'):
+                a.extract()
+        except AttributeError as e:
+            logging.error(e, exc_info=True)
+        return soup
 
     def _save_files(self, content: bytes) -> Path:
         files_dir = self.path / "files"

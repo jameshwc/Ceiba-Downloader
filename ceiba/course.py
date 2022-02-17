@@ -149,7 +149,7 @@ class Course():
             url = util.admin_module_urlgen(mod)
             path = self.admin_path / mod
             path.mkdir(exist_ok=True)
-            Admin(session, url, path, course_name, mod, mod).crawl()
+            Crawler(session, url, path, is_admin=True, course_name=course_name, module=mod, filename=mod).crawl()
 
     @util.progress_decorator()
     def download_admin_main_page(self, session: requests.Session, name: str = strings.homepage):
