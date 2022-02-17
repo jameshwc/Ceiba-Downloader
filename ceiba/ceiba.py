@@ -53,9 +53,9 @@ class Ceiba():
         resp = util.post(self.sess, util.login_alternative_url, data=payload)  # will get resp that redirect to /ChkSessLib.php
         if '登出' not in resp.content.decode('utf-8'):
             raise InvalidCredentials
-        
+
     def login(self, role: Role = Role.NTUer,
-              cookie_PHPSESSID: Optional[str] = None, 
+              cookie_PHPSESSID: Optional[str] = None,
               username: Optional[str] = None,
               password: Optional[str] = None,
               progress = None):
@@ -63,7 +63,7 @@ class Ceiba():
         :param role: Integer. 0: NTUer, 1: TA, 2: Professor, 3: Outside NTU
         '''
         self.role = role
-        
+
         if cookie_PHPSESSID:
             self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
         elif username and password:
@@ -78,7 +78,7 @@ class Ceiba():
         else:
             raise InvalidLoginParameters
         # check if user credential is correct
-        
+
         info_url = util.info_url(self.role)
 
         soup = BeautifulSoup(util.get(self.sess, info_url).content, 'html.parser')
@@ -99,27 +99,27 @@ class Ceiba():
     def __get_courses_rows_from_homepage_table(self, soup) -> ResultSet:
         table: Tag = soup.find_all("table")[0]
         rows = table.find_all('tr')[1:]
-        
+
         try:
-            second_table: Tag = soup.find_all("table")[1] 
+            second_table: Tag = soup.find_all("table")[1]
             # tables[1] may be audit courses or not-set-up-in-ceiba courses
             if '旁聽' in second_table.find_previous_sibling('h2').get_text():
                 rows.extend(second_table.find_all('tr')[1:])
         except IndexError:
             pass
-        
+
         return rows
-            
+
     def get_courses_list(self):
 
         logging.info(strings.try_to_get_courses)
         courses_url = util.courses_url(self.role)
-        
+
         soup = BeautifulSoup(
             util.get(self.sess, courses_url).content, 'html.parser')
 
         rows = self.__get_courses_rows_from_homepage_table(soup)
-        
+
         count: int = 0
         row: Tag
         for row in rows:
@@ -128,7 +128,7 @@ class Ceiba():
                 cols = row.find_all('td')
                 href = cols[4].find('a').get('href')
                 name = cols[4].get_text(strip=True, separator='\n').splitlines()
-                
+
                 admin_url = None
                 if util.is_admin(self.role):
                     onclick_val = cols[len(cols)-1].find('input').get('onclick')
@@ -172,7 +172,7 @@ class Ceiba():
 
         self.path = Path(path) / "-".join(["ceiba", self.id, datetime.today().strftime('%Y%m%d')])
         self.courses_dir = self.path / "courses"
-        
+
         try:
             if type(path) == str and len(path) == 0:
                 raise FileNotFoundError
@@ -181,7 +181,7 @@ class Ceiba():
             raise InvalidFilePath
 
         self.download_ceiba_homepage(path, course_id_filter)
-        
+
         logging.info(strings.start_downloading_courses)
         for course in self.courses:
             course_name = course.cname if strings.lang == 'zh-tw' else course.ename
@@ -189,14 +189,11 @@ class Ceiba():
                 logging.info(strings.course_download_info.format(course_name))
                 self.courses_dir.joinpath(course.folder_name).mkdir(exist_ok=True)
                 if util.is_admin(self.role) and admin:
-                    try:
-                        course.download_admin(self.courses_dir, self.sess, progress)
-                    except Exception as e:
-                        logging.error(e, exc_info=True)
-                        # TODO: add warning (new string)
-                        # logging.warning(strings.error_skip_and_continue_download_courses.format(course_name))
+                    admin = True
+                else:
+                    admin = False
                 try:
-                    course.download(self.courses_dir, self.sess, modules_filter, progress)
+                    course.download(self.courses_dir, self.sess, admin, modules_filter, progress)
                 except Exception as e:
                     logging.error(e, exc_info=True)
                     logging.warning(strings.error_skip_and_continue_download_courses.format(course_name))
@@ -207,18 +204,18 @@ class Ceiba():
     def download_ceiba_homepage(self,
                                 path: Union[Path,str],
                                 course_id_filter=None):
-        
+
         self.path = Path(path) / "-".join(["ceiba", self.id, datetime.today().strftime('%Y%m%d')])
-        
+
         try:
             if type(path) == str and len(path) == 0:
                 raise FileNotFoundError
             self.path.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
             raise InvalidFilePath
-        
+
         logging.info(strings.start_downloading_homepage)
-        
+
         courses_url = util.courses_url(self.role)
 
         resp = util.get(self.sess, courses_url)
@@ -227,7 +224,7 @@ class Ceiba():
         Crawler(self.sess, resp.url, self.path).download_css(soup.find_all('link'))
 
         rows = self.__get_courses_rows_from_homepage_table(soup)
-        
+
         valid_a_tag = set()
         row: Tag
         for row in rows:
@@ -273,7 +270,7 @@ class Ceiba():
         timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
         mac_addr = hex(uuid.getnode())
         id = timestamp + "-" + mac_addr
-        payload = {'id': id, 'type': ticket_type, 'content': content, 'timestamp': timestamp, 
+        payload = {'id': id, 'type': ticket_type, 'content': content, 'timestamp': timestamp,
                    'mac_addr': mac_addr, 'version': self.version}
         if not anonymous:
             payload['email'] = self.email
@@ -282,7 +279,7 @@ class Ceiba():
             logging.info(strings.send_ticket_successfully)
             return
         raise SendTicketError(resp.content)
-    
+
     def check_for_updates(self) -> bool:
         try:
             resp = self.sess.get('https://raw.githubusercontent.com/jameshwc/Ceiba-Downloader/master/version.txt')
@@ -293,7 +290,6 @@ class Ceiba():
         if version > self.version:
             return True
         return False
-    
+
     def set_lang(self, lang: str):
         strings.set_lang(lang)
-        

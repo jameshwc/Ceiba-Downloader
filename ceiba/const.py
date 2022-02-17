@@ -166,6 +166,10 @@ class String:
         return self._data['homepage'][self.lang]
 
     @property
+    def admin_homepage(self) -> str:
+        return self._data['admin_homepage'][self.lang]
+
+    @property
     def urlf(self) -> str:
         return self._data['urlf'][self.lang]
 

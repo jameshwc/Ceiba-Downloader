@@ -33,6 +33,7 @@
         "download_homepage_successfully": "下載首頁完成！",
         "send_ticket_successfully": "傳送意見完成！",
         "homepage": "首頁",
+        "admin_homepage": "管理介面首頁",
         "urlf": "網址：{}",
         "url_duplicate": "url 重複，跳過下載：{}",
         "exception_invalid_login_parameters": "你必須提供 cookies 或計中的帳號密碼！",
