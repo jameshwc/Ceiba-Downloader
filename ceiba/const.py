@@ -53,6 +53,10 @@ class String:
             self.init_str(info)
             self._data[info][lang] = str_
 
+        for qt, str_ in data['qt'].items():
+            self.init_str(f'qt_{qt}')
+            self._data[f'qt_{qt}'][lang] = str_
+
     def init_str(self, name):
         if name not in self._data:
             self._data[name] = {}
@@ -224,5 +228,29 @@ class String:
     @property
     def retry_after_five_seconds(self) -> str:
         return self._data['retry_after_five_seconds'][self.lang]
+
+    @property
+    def try_to_pause_download(self) -> str:
+        return self._data['try_to_pause_download'][self.lang]
+
+    @property
+    def pause_download(self) -> str:
+        return self._data['pause_download'][self.lang]
+
+    @property
+    def resume_download(self) -> str:
+        return self._data['resume_download'][self.lang]
+
+    @property
+    def wait_to_completely_download_module(self) -> str:
+        return self._data['wait_to_completely_download_module'][self.lang]
+
+    @property
+    def qt_pause_button(self) -> str:
+        return self._data['qt_pause_button'][self.lang]
+
+    @property
+    def qt_resume_button(self) -> str:
+        return self._data['qt_resume_button'][self.lang]
 
 strings = String()

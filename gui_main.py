@@ -295,12 +295,16 @@ class MyApp(QMainWindow):
         logging.getLogger().setLevel(logging.INFO)
         # logging.getLogger().setLevel(logging.DEBUG)
         # sys.excepthook = exception_handler
+        self.pause_button = QPushButton()
+        self.pause_button.clicked.connect(self.pause)
+        self.pause_button.setDisabled(True)
         self.progress_bar = QProgressBar()
         self.progress_bar.setMinimum(0)
         self.progress_bar.setMaximum(100)
         self.progress_bar.setValue(0)
 
         self.status_layout.addWidget(self.log_output.widget)
+        self.status_layout.addWidget(self.pause_button)
         self.status_layout.addWidget(self.progress_bar)
         self.status_group_box.setLayout(self.status_layout)
 
@@ -492,8 +496,10 @@ class MyApp(QMainWindow):
             if self.courses_checkboxes[i].isChecked():
                 course_id_list.append(self.courses[i].id)
 
-
-        self.progress_bar.setMaximum(len(course_id_list) * len(items))
+        if self.download_admin_checkbox.isChecked():
+            self.progress_bar.setMaximum(len(course_id_list) * (len(items) + util.admin_mod_num))
+        else:
+            self.progress_bar.setMaximum(len(course_id_list) * len(items))
         if self.only_download_homepage_checkbox.isChecked():
             worker = Worker(
                 self.ceiba.download_ceiba_homepage,
@@ -514,6 +520,7 @@ class MyApp(QMainWindow):
         worker.signals.finished.connect(self.after_download)
         self.thread_pool.start(worker)
         self.download_button.setDisabled(True)
+        self.pause_button.setEnabled(True)
 
     def get_save_directory(self):
         filepath = QFileDialog.getExistingDirectory(self)
@@ -547,6 +554,13 @@ class MyApp(QMainWindow):
             open_path(Path(self.ceiba.path, "index.html"))
         elif role == self.download_finish_msgbox.YesRole:  # open dir
             open_path(Path(self.ceiba.path))
+
+    def pause(self):
+        util.pause()
+        if util.PAUSE:
+            self.pause_button.setText(strings.qt_resume_button)
+        else:
+            self.pause_button.setText(strings.qt_pause_button)
 
     def update_progressbar(self, add_value: int):
         if add_value < 0:
@@ -634,6 +648,11 @@ class MyApp(QMainWindow):
             if checkbox.text()[1:] in util.ename_map:
                 checkbox.setText("&" + util.ename_map[checkbox.text()[1:]])
 
+        if util.PAUSE:
+            self.pause_button.setText(strings.qt_resume_button)
+        else:
+            self.pause_button.setText(strings.qt_pause_button)
+
         self.download_finish_msgbox_text = 'The download has completed!'
         self.download_finish_msgbox_open_dir_text = 'Open Ceiba directory'
         self.download_finish_msgbox_open_browser_text = 'Open Ceiba homepage'
@@ -680,6 +699,10 @@ class MyApp(QMainWindow):
             checkbox: QCheckBox = action.defaultWidget()
             if checkbox.text()[1:] in util.cname_map:
                 checkbox.setText("&" + util.cname_map[checkbox.text()[1:]])
+        if util.PAUSE:
+            self.pause_button.setText(strings.qt_resume_button)
+        else:
+            self.pause_button.setText(strings.qt_pause_button)
 
         self.download_finish_msgbox_text = '下載完成！'
         self.download_finish_msgbox_open_dir_text = '打開檔案目錄'

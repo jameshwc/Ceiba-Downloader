@@ -184,6 +184,7 @@ class Ceiba():
 
         logging.info(strings.start_downloading_courses)
         for course in self.courses:
+            util.check_pause()
             course_name = course.cname if strings.lang == 'zh-tw' else course.ename
             if course_id_filter is None or course.id in course_id_filter:
                 logging.info(strings.course_download_info.format(course_name))
