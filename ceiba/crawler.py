@@ -44,7 +44,6 @@ class Crawler():
         if self.url in Crawler.crawled_urls:
             # See issue #11 [https://github.com/jameshwc/Ceiba-Downloader/issues/11]
             if util.is_relative_to(Crawler.crawled_urls[self.url], self.path):
-                logging.debug(strings.url_duplicate.format(self.url))
                 return Crawler.crawled_urls[self.url]
 
         response = util.get(self.session, self.url)
@@ -73,6 +72,8 @@ class Crawler():
         elif self.module == 'bulletin':
             soup = self.__handle_bulletin(soup, response.url)
 
+        if self.is_admin:
+            soup = self.parse_frame(soup)
         soup = self.crawl_hrefs(soup, response.url)
 
         for op in soup.find_all('option'):
@@ -216,11 +217,10 @@ class Crawler():
             css['href'] = 'static/' + filename
             static_dir = self.path / 'static'
             static_dir.mkdir(exist_ok=True)
-            Crawler(self.session, url, static_dir, self.is_admin, self.module,
-                    filename, css['href']).crawl_css_and_resources()
+            Crawler(self.session, url, static_dir, self.is_admin, filename=filename, text=css['href']).crawl_css_and_resources()
 
 
-    def parse_frame(self, soup: BeautifulSoup, url: str) -> BeautifulSoup:
+    def parse_frame(self, soup: BeautifulSoup) -> BeautifulSoup:
         nav = soup.find('div', {"id": "majornav"})
         try:
             a: Tag
@@ -240,6 +240,9 @@ class Crawler():
 
             for a in soup.find('div', {'id': 'footer'}).find_all('a'):
                 a.extract()
+
+            courses_list_a_tag = soup.find('li', {'id': 'clist'})
+            courses_list_a_tag['href'] =
         except AttributeError as e:
             logging.error(e, exc_info=True)
         return soup
@@ -249,8 +252,8 @@ class Crawler():
         files_dir.mkdir(exist_ok=True)
         filepath = self._get_uniq_filepath(files_dir.joinpath(self.filename))
         filepath.write_bytes(content)
-        self.__class__.crawled_files_path.add(filepath)
-        self.__class__.crawled_urls[self.url] = filepath
+        Crawler.crawled_files_path.add(filepath)
+        Crawler.crawled_urls[self.url] = filepath
         return filepath
 
     def _get_uniq_filepath(self, path: Path):
