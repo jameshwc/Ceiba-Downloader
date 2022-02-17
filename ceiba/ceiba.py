@@ -15,7 +15,7 @@ from .course import Course
 from .crawler import Crawler
 from .exceptions import (CheckForUpdatesError, InvalidCredentials,
                          InvalidFilePath, InvalidLoginParameters,
-                         NullTicketContent, SendTicketError)
+                         NullTicketContent, SendTicketError, StopDownload)
 from .const import strings, Role
 
 class Ceiba():
@@ -184,6 +184,7 @@ class Ceiba():
 
         logging.info(strings.start_downloading_courses)
         for course in self.courses:
+            util.check_stop()
             util.check_pause()
             course_name = course.cname if strings.lang == 'zh-tw' else course.ename
             if course_id_filter is None or course.id in course_id_filter:
@@ -195,6 +196,9 @@ class Ceiba():
                     admin = False
                 try:
                     course.download(self.courses_dir, self.sess, admin, modules_filter, progress)
+                except StopDownload as e:
+                    Crawler.reset()
+                    raise e
                 except Exception as e:
                     logging.error(e, exc_info=True)
                     logging.warning(strings.error_skip_and_continue_download_courses.format(course_name))

@@ -8,6 +8,8 @@ import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
+from ceiba.exceptions import StopDownload
+
 from . import util
 from .crawler import Crawler
 from .const import strings
@@ -52,7 +54,7 @@ class Course():
         if m and m.group(0).startswith('course/'):
             self.course_sn = m.group(0)[7:]
         else:
-            logging.error(strings.error_unable_to_parse_course_sn.format(self.course_name, course_name))
+            logging.error(strings.error_unable_to_parse_course_sn.format(self.course_name, self.course_name))
             return
 
         modules = self.download_homepage(session, strings.homepage, modules_filter_list)
@@ -69,10 +71,13 @@ class Course():
 
     def download_modules(self, modules, session, progress, admin: bool):
         for module in modules:
+            util.check_stop()
             util.check_pause()
             module_name = util.full_cname_map[module] if strings.lang == 'zh-tw' else module
             try:
                 self.download_module(session, module_name, self.course_name, module, admin=admin)
+            except StopDownload as e:
+                raise e
             except Exception as e:
                 logging.error(e, exc_info=True)
                 logging.warning(strings.error_skip_and_continue_download_modules.format(self.course_name, module_name))

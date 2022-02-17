@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from bs4.element import ResultSet, Tag
 
 from . import util
-from .exceptions import NotFound
+from .exceptions import NotFound, StopDownload
 from .const import strings
 
 
@@ -19,6 +19,11 @@ class Crawler():
     crawled_urls: Dict[str, Path] = {}
 
     # Dicuss: should we move css/img to root folder instead of download them every time in each course?
+
+    @classmethod
+    def reset(cls):
+        cls.crawled_files_path.clear()
+        cls.crawled_urls = {}
 
     def __init__(self,
                  session: requests.Session,
@@ -118,6 +123,7 @@ class Crawler():
 
         a: Tag
         for a in hrefs:
+            util.check_stop()
             util.check_pause()
             if a.text in skip_href_texts or \
                 (self.module == 'ftp' and a.text.endswith('.htm')):
@@ -145,6 +151,8 @@ class Crawler():
                 crawler_path = self._board_dir[a.text]
             try:
                 filename = Crawler(self.session, url, crawler_path, self.is_admin, self.course_name, self.module, filename, text).crawl()
+            except StopDownload as e:
+                raise e
             except NotFound as e:
                 logging.warning(e)
                 a.string = a.text + " [404 not found]"

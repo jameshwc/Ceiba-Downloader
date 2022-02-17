@@ -44,3 +44,7 @@ class CrawlerConnectionError(Exception):
 
     def __str__(self):
         return strings.exception_crawler_connection_error.format(self.url)
+
+class StopDownload(Exception):
+    def __str__(self):
+        return strings.stop_download

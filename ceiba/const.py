@@ -246,6 +246,14 @@ class String:
         return self._data['wait_to_completely_download_module'][self.lang]
 
     @property
+    def try_to_stop_download(self) -> str:
+        return self._data['try_to_stop_download'][self.lang]
+
+    @property
+    def stop_download(self) -> str:
+        return self._data['stop_download'][self.lang]
+
+    @property
     def qt_pause_button(self) -> str:
         return self._data['qt_pause_button'][self.lang]
 

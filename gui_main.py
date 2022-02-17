@@ -23,6 +23,7 @@ from ceiba import util
 from ceiba.ceiba import Ceiba
 from ceiba.course import Course
 from ceiba.const import Role, strings
+from ceiba.exceptions import StopDownload
 from qt_custom_widget import PyLogOutput, PyToggle
 
 dirname = os.path.dirname(__file__) or '.'
@@ -37,6 +38,7 @@ class CeibaSignals(QObject):
     finished = Signal()
     success = Signal()
     failed = Signal()
+    stop = Signal()
     progress = Signal(int)
     result = Signal(object)
 
@@ -54,6 +56,9 @@ class Worker(QRunnable):
     def run(self):
         try:
             result = self.fn(*self.args, **self.kwargs)
+        except StopDownload:
+            logging.warning(strings.stop_download)
+            self.signals.stop.emit()
         except Exception as e:
             logging.error(e)
             self.signals.failed.emit()
@@ -284,7 +289,7 @@ class MyApp(QMainWindow):
         self.status_group_box = QGroupBox()
         self.status_layout = QGridLayout()
 
-        self.log_output = PyLogOutput(self.status_group_box)
+        self.log_output = PyLogOutput()
         self.log_output.setFormatter(
             logging.Formatter(
                 "%(asctime)s - %(levelname)s - %(message)s", "%Y-%m-%d %H:%M:%S"
@@ -298,14 +303,19 @@ class MyApp(QMainWindow):
         self.pause_button = QPushButton()
         self.pause_button.clicked.connect(self.pause)
         self.pause_button.setDisabled(True)
+        self.stop_button = QPushButton()
+        self.stop_button.clicked.connect(self.stop)
+        self.stop_button.setDisabled(True)
+
         self.progress_bar = QProgressBar()
         self.progress_bar.setMinimum(0)
         self.progress_bar.setMaximum(100)
         self.progress_bar.setValue(0)
 
-        self.status_layout.addWidget(self.log_output.widget)
-        self.status_layout.addWidget(self.pause_button)
-        self.status_layout.addWidget(self.progress_bar)
+        self.status_layout.addWidget(self.log_output.widget, 0, 0, 1, 2)
+        self.status_layout.addWidget(self.pause_button, 1, 0, 1, 1)
+        self.status_layout.addWidget(self.stop_button, 1, 1, 1, 1)
+        self.status_layout.addWidget(self.progress_bar, 2, 0, 1, 2)
         self.status_group_box.setLayout(self.status_layout)
 
     def login(self):
@@ -314,6 +324,7 @@ class MyApp(QMainWindow):
                     cookie_PHPSESSID=self.password_edit.text(),
                     role=Role(self.login_user_menu.currentIndex())
                 )
+            worker
             self.progress_bar.setMaximum(1)
         else:
             worker = Worker(self.ceiba.login, progress=True,
@@ -518,9 +529,11 @@ class MyApp(QMainWindow):
             worker.signals.progress.connect(self.update_progressbar)
         worker.signals.success.connect(self.after_download_successfully)
         worker.signals.finished.connect(self.after_download)
+        # worker.signals.stop.connect(self.after_download_stop)
         self.thread_pool.start(worker)
         self.download_button.setDisabled(True)
         self.pause_button.setEnabled(True)
+        self.stop_button.setEnabled(True)
 
     def get_save_directory(self):
         filepath = QFileDialog.getExistingDirectory(self)
@@ -529,6 +542,8 @@ class MyApp(QMainWindow):
     def after_download(self):
         self.progress_bar.setValue(self.progress_bar.maximum())
         self.download_button.setEnabled(True)
+        self.pause_button.setDisabled(True)
+        self.stop_button.setDisabled(True)
         self.progress_bar.setMaximum(1)
         self.progress_bar.reset()
 
@@ -556,16 +571,23 @@ class MyApp(QMainWindow):
             open_path(Path(self.ceiba.path))
 
     def pause(self):
-        util.pause()
-        if util.PAUSE:
+        is_pause = util.pause()
+        if is_pause:
             self.pause_button.setText(strings.qt_resume_button)
         else:
             self.pause_button.setText(strings.qt_pause_button)
 
+    def stop(self):
+        util.stop()
+        self.pause_button.setDisabled(True)
+        self.stop_button.setDisabled(True)
+        self.pause_button.setText(strings.qt_pause_button)
+        self.update_progressbar(0)
+
     def update_progressbar(self, add_value: int):
         if add_value < 0:
             self.progress_bar.setMaximum(self.progress_bar.maximum() + (add_value * -1))
-        elif add_value == 0:  # magic number
+        elif add_value == 0:  # magic number: busy indicator
             self.progress_bar.setValue(0)
             self.progress_bar.setMaximum(0)
             self.progress_bar.setMinimum(0)
@@ -652,7 +674,7 @@ class MyApp(QMainWindow):
             self.pause_button.setText(strings.qt_resume_button)
         else:
             self.pause_button.setText(strings.qt_pause_button)
-
+        self.stop_button.setText('Stop Download')
         self.download_finish_msgbox_text = 'The download has completed!'
         self.download_finish_msgbox_open_dir_text = 'Open Ceiba directory'
         self.download_finish_msgbox_open_browser_text = 'Open Ceiba homepage'
@@ -703,11 +725,13 @@ class MyApp(QMainWindow):
             self.pause_button.setText(strings.qt_resume_button)
         else:
             self.pause_button.setText(strings.qt_pause_button)
-
+        self.stop_button.setText('停止下載')
         self.download_finish_msgbox_text = '下載完成！'
         self.download_finish_msgbox_open_dir_text = '打開檔案目錄'
         self.download_finish_msgbox_open_browser_text = '打開 Ceiba 網頁'
 
+    def closeEvent(self, event):
+        util.stop()
 
 if __name__ == "__main__":
     from PySide6.QtCore import Qt

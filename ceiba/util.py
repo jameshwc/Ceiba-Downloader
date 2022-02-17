@@ -1,18 +1,20 @@
 from http.client import RemoteDisconnected
 import logging
+from operator import truediv
 import re
 import time
 
 from requests import Session, Response
 from typing import Callable
 from .const import strings, Role
-from .exceptions import CrawlerConnectionError
+from .exceptions import CrawlerConnectionError, StopDownload
 from pathlib import Path
 from os.path import relpath
 
 CONNECT_RETRY_MAX = 10
 REQUESTS_TIMEOUT = 300
 PAUSE = False
+STOP = False
 
 home_url = 'https://ceiba.ntu.edu.tw'
 login_url = 'https://ceiba.ntu.edu.tw/ChkSessLib.php'
@@ -147,7 +149,7 @@ def loop_connect(http_method_func, url, **kwargs) -> Response:
     logging.warning(strings.warning_max_retries_exceeded)
     raise CrawlerConnectionError(url)
 
-def pause():
+def pause() -> bool:
     global PAUSE
     if PAUSE:
         logging.warning(strings.resume_download)
@@ -155,9 +157,24 @@ def pause():
         logging.warning(strings.try_to_pause_download)
         logging.warning(strings.wait_to_completely_download_module)
     PAUSE = not PAUSE
+    return PAUSE
+
+def stop():
+    global STOP
+    STOP = True
+    logging.warning(strings.try_to_stop_download)
+
+def check_stop():
+    global STOP
+    global PAUSE
+    if STOP:
+        STOP = False
+        PAUSE = False
+        raise StopDownload
 
 def check_pause():
     if PAUSE:
         logging.warning(strings.pause_download)
     while PAUSE:
+        check_stop()
         time.sleep(1)
