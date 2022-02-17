@@ -12,6 +12,7 @@ from os.path import relpath
 
 CONNECT_RETRY_MAX = 10
 REQUESTS_TIMEOUT = 300
+PAUSE = False
 
 home_url = 'https://ceiba.ntu.edu.tw'
 login_url = 'https://ceiba.ntu.edu.tw/ChkSessLib.php'
@@ -146,9 +147,17 @@ def loop_connect(http_method_func, url, **kwargs) -> Response:
     logging.warning(strings.warning_max_retries_exceeded)
     raise CrawlerConnectionError(url)
 
-def debug():
-    while True:
-        try:
-            eval(input())
-        except KeyboardInterrupt:
-            break
+def pause():
+    global PAUSE
+    if PAUSE:
+        logging.warning(strings.resume_download)
+    else:
+        logging.warning(strings.try_to_pause_download)
+        logging.warning(strings.wait_to_completely_download_module)
+    PAUSE = not PAUSE
+
+def check_pause():
+    if PAUSE:
+        logging.warning(strings.pause_download)
+    while PAUSE:
+        time.sleep(1)
