@@ -33,6 +33,7 @@
         "download_homepage_successfully": "Ceiba homepage has been downloaded successfully!",
         "send_ticket_successfully": "Successfully sent the ticket!",
         "homepage": "homepage",
+        "admin_homepage": "admin homepage",
         "urlf": "url: {}",
         "url_duplicate": "duplicate url: skipping download - {}",
         "exception_invalid_login_parameters": "You must fill in the username/password or cookies!",

@@ -59,6 +59,7 @@ board_skip_href_texts = default_skip_href_texts + [
 student_skip_href_texts = default_skip_href_texts + ['上頁', '下頁']
 
 admin_skip_mod = ['calendar', 'user', 'theme', 'grade', 'mail']
+admin_mod_num = len(admin_cname_map) - len(admin_skip_mod)
 
 def skip_href_texts(mod: str, admin: bool):
     if admin:
@@ -94,11 +95,11 @@ def get_valid_filename(name: str) -> str:
 
 def progress_decorator():
     def decorator(func):
-        def wrap(self, *args):
+        def wrap(self, *args, **kwargs):
             name = self.cname if strings.lang == 'zh-tw' else self.ename
             logging.info(
                 strings.object_download_info.format(name, args[1]))
-            ret = func(self, *args)
+            ret = func(self, *args, **kwargs)
             logging.info(strings.object_finish_info.format(
                 name, args[1]))
             return ret

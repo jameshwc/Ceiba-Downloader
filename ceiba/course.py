@@ -10,12 +10,11 @@ from bs4.element import Tag
 from . import util
 from .crawler import Crawler
 from .const import strings
-from .crawler_admin import Admin
 
 
 class Course():
 
-    def __init__(self, semester, course_num, cname, ename, teacher, href, admin_url: str):
+    def __init__(self, semester, course_num, cname, ename, teacher, href, admin_url: Optional[str]):
         self.semester: str = semester
         self.course_num: str = course_num
         self.cname: str = cname
@@ -23,6 +22,7 @@ class Course():
         self.teacher: str = teacher
         self.href: str = href
         self.admin_url = admin_url
+        self.admin_path = Path()
         self.folder_name: str = util.get_valid_filename("_".join([self.semester, self.cname, self.ename, self.teacher]))
         self.id: str = self.semester + self.course_num
         self.course_sn: str = ""
@@ -34,21 +34,24 @@ class Course():
     def download(self,
                  path: Path,
                  session: requests.Session,
+                 admin=False,
                  modules_filter_list: Optional[List[str]] = None,
                  progress = None):
 
         self.path = path / self.folder_name
         self.path.mkdir(exist_ok=True)
+        if admin:
+            self.admin_path = self.path / "admin"
+            self.admin_path.mkdir(exist_ok=True, parents=True)
 
-        course_name = self.cname if strings.lang == 'zh-tw' else self.ename
+        self.course_name = self.cname if strings.lang == 'zh-tw' else self.ename
 
         course_url = util.get(session, self.href).url
         m = re.search(r'course/([0-9a-f]*)+', course_url)
         if m and m.group(0).startswith('course/'):
             self.course_sn = m.group(0)[7:]
         else:
-            logging.error(strings.error_unable_to_parse_course_sn.format(course_name, course_name))
-            logging.debug(strings.urlf.format(course_url))
+            logging.error(strings.error_unable_to_parse_course_sn.format(self.course_name, course_name))
             return
 
         modules = self.download_homepage(session, strings.homepage, modules_filter_list)
@@ -57,25 +60,34 @@ class Course():
             modules_not_in_this_module_num = len(modules_filter_list) - len(modules)
             if modules_not_in_this_module_num > 0:
                 progress.emit(modules_not_in_this_module_num)
+        self.download_modules(modules, session, progress, admin=False)
 
+        if admin:
+            admin_modules = self.download_admin_main_page(session, strings.admin_homepage)
+            self.download_modules(admin_modules, session, progress, admin=True)
+
+    def download_modules(self, modules, session, progress, admin: bool):
         for module in modules:
-            module_name = util.cname_map[module] if strings.lang == 'zh-tw' else module
+            module_name = util.full_cname_map[module] if strings.lang == 'zh-tw' else module
             try:
-                self.download_module(session, module_name, course_name, module)
+                self.download_module(session, module_name, self.course_name, module, admin=admin)
             except Exception as e:
                 logging.error(e, exc_info=True)
-                logging.warning(strings.error_skip_and_continue_download_modules.format(course_name, module_name))
+                logging.warning(strings.error_skip_and_continue_download_modules.format(self.course_name, module_name))
             if progress:
                 progress.emit(1)
 
     @util.progress_decorator()
-    def download_module(self, session: requests.Session, obj_name: str, course_name: str, module: str):
-        url = util.module_url + "?csn=" + self.course_sn + "&default_fun=" + module + "&current_lang=chinese"  # TODO:language
+    def download_module(self, session: requests.Session, obj_name: str, course_name: str, module: str, admin: bool):
+        if admin:
+            url = util.admin_module_urlgen(module)
+            module_dir = self.admin_path / module
+        else:
+            url = util.module_url + "?csn=" + self.course_sn + "&default_fun=" + module + "&current_lang=chinese"  # TODO:language
+            module_dir = self.path / module
 
-        module_dir = self.path / module
         module_dir.mkdir(exist_ok=True)
-
-        Crawler(session, url, module_dir, course_name=course_name, module=module, filename=module).crawl()
+        Crawler(session, url, module_dir, is_admin=admin, course_name=course_name, module=module, filename=module).crawl()
 
     @util.progress_decorator()
     def download_homepage(self,
@@ -132,25 +144,6 @@ class Course():
         self.path.joinpath(filename).write_text(str(soup), encoding='utf-8')
         return items
 
-    def download_admin(self,
-                       path: Path,
-                       session: requests.Session,
-                       progress = None):
-
-        self.path = path / self.folder_name
-        self.admin_path = self.path / "admin"
-        self.admin_path.mkdir(exist_ok=True, parents=True)
-
-        course_name = self.cname if strings.lang == 'zh-tw' else self.ename
-        admin_modules = self.download_admin_main_page(session, strings.homepage)
-        for mod in admin_modules:
-            if mod in util.admin_skip_mod:
-                continue
-            url = util.admin_module_urlgen(mod)
-            path = self.admin_path / mod
-            path.mkdir(exist_ok=True)
-            Crawler(session, url, path, is_admin=True, course_name=course_name, module=mod, filename=mod).crawl()
-
     @util.progress_decorator()
     def download_admin_main_page(self, session: requests.Session, name: str = strings.homepage):
         resp = util.get(session, self.admin_url)
@@ -177,3 +170,10 @@ class Course():
         Crawler(session, resp.url, self.admin_path).download_css(soup.find_all('link'))
         self.admin_path.joinpath('index.html').write_text(str(soup), encoding='utf-8')
         return modules
+
+    @util.progress_decorator()
+    def download_admin_module(self, session: requests.Session, obj_name: str, course_name: str, mod: str):
+        url = util.admin_module_urlgen(mod)
+        path = self.admin_path / mod
+        path.mkdir(exist_ok=True)
+        Crawler(session, url, path, is_admin=True, course_name=course_name, module=mod, filename=mod).crawl()
