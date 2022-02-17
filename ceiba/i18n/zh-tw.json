@@ -51,7 +51,9 @@
         "try_to_pause_download": "正在暫停下載...",
         "resume_download": "繼續下載...",
         "wait_to_completely_download_module": "將在目前的連結或檔案下載完畢後暫停下載！",
-        "pause_download": "暫停下載！"
+        "pause_download": "暫停下載！",
+        "try_to_stop_download": "正在停止下載... 將在目前的連結或檔案下載完畢後停止下載！",
+        "stop_download": "停止下載！"
     },
 
     "qt": {
