@@ -86,14 +86,14 @@ jobs:
 
       - name: Add execution permission
         run: |
-          chmod +x ceiba-downloader-ubuntu-latest/ceiba-downloader/ceiba-downloader
-          chmod +x ceiba-downloader-macos-latest/ceiba-downloader.app/Contents/MacOS/ceiba-downloader
+          chmod +x ceiba-downloader-ubuntu-latest/dist/ceiba-downloader/ceiba-downloader
+          chmod +x ceiba-downloader-macos-latest/dist/ceiba-downloader.app/Contents/MacOS/ceiba-downloader
 
       - name: Zip files
         run: |
-          cd ceiba-downloader-windows-latest && zip -r ../ceiba-downloader-windows.zip ceiba-downloader && cd ..
-          cd ceiba-downloader-macos-latest && zip -r ../ceiba-downloader-mac.zip ceiba-downloader.app && cd ..
-          cd ceiba-downloader-ubuntu-latest && zip -r ../ceiba-downloader-linux.zip ceiba-downloader && cd ..
+          cd ceiba-downloader-windows-latest/dist && zip -r ../../ceiba-downloader-windows.zip ceiba-downloader && cd ../..
+          cd ceiba-downloader-macos-latest/dist && zip -r ../../ceiba-downloader-mac.zip ceiba-downloader.app && cd ../..
+          cd ceiba-downloader-ubuntu-latest/dist && zip -r ../../ceiba-downloader-linux.zip ceiba-downloader && cd ../..
 
       - name: Emit a Github Release
         uses: "marvinpinto/action-automatic-releases@latest"
