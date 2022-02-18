@@ -20,23 +20,23 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    
+
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      
+
       - name: Get version
         run: |
           echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV &&
           echo "VERSION=$(cat version.txt)" >> $env:GITHUB_ENV
-      
+
       - name: Add version
         run: |
           perl -i -pe's/VERSION/V${{ env.VERSION }}/g' gui_main.py
           perl -i -pe's/self.version: str = \"1.0\"/self.version = \"${{ env.VERSION }}\"/g' ceiba/ceiba.py
-      
+
       - name: test
         run: cat ceiba/ceiba.py
 
@@ -45,13 +45,13 @@ jobs:
         if: ${{ matrix.os != 'macos-latest' }}
         with:
           python-version: '3.7'
-      
+
       - name: Set up python version
         uses: actions/setup-python@v2
         if: ${{ matrix.os == 'macos-latest' }}
         with:
           python-version: '3.10'
-          
+
       - name: Install modules
         run: pip3 install -r requirements.txt
 
@@ -65,9 +65,11 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ceiba-downloader-${{ matrix.os }}
-          path: dist/*
+          path: |
+            dist/*
+            version.txt
           retention-days: 1
-  
+
   release:
     name: "Prelease"
     needs: build
@@ -79,11 +81,14 @@ jobs:
       - name: Display fetched artifacts
         run: ls -R
 
+      - name: Save version variable
+        run: echo "VERSION=$(cat ceiba-downloader-ubuntu-latest/version.txt)" >> $GITHUB_ENV
+
       - name: Add execution permission
         run: |
           chmod +x ceiba-downloader-ubuntu-latest/ceiba-downloader/ceiba-downloader
           chmod +x ceiba-downloader-macos-latest/ceiba-downloader.app/Contents/MacOS/ceiba-downloader
-      
+
       - name: Zip files
         run: |
           cd ceiba-downloader-windows-latest && zip -r ../ceiba-downloader-windows.zip ceiba-downloader && cd ..
@@ -94,8 +99,8 @@ jobs:
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
+          automatic_release_tag: "${{ env.VERSION }}-beta"
           prerelease: true
-          title: "Development Build"
+          title: "v${{ env.VERSION}} (Beta)"
           files: |
             ceiba-downloader*.zip
