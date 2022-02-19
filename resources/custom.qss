@@ -1,6 +1,6 @@
 
-QLabel, QCheckBox, QLineEdit, QPushButton, QGroupBox, QTabWidget, QPlainTextEdit, QComboBox {{
-    font-size: 16px;
+QLabel, QCheckBox, QLineEdit, QPushButton, QGroupBox, QTabWidget, QPlainTextEdit, QComboBox, QTableWidget {{
+    font-size: 20px;
 }}
 
 QLabel[class="welcome"] {{

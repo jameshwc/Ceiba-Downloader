@@ -150,6 +150,7 @@ class Ceiba():
 
                 course = Course(semester=cols[0],
                                 course_num=cols[2],
+                                class_num=cols[3],
                                 cname=cname,
                                 ename=ename,
                                 teacher=cols[5],
