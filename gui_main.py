@@ -16,7 +16,8 @@ from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox,
                                QMainWindow, QMessageBox, QProgressBar,
                                QPushButton, QRadioButton, QScrollArea,
                                QSizePolicy, QTabWidget, QTextEdit, QVBoxLayout,
-                               QWidget, QMenu, QWidgetAction, QComboBox)
+                               QWidget, QMenu, QWidgetAction, QComboBox,
+                               QTableWidget, QTableWidgetItem, QHeaderView)
 from qt_material import apply_stylesheet
 
 from ceiba import util
@@ -367,30 +368,62 @@ class MyApp(QMainWindow):
 
         courses_main_layout = QGridLayout()
         courses_by_semester_layouts: Dict[str, QLayout] = {}
+        courses_by_semester_table: Dict[str, QTableWidget] = {}
 
         for course in self.courses:
 
             if course.semester not in courses_by_semester_layouts:
                 layout = QGridLayout()
-                courses_by_semester_layouts[course.semester] = layout
+                table = QTableWidget()
+                table.setColumnCount(4)
+                table.setHorizontalHeaderLabels(['點選', '課號', '班次', '課程名稱'])
+                table.verticalHeader().setVisible(False)
+                table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-            if self.language == 'zh-tw':
-                checkbox = QCheckBox("&" + course.cname)
-            elif self.language == 'en':
-                checkbox = QCheckBox('&' + course.ename)
+                table.horizontalHeader().setSectionsClickable(True)
+                table.horizontalHeader().setSectionsMovable(False)
+                table.horizontalHeader().setHighlightSections(False)
+                table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
+                table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+
+                table.horizontalHeader().setDefaultAlignment(Qt.AlignLeft | Qt.AlignCenter)
+
+                courses_by_semester_layouts[course.semester] = layout
+                courses_by_semester_table[course.semester] = table
+
+            course_name = course.cname
+            if self.language == 'en':
+                course_name = course.ename
+            checkbox = QCheckBox("&" + course_name)
 
             self.courses_checkboxes.append(checkbox)
             courses_by_semester_layouts[course.semester].addWidget(checkbox)
+            table = courses_by_semester_table[course.semester]
+            table_row = table.rowCount()
+            table.insertRow(table_row)
+            table.setCellWidget(table_row, 0, checkbox)
+            for idx, item in enumerate([QTableWidgetItem(course.course_num),
+                              QTableWidgetItem(course.class_num), QTableWidgetItem(course_name)]):
+                table.setItem(table_row, idx+1, item)
+
+            table.setRowCount(table_row+1)
 
         tabWidget = QTabWidget()
         for semester in courses_by_semester_layouts:
-            semester_widget = QScrollArea()
-            semester_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-            semester_widget.setWidgetResizable(True)
-            temp_widget = QWidget()
-            semester_widget.setWidget(temp_widget)
-            temp_widget.setLayout(courses_by_semester_layouts[semester])
-            tabWidget.addTab(semester_widget, "&" + semester)
+            if not util.is_admin(self.ceiba.role):
+                semester_widget = QScrollArea()
+                semester_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+                semester_widget.setWidgetResizable(True)
+                temp_widget = QWidget()
+                semester_widget.setWidget(temp_widget)
+                temp_widget.setLayout(courses_by_semester_layouts[semester])
+                tabWidget.addTab(semester_widget, "&" + semester)
+            else:
+                l = QVBoxLayout()
+                l.addWidget(courses_by_semester_table[semester])
+                temp_widget = QWidget()
+                temp_widget.setLayout(l)
+                tabWidget.addTab(temp_widget, "&" + semester)
 
         def click_all_courses_checkbox(state):
             for checkbox in self.courses_checkboxes:
@@ -400,7 +433,6 @@ class MyApp(QMainWindow):
                     checkbox.setCheckState(Qt.Unchecked)
 
         self.check_all_courses_checkbox.stateChanged.connect(click_all_courses_checkbox)
-
         courses_main_layout.addWidget(tabWidget, 0, 0)
         courses_main_layout.addWidget(self.check_all_courses_checkbox, 1, 0)
         self.courses_group_box.setLayout(courses_main_layout)

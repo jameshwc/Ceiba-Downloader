@@ -17,9 +17,10 @@ from .const import strings
 
 class Course():
 
-    def __init__(self, semester, course_num, cname, ename, teacher, href, admin_url: Optional[str]):
+    def __init__(self, semester, course_num, class_num, cname, ename, teacher, href, admin_url: Optional[str]):
         self.semester: str = semester
         self.course_num: str = course_num
+        self.class_num: str = class_num
         self.cname: str = cname
         self.ename: str = ename
         self.teacher: str = teacher
