@@ -111,9 +111,6 @@ def progress_decorator():
 
     return decorator
 
-def is_admin(role: Role) -> bool:
-    return role == Role.TA or role == Role.Professor or role == Role.Outside_Teacher
-
 # alternative function for python3.10 pathlib.Path.is_relative_to
 def is_relative_to(self: Path, other: Path) -> bool:
     try:

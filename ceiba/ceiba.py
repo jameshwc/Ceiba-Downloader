@@ -130,7 +130,7 @@ class Ceiba():
                 name = cols[4].get_text(strip=True, separator='\n').splitlines()
 
                 admin_url = None
-                if util.is_admin(self.role):
+                if self.role.is_admin:
                     onclick_val = cols[len(cols)-1].find('input').get('onclick')
                     m = re.search(r"\'([0-9a-f]*)\'", onclick_val)
                     if m:
@@ -166,7 +166,7 @@ class Ceiba():
 
     def download_courses(self,
                          path: Union[Path, str],
-                         admin=False,
+                         download_admin=False,
                          course_id_filter=None,
                          modules_filter=None,
                          progress = None):
@@ -191,12 +191,12 @@ class Ceiba():
             if course_id_filter is None or course.id in course_id_filter:
                 logging.info(strings.course_download_info.format(course_name))
                 self.courses_dir.joinpath(course.folder_name).mkdir(exist_ok=True)
-                if util.is_admin(self.role) and admin:
-                    admin = True
+                if self.role.is_admin and download_admin:
+                    download_admin = True
                 else:
-                    admin = False
+                    download_admin = False
                 try:
-                    course.download(self.courses_dir, self.sess, admin, modules_filter, progress)
+                    course.download(self.courses_dir, self.sess, download_admin, modules_filter, progress)
                 except StopDownload as e:
                     Crawler.reset()
                     raise e
@@ -246,7 +246,7 @@ class Ceiba():
                     row['style'] = 'background: silver;'
                     continue
                 course['href'] = "courses/" + self.course_dir_map[course_id] + '/index.html'
-                if util.is_admin(self.role):
+                if self.role.is_admin:
                     op = row.find('input', {'value': '管理'})
                     op.name = 'a'
                     op.string = '管理'
