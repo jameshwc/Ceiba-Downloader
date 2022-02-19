@@ -12,6 +12,10 @@ class Role(Enum):
     def __str__(self):
         return self.name.replace('_', ' ')
 
+    @property
+    def is_admin(self) -> bool:
+        return self == Role.TA or self == Role.Professor or self == Role.Outside_Teacher
+
 class String:
 
     def __init__(self):
