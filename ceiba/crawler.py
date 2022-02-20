@@ -119,8 +119,7 @@ class Crawler():
 
         a: Tag
         for a in hrefs:
-            util.check_stop()
-            util.check_pause()
+            util.check_pause_and_stop()
             if a.text in skip_href_texts or \
                 (self.module == 'ftp' and a.text.endswith('.htm')):
                 a.replaceWithChildren()
