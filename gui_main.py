@@ -355,7 +355,7 @@ class MyApp(QMainWindow):
         self.welcome_label.setText(self.welcome_text.format(self.ceiba.student_name, self.ceiba.email))
         self.login_layout.addWidget(self.welcome_label, 0, 0)
         self.login_group_box.setLayout(self.login_layout)
-        if not util.is_admin(self.ceiba.role):
+        if not self.ceiba.role.is_admin:
             self.download_admin_checkbox.setHidden(True)
         worker = Worker(self.ceiba.get_courses_list)
         worker.signals.result.connect(self.fill_course_group_box)
@@ -410,7 +410,7 @@ class MyApp(QMainWindow):
 
         tabWidget = QTabWidget()
         for semester in courses_by_semester_layouts:
-            if not util.is_admin(self.ceiba.role):
+            if not self.ceiba.role.is_admin:
                 semester_widget = QScrollArea()
                 semester_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
                 semester_widget.setWidgetResizable(True)
@@ -554,7 +554,7 @@ class MyApp(QMainWindow):
                 self.ceiba.download_courses,
                 progress=True,
                 path=self.filepath_line_edit.text(),
-                admin=self.download_admin_checkbox.isChecked(),
+                download_admin=self.download_admin_checkbox.isChecked(),
                 course_id_filter=course_id_list,
                 modules_filter=items,
             )
