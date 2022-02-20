@@ -161,17 +161,14 @@ def stop():
     STOP = True
     logging.warning(strings.try_to_stop_download)
 
-def check_stop():
+def check_pause_and_stop():
     global STOP
     global PAUSE
-    if STOP:
-        STOP = False
-        PAUSE = False
-        raise StopDownload
-
-def check_pause():
     if PAUSE:
         logging.warning(strings.pause_download)
-    while PAUSE:
-        check_stop()
+    while PAUSE or STOP:
+        if STOP:
+            STOP = False
+            PAUSE = False
+            raise StopDownload
         time.sleep(1)

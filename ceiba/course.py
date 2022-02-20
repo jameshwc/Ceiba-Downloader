@@ -72,8 +72,7 @@ class Course():
 
     def download_modules(self, modules, session, progress, admin: bool):
         for module in modules:
-            util.check_stop()
-            util.check_pause()
+            util.check_pause_and_stop()
             module_name = util.full_cname_map[module] if strings.lang == 'zh-tw' else module
             try:
                 self.download_module(session, module_name, self.course_name, module, admin=admin)
