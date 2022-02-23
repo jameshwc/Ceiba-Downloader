@@ -146,6 +146,19 @@ class About(QMainWindow):
     def open_github(self):
         webbrowser.open('https://github.com/jameshwc/Ceiba-Downloader')
 
+class SemesterTab(QTabWidget):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def addSemester(self, semester, semester_layout):
+        semester_widget = QScrollArea()
+        semester_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        semester_widget.setWidgetResizable(True)
+        temp_widget = QWidget()
+        semester_widget.setWidget(temp_widget)
+        temp_widget.setLayout(semester_layout)
+        self.addTab(semester_widget, "&" + semester)
 
 class MyApp(QMainWindow):
     def __init__(self):
@@ -163,7 +176,6 @@ class MyApp(QMainWindow):
         self.create_status_group_box()
         self.set_zh_tw()
 
-        self.login_group_box.move
         self.courses_group_box.setHidden(True)
         self.options_and_download_groupbox.setHidden(True)
         self.setCentralWidget(QWidget(self))
@@ -174,9 +186,6 @@ class MyApp(QMainWindow):
         self.user_layout.addWidget(self.login_group_box, 0, 0)
         self.user_layout.addWidget(self.courses_group_box, 1, 0)
         self.user_layout.addWidget(self.options_and_download_groupbox, 2, 0)
-        self.user_layout.setRowStretch(0, 1)
-        self.user_layout.setRowStretch(1, 4)
-        self.user_layout.setRowStretch(2, 1)
         self.user_groupbox = QGroupBox()
         self.user_groupbox.setLayout(self.user_layout)
         self.main_layout.addWidget(self.user_groupbox, 0, 0)
@@ -285,6 +294,7 @@ class MyApp(QMainWindow):
         self.courses_checkboxes: List[QCheckBox] = []
         self.courses = []
         self.check_all_courses_checkbox = QCheckBox()
+        self.courses_table_view_checkbox = QCheckBox()
 
     def create_status_group_box(self):
         self.status_group_box = QGroupBox()
@@ -325,7 +335,6 @@ class MyApp(QMainWindow):
                     cookie_PHPSESSID=self.password_edit.text(),
                     role=Role(self.login_user_menu.currentIndex())
                 )
-            worker
             self.progress_bar.setMaximum(1)
         else:
             worker = Worker(self.ceiba.login, progress=True,
@@ -338,6 +347,7 @@ class MyApp(QMainWindow):
         def fail_handler():
             self.login_button.setEnabled(True)
             self.password_edit.clear()
+            self.progress_bar.setValue(0)
 
         worker.signals.failed.connect(fail_handler)
         worker.signals.success.connect(self.after_login_successfully)
@@ -402,22 +412,15 @@ class MyApp(QMainWindow):
             table_row = table.rowCount()
             table.insertRow(table_row)
             table.setCellWidget(table_row, 0, checkbox)
-            for idx, item in enumerate([QTableWidgetItem(course.course_num),
-                              QTableWidgetItem(course.class_num), QTableWidgetItem(course_name)]):
-                table.setItem(table_row, idx+1, item)
+            for idx, item in enumerate([course.course_num, course.class_num, course_name]):
+                table.setItem(table_row, idx+1, QTableWidgetItem(item))
 
             table.setRowCount(table_row+1)
 
-        tabWidget = QTabWidget()
+        tabWidget = SemesterTab()
         for semester in courses_by_semester_layouts:
             if not self.ceiba.role.is_admin:
-                semester_widget = QScrollArea()
-                semester_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-                semester_widget.setWidgetResizable(True)
-                temp_widget = QWidget()
-                semester_widget.setWidget(temp_widget)
-                temp_widget.setLayout(courses_by_semester_layouts[semester])
-                tabWidget.addTab(semester_widget, "&" + semester)
+                tabWidget.addSemester(semester, courses_by_semester_layouts[semester])
             else:
                 l = QVBoxLayout()
                 l.addWidget(courses_by_semester_table[semester])
@@ -427,10 +430,7 @@ class MyApp(QMainWindow):
 
         def click_all_courses_checkbox(state):
             for checkbox in self.courses_checkboxes:
-                if state == Qt.Checked:
-                    checkbox.setCheckState(Qt.Checked)
-                elif state == Qt.Unchecked:
-                    checkbox.setCheckState(Qt.Unchecked)
+                checkbox.setCheckState(Qt.CheckState(state))
 
         self.check_all_courses_checkbox.stateChanged.connect(click_all_courses_checkbox)
         courses_main_layout.addWidget(tabWidget, 0, 0)
@@ -479,16 +479,10 @@ class MyApp(QMainWindow):
         self.only_download_homepage_checkbox.setProperty('class', 'hover')
 
         def disable_download_item_menu_button():
-            if self.only_download_homepage_checkbox.isChecked():
-                self.download_item_menu_button.setDisabled(True)
-                self.check_all_download_item_checkbox.setDisabled(True)
-                self.download_item_label.setDisabled(True)
-                self.download_admin_checkbox.setDisabled(True)
-            else:
-                self.download_item_menu_button.setEnabled(True)
-                self.check_all_download_item_checkbox.setEnabled(True)
-                self.download_item_label.setEnabled(True)
-                self.download_admin_checkbox.setEnabled(True)
+            self.download_item_menu_button.setDisabled(self.only_download_homepage_checkbox.isChecked())
+            self.check_all_download_item_checkbox.setDisabled(self.only_download_homepage_checkbox.isChecked())
+            self.download_item_label.setDisabled(self.only_download_homepage_checkbox.isChecked())
+            self.download_admin_checkbox.setDisabled(self.only_download_homepage_checkbox.isChecked())
 
         self.only_download_homepage_checkbox.clicked.connect(disable_download_item_menu_button)
         download_item_layout = QHBoxLayout()
@@ -524,8 +518,8 @@ class MyApp(QMainWindow):
 
     def download(self):
         items = []
+        action: QWidgetAction
         for action in self.download_item_menu.actions():
-            action: QWidgetAction = action
             checkbox: QCheckBox = action.defaultWidget()
             if checkbox.isChecked():
                 module_name = checkbox.text()[1:]  # remove '&'
@@ -741,6 +735,7 @@ class MyApp(QMainWindow):
         self.check_all_courses_checkbox.setText('勾選所有課程')
         self.download_item_label.setText(' 下載項目： ')
         self.check_all_download_item_checkbox.setText(' 勾選全部下載項目 ')
+        self.courses_table_view_checkbox.setText('以表格瀏覽')
         self.download_admin_checkbox.setText('下載管理後台 [?]')
         self.download_admin_checkbox.setToolTip('下載 Ceiba 管理後臺（只有助教、教授與校外老師適用）')
         self.only_download_homepage_checkbox.setText(' 只下載首頁[?] ')

@@ -12,7 +12,6 @@ from . import util
 from .exceptions import NotFound, StopDownload
 from .const import strings
 
-
 class Crawler():
 
     crawled_files_path: Set[Path] = set()

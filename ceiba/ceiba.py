@@ -67,11 +67,9 @@ class Ceiba():
         if cookie_PHPSESSID:
             self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
         elif username and password:
-            if self.role == Role.NTUer:
+            if self.role.is_sso_login:
                 self.login_user(username, password)
-            elif self.role == Role.TA or \
-                 self.role == Role.Outside_Teacher or \
-                 self.role == Role.Outside_Student:
+            else:
                 self.login_alternative_user(username, password)
             if progress:
                 progress.emit(1)
@@ -115,8 +113,7 @@ class Ceiba():
         logging.info(strings.try_to_get_courses)
         courses_url = util.courses_url(self.role)
 
-        soup = BeautifulSoup(
-            util.get(self.sess, courses_url).content, 'html.parser')
+        soup = BeautifulSoup(util.get(self.sess, courses_url).content, 'html.parser')
 
         rows = self.__get_courses_rows_from_homepage_table(soup)
 
