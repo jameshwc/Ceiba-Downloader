@@ -76,6 +76,8 @@ class Crawler():
             self.__handle_board(soup.find_all('caption'))  # special case for board
         elif self.module == 'bulletin':
             soup = self.__handle_bulletin(soup, response.url)
+        elif self.module == 'hw':
+            soup = self.__handle_hw(soup, response.url)
 
         if self.is_admin:
             soup = self.remove_nav_and_footer(soup)
