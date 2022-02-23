@@ -27,7 +27,8 @@ from ceiba.const import Role, strings
 from ceiba.exceptions import StopDownload
 from qt_custom_widget import PyLogOutput, PyToggle
 
-dirname = os.path.dirname(__file__) or '.'
+DIRNAME = os.path.dirname(__file__) or '.'
+TITLE = 'Ceiba Downloader by Jameshwc'
 
 def exception_handler(type, value, tb: TracebackType):
     logging.getLogger().error(
@@ -121,7 +122,7 @@ class About(QMainWindow):
 
         about_icon = QLabel()
         about_icon.setProperty("class", "no-padding")
-        icon = QPixmap(dirname / Path('resources/ceiba.ico'))
+        icon = QPixmap(DIRNAME / Path('resources/ceiba.ico'))
         icon = icon.scaled(36, 36, Qt.KeepAspectRatioByExpanding)
         about_icon.setPixmap(icon)
         about_icon.show()
@@ -155,16 +156,14 @@ class SemesterTab(QTabWidget):
         semester_widget = QScrollArea()
         semester_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         semester_widget.setWidgetResizable(True)
-        temp_widget = QWidget()
-        semester_widget.setWidget(temp_widget)
-        temp_widget.setLayout(semester_layout)
+        semester_widget.setLayout(semester_layout)
         self.addTab(semester_widget, "&" + semester)
 
 class MyApp(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Ceiba Downloader by Jameshwc")
-        icon_path = dirname / Path("resources/ceiba.ico")
+        self.setWindowTitle(TITLE)
+        icon_path = DIRNAME / Path("resources/ceiba.ico")
         self.setWindowIcon(QIcon(str(icon_path)))
         self.ceiba = Ceiba()
         self.language = 'zh-tw'
@@ -201,12 +200,12 @@ class MyApp(QMainWindow):
         self.menu_language_group = QActionGroup(self)
 
         self.menu_chinese = QAction("&中文", self, checkable=True)
-        self.menu_chinese.setChecked(True)
         self.menu_english = QAction("&English", self, checkable=True)
 
         self.menu_chinese.triggered.connect(self.set_zh_tw)
         self.menu_english.triggered.connect(self.set_en)
 
+        self.menu_chinese.setChecked(True)
         self.menu_language_group.addAction(self.menu_english)
         self.menu_language_group.addAction(self.menu_chinese)
 
@@ -239,6 +238,7 @@ class MyApp(QMainWindow):
 
         self.password_edit = QLineEdit("")
         self.password_edit.setEchoMode(QLineEdit.Password)
+        self.password_edit.setProperty("class", "password")
 
         self.login_user_menu = QComboBox(self)
         for role in Role:
@@ -253,13 +253,11 @@ class MyApp(QMainWindow):
         self.method_toggle = PyToggle(width=80)
 
         def switch_method():
+            self.username_label.setHidden(self.method_toggle.isChecked())
+            self.username_edit.setHidden(self.method_toggle.isChecked())
             if self.method_toggle.isChecked():
-                self.username_label.setHidden(True)
-                self.username_edit.setHidden(True)
                 self.password_label.setText("Cookie [PHPSESSID]:")
             else:
-                self.username_label.setHidden(False)
-                self.username_edit.setHidden(False)
                 self.password_label.setText(self.password_label_text)
 
         self.method_toggle.clicked.connect(switch_method)
@@ -292,7 +290,7 @@ class MyApp(QMainWindow):
         self.courses_group_box = QGroupBox()
         self.courses_group_box.setDisabled(True)
         self.courses_checkboxes: List[QCheckBox] = []
-        self.courses = []
+        self.courses: List[Course] = []
         self.check_all_courses_checkbox = QCheckBox()
         self.courses_table_view_checkbox = QCheckBox()
 
@@ -310,7 +308,7 @@ class MyApp(QMainWindow):
         logging.getLogger("urllib3").propagate = False
         logging.getLogger().setLevel(logging.INFO)
         # logging.getLogger().setLevel(logging.DEBUG)
-        # sys.excepthook = exception_handler
+        sys.excepthook = exception_handler
         self.pause_button = QPushButton()
         self.pause_button.clicked.connect(self.pause)
         self.pause_button.setDisabled(True)
@@ -357,7 +355,7 @@ class MyApp(QMainWindow):
 
     def after_login_successfully(self):
 
-        self.courses_group_box.setHidden(False)
+        self.courses_group_box.setVisible(True)
         self.update_progressbar(0)  # busy indicator
         for i in reversed(range(self.login_layout.count())):
             self.login_layout.itemAt(i).widget().setParent(None)
@@ -457,6 +455,7 @@ class MyApp(QMainWindow):
                 checkbox.setDisabled(True)
         self.download_item_menu_button = QPushButton(self)
         self.download_item_menu_button.setMenu(self.download_item_menu)
+        self.download_item_menu_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.download_item_label = QLabel()
         self.download_item_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
@@ -471,6 +470,7 @@ class MyApp(QMainWindow):
                 else:
                     action.defaultWidget().setChecked(False)
         self.check_all_download_item_checkbox.stateChanged.connect(download_item_menu_check_all)
+        self.check_all_download_item_checkbox.setChecked(True)
 
         self.download_admin_checkbox = QCheckBox()
         self.download_admin_checkbox.setProperty('class', 'hover')
@@ -485,12 +485,12 @@ class MyApp(QMainWindow):
             self.download_admin_checkbox.setDisabled(self.only_download_homepage_checkbox.isChecked())
 
         self.only_download_homepage_checkbox.clicked.connect(disable_download_item_menu_button)
-        download_item_layout = QHBoxLayout()
-        download_item_layout.addWidget(self.download_item_label)
-        download_item_layout.addWidget(self.download_item_menu_button)
-        download_item_layout.addWidget(self.check_all_download_item_checkbox)
-        download_item_layout.addWidget(self.download_admin_checkbox)
-        download_item_layout.addWidget(self.only_download_homepage_checkbox)
+        download_item_layout = QGridLayout()
+        download_item_layout.addWidget(self.download_item_label, 0, 0)
+        download_item_layout.addWidget(self.download_item_menu_button, 0, 1)
+        download_item_layout.addWidget(self.check_all_download_item_checkbox, 0, 2)
+        download_item_layout.addWidget(self.download_admin_checkbox, 1, 1)
+        download_item_layout.addWidget(self.only_download_homepage_checkbox, 1, 2)
         download_item_group_box = QGroupBox()
         download_item_group_box.setLayout(download_item_layout)
 
@@ -513,7 +513,7 @@ class MyApp(QMainWindow):
         options_and_download_layout.addWidget(file_groupbox, 1, 0)
         options_and_download_layout.addWidget(self.download_button, 2, 0)
 
-        self.options_and_download_groupbox.setProperty("class", "no-padding")
+        # self.options_and_download_groupbox.setProperty("class", "no-padding")
         self.options_and_download_groupbox.setLayout(options_and_download_layout)
 
     def download(self):
@@ -578,14 +578,13 @@ class MyApp(QMainWindow):
             if sys.platform == "win32":
                 os.startfile(path)
             else:
-                # TODO: Not test on Linux/Mac yet.
                 opener = "open" if sys.platform == "darwin" else "xdg-open"
                 import subprocess
 
                 subprocess.call([opener, path])
 
         self.download_finish_msgbox = QMessageBox(self)
-        self.download_finish_msgbox.setWindowTitle("Ceiba Downloader by Jameshwc")
+        self.download_finish_msgbox.setWindowTitle(TITLE)
         self.download_finish_msgbox.setText(self.download_finish_msgbox_text)
         self.download_finish_msgbox.addButton(self.download_finish_msgbox_open_dir_text, self.download_finish_msgbox.YesRole)
         self.download_finish_msgbox.addButton(self.download_finish_msgbox_open_browser_text, self.download_finish_msgbox.ActionRole)
@@ -640,7 +639,7 @@ class MyApp(QMainWindow):
         if has_new_version:
             update_msgbox = QMessageBox(self)
             update_msgbox.setIcon(QMessageBox.Information)
-            update_msgbox.setWindowTitle('Ceiba Downloader By Jameshwc')
+            update_msgbox.setWindowTitle(TITLE)
             update_msgbox.setText('There are available updates!')
             update_msgbox.addButton('Download the latest version', QMessageBox.ActionRole)
             update_msgbox.addButton('Cancel', QMessageBox.RejectRole)
@@ -648,7 +647,7 @@ class MyApp(QMainWindow):
             if update_msgbox.buttonRole(update_msgbox.clickedButton()) == QMessageBox.ActionRole:
                 webbrowser.open('https://github.com/jameshwc/Ceiba-Downloader/releases/latest')
         elif self.has_checked_onstart:
-            QMessageBox.information(self, 'Ceiba Downloader by Jameshwc', 'There are currently no updates available.', QMessageBox.Close)
+            QMessageBox.information(self, TITLE, 'There are currently no updates available.', QMessageBox.Close)
         else:
             self.has_checked_onstart = True
 
@@ -761,16 +760,11 @@ class MyApp(QMainWindow):
         util.stop()
 
 if __name__ == "__main__":
-    from PySide6.QtCore import Qt
-    if hasattr(Qt, 'AA_EnableHighDpiScaling'):
-        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
-        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = QApplication([])
 
     window = MyApp()
-    custom_qss_path = dirname / Path("resources/custom.qss")
-    font_path = dirname / Path("resources/GenSenRounded-M.ttc")
+    custom_qss_path = DIRNAME / Path("resources/custom.qss")
+    font_path = DIRNAME / Path("resources/GenSenRounded-M.ttc")
 
     font_id = QFontDatabase.addApplicationFont(str(font_path))
     font_name = QFontDatabase.applicationFontFamilies(font_id)[0]
