@@ -16,6 +16,11 @@ class Role(Enum):
     def is_admin(self) -> bool:
         return self == Role.TA or self == Role.Professor or self == Role.Outside_Teacher
 
+    @property
+    def is_sso_login(self) -> bool:  # Use username/password set up in Ceiba
+        return self == Role.NTUer or self == Role.Professor
+
+
 class String:
 
     def __init__(self):
