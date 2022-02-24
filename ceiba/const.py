@@ -79,6 +79,10 @@ class String:
         return self._data[f'role_{role}'][self.lang]
 
     @property
+    def course(self) -> str:
+        return self._data['course'][self.lang]
+
+    @property
     def cancel_on_object(self) -> str:
         return self._data['cancel_on_object'][self.lang]
 
