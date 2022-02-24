@@ -205,6 +205,10 @@ class String:
         return self._data['exception_invalid_credentials'][self.lang]
 
     @property
+    def exception_invalid_login_role(self) -> str:
+        return self._data['exception_invalid_login_role'][self.lang]
+
+    @property
     def exception_invalid_filepath(self) -> str:
         return self._data['exception_invalid_filepath'][self.lang]
 
@@ -275,5 +279,13 @@ class String:
     @property
     def qt_resume_button(self) -> str:
         return self._data['qt_resume_button'][self.lang]
+
+    @property
+    def qt_role_label(self) -> str:
+        return self._data['qt_role_label'][self.lang]
+
+    @property
+    def qt_role_menu_placeholder(self) -> str:
+        return self._data['qt_role_menu_placeholder'][self.lang]
 
 strings = String()

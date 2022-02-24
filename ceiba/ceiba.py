@@ -14,7 +14,7 @@ from . import util
 from .course import Course
 from .crawler import Crawler
 from .exceptions import (CheckForUpdatesError, InvalidCredentials,
-                         InvalidFilePath, InvalidLoginParameters,
+                         InvalidFilePath, InvalidLoginParameters, InvalidLoginRole,
                          NullTicketContent, SendTicketError, StopDownload)
 from .const import strings, Role
 
@@ -32,6 +32,7 @@ class Ceiba():
         self.course_dir_map: Dict[str, str] = {}  # cname map to dir
         self.is_login: bool = False
         self.is_alternative: bool = False
+        self.role: Role = None
         # alternative users including ta, outside instructors & students, etc.
         try:
             with open('version.txt', 'r', encoding='utf-8') as f:
@@ -54,7 +55,7 @@ class Ceiba():
         if '登出' not in resp.content.decode('utf-8'):
             raise InvalidCredentials
 
-    def login(self, role: Role = Role.NTUer,
+    def login(self, role: int = 0,
               cookie_PHPSESSID: Optional[str] = None,
               username: Optional[str] = None,
               password: Optional[str] = None,
@@ -62,7 +63,10 @@ class Ceiba():
         '''
         :param role: Integer. 0: NTUer, 1: TA, 2: Professor, 3: Outside NTU
         '''
-        self.role = role
+        try:
+            self.role = Role(role)
+        except ValueError:
+            raise InvalidLoginRole
 
         if cookie_PHPSESSID:
             self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
@@ -75,11 +79,11 @@ class Ceiba():
                 progress.emit(1)
         else:
             raise InvalidLoginParameters
+
         # check if user credential is correct
-
         info_url = util.info_url(self.role)
-
         soup = BeautifulSoup(util.get(self.sess, info_url).content, 'html.parser')
+
         if progress:
             progress.emit(1)
         try:

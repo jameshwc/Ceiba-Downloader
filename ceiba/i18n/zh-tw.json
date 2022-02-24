@@ -40,6 +40,7 @@
         "url_duplicate": "url 重複，跳過下載：{}",
         "exception_invalid_login_parameters": "你必須提供 cookies 或計中的帳號密碼！",
         "exception_invalid_credentials": "登入失敗！請檢查帳號與密碼是否正確！",
+        "exception_invalid_login_role": "登入失敗！請填寫登入身分（台大學生、老師、校外師生等）！",
         "exception_invalid_filepath": "路徑錯誤！請檢查路徑是否空白與錯誤！",
         "exception_null_ticket_content": "內容空白！你必須提供意見內容！",
         "exception_send_ticket_error": "傳送意見失敗！錯誤：{}",
@@ -60,6 +61,8 @@
 
     "qt": {
         "pause_button": "暫停下載",
-        "resume_button": "繼續下載"
+        "resume_button": "繼續下載",
+        "role_label": "身分：",
+        "role_menu_placeholder": "請選擇您的身分"
     }
 }
