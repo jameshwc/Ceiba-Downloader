@@ -156,7 +156,9 @@ class SemesterTab(QTabWidget):
         semester_widget = QScrollArea()
         semester_widget.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         semester_widget.setWidgetResizable(True)
-        semester_widget.setLayout(semester_layout)
+        temp_widget = QWidget()
+        semester_widget.setWidget(temp_widget)
+        temp_widget.setLayout(semester_layout)
         self.addTab(semester_widget, "&" + semester)
 
 class MyApp(QMainWindow):
@@ -399,9 +401,9 @@ class MyApp(QMainWindow):
             self.courses_checkboxes.append(checkbox)
             courses_by_semester_layouts[course.semester].addWidget(checkbox)
 
-        tabWidget = SemesterTab()
+        tab_widget = SemesterTab()
         for semester in courses_by_semester_layouts:
-            tabWidget.addSemester(semester, courses_by_semester_layouts[semester])
+            tab_widget.addSemester(semester, courses_by_semester_layouts[semester])
 
         def click_all_courses_checkbox(state):
             for checkbox in self.courses_checkboxes:
@@ -410,7 +412,7 @@ class MyApp(QMainWindow):
         self.check_all_courses_checkbox.stateChanged.connect(click_all_courses_checkbox)
         self.check_all_courses_checkbox.setChecked(True)
 
-        courses_main_layout.addWidget(tabWidget, 0, 0)
+        courses_main_layout.addWidget(tab_widget, 0, 0)
         courses_main_layout.addWidget(self.check_all_courses_checkbox, 1, 0)
         self.courses_group_box.setLayout(courses_main_layout)
         if self.ceiba.role.is_admin:
