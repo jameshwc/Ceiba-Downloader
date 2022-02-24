@@ -9,6 +9,7 @@
 
     "info": {
         "course": "{} {} (Class {})",
+        "course_without_class": "{} {}",
         "cancel_on_object": "There is no {1} module in course {0}! Cancel the download of {}.",
         "wrong_with_object": "Error when downloading {0}! Cancel the download of {2} in {1}.",
         "wrong_with_downloading_url": "Error when downloading {} ! Url: {}",

@@ -388,7 +388,7 @@ class MyApp(QMainWindow):
                 course_name = course.ename
 
             if self.ceiba.role.is_admin:
-                checkbox = QCheckBox("&" + strings.course.format(course_name, course.course_num, course.class_num))
+                checkbox = QCheckBox("&" + strings.course(course_name, course.course_num, course.class_num))
             else:
                 checkbox = QCheckBox("&" + course_name)
 
@@ -658,7 +658,7 @@ class MyApp(QMainWindow):
         for i in range(len(self.courses_checkboxes)):
             course = self.courses[i]
             if self.ceiba.role.is_admin:
-                self.courses_checkboxes[i].setText("&" + strings.course.format(course.ename, course.course_num, course.class_num))
+                self.courses_checkboxes[i].setText("&" + strings.course(course.ename, course.course_num, course.class_num))
             else:
                 self.courses_checkboxes[i].setText("&" + course.ename)
 
@@ -716,7 +716,7 @@ class MyApp(QMainWindow):
         for i in range(len(self.courses_checkboxes)):
             course = self.courses[i]
             if self.ceiba.role.is_admin:
-                self.courses_checkboxes[i].setText("&" + strings.course.format(course.cname, course.course_num, course.class_num))
+                self.courses_checkboxes[i].setText("&" + strings.course(course.cname, course.course_num, course.class_num))
             else:
                 self.courses_checkboxes[i].setText("&" + course.cname)
 
