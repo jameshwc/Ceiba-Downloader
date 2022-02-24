@@ -131,24 +131,29 @@ class Crawler():
             if not url.startswith('http') or \
                urlparse(url).netloc != 'ceiba.ntu.edu.tw' or \
                urlparse(url).path == '' or \
-               len(a.text) == 0:
+               (len(a.text) == 0 and (self.module != 'vote' or a.get('href') != '#')):
                 continue
             filename = a.text
             text = a.text
+            is_admin = self.is_admin
 
             if self.module == 'vote' and a.get('href') == "#" and a.get('onclick'):
                 m = re.search(r"window\.open\(\'(.*?)\'.*", a.get('onclick'))
                 if m:
                     url = urljoin(resp_url, m.group(1))
                     del a['onclick']
-                filename = a.parent.parent.find_all('td')[1].text.strip()
+                if self.is_admin:
+                    filename = a.parent.parent.parent.find_all('td')[0].text.strip() + "_result"
+                else:
+                    filename = a.parent.parent.find_all('td')[1].text.strip()
                 text = filename
+                is_admin = False
 
             crawler_path = self.path
             if self._is_board and a.text in self._board_dir:
                 crawler_path = self._board_dir[a.text]
             try:
-                filename = Crawler(self.session, url, crawler_path, self.is_admin, self.course_name, self.module, filename, text).crawl()
+                filename = Crawler(self.session, url, crawler_path, is_admin, self.course_name, self.module, filename, text).crawl()
             except StopDownload as e:
                 raise e
             except NotFound as e:
@@ -157,7 +162,7 @@ class Crawler():
                 a['href'] = url
                 # a.replaceWithChildren()  # discuss: when 404 happens, should it link to original url?
             except Exception as e:
-                logging.warning(strings.crawler_download_fail.format(text, url), exc_info=True)
+                logging.error(strings.crawler_download_fail.format(text, url), exc_info=True)
                 a.string = a.text + " [ERROR]"
             else:
                 a['href'] = util.relative_path(self.path, filename)
