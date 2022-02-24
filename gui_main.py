@@ -376,7 +376,6 @@ class MyApp(QMainWindow):
 
         courses_main_layout = QGridLayout()
         courses_by_semester_layouts: Dict[str, QLayout] = {}
-        courses_by_semester_table: Dict[str, QTableWidget] = {}
 
         for course in self.courses:
 
@@ -405,6 +404,8 @@ class MyApp(QMainWindow):
                 checkbox.setCheckState(Qt.CheckState(state))
 
         self.check_all_courses_checkbox.stateChanged.connect(click_all_courses_checkbox)
+        self.check_all_courses_checkbox.setChecked(True)
+
         courses_main_layout.addWidget(tabWidget, 0, 0)
         courses_main_layout.addWidget(self.check_all_courses_checkbox, 1, 0)
         self.courses_group_box.setLayout(courses_main_layout)
@@ -412,6 +413,7 @@ class MyApp(QMainWindow):
             self.download_item_layout.removeWidget(self.only_download_homepage_checkbox)
             self.download_item_layout.addWidget(self.download_admin_checkbox, 1, 1)
             self.download_item_layout.addWidget(self.only_download_homepage_checkbox, 1, 2)
+            self.download_admin_checkbox.setChecked(True)
 
         self.options_and_download_groupbox.setHidden(False)
 

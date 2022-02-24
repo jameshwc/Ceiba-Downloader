@@ -21,7 +21,7 @@ login_url = 'https://ceiba.ntu.edu.tw/ChkSessLib.php'
 login_alternative_url = 'https://ceiba.ntu.edu.tw/index.php?error_check=OK'
 module_url = 'https://ceiba.ntu.edu.tw/modules/main.php'
 
-role_short = {Role.NTUer: 'student', Role.TA: 'ta',
+role_short = {Role.NTUer: 'student', Role.TA: 'ta', Role.Professor: 'teacher',
               Role.Outside_Student: 'student', Role.Outside_Teacher: 'outside_teacher'}
 courses_url: Callable[[Role], str] = lambda role: 'https://ceiba.ntu.edu.tw/{}/index.php?seme_op=all'.format(role_short[role])
 info_url: Callable[[Role], str] = lambda role: 'https://ceiba.ntu.edu.tw/{}/?op=personal'.format(role_short[role])
@@ -83,7 +83,7 @@ def admin_skip_href_texts(mod: str):
     elif mod == 'board':
         return board_skip_href_texts + ['新增看板', '修改', '刪除']
     elif mod == 'hw':
-        return ['匯出', '指派作業']
+        return ['匯出', '指派作業', '依個人']
     elif mod == 'vote':
         return ['張貼投票']
     else:
