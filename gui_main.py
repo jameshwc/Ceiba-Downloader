@@ -434,11 +434,16 @@ class MyApp(QMainWindow):
         courses_main_layout.addWidget(tabWidget, 0, 0)
         courses_main_layout.addWidget(self.check_all_courses_checkbox, 1, 0)
         self.courses_group_box.setLayout(courses_main_layout)
+        if self.ceiba.role.is_admin:
+            self.download_item_layout.removeWidget(self.only_download_homepage_checkbox)
+            self.download_item_layout.addWidget(self.download_admin_checkbox, 1, 1)
+            self.download_item_layout.addWidget(self.only_download_homepage_checkbox, 1, 2)
+
         self.options_and_download_groupbox.setHidden(False)
 
     def create_options_and_download_groupbox(self):
         self.options_and_download_groupbox = QGroupBox()
-        options_and_download_layout = QGridLayout()
+        self.options_and_download_layout = QGridLayout()
         self.download_button = QPushButton()
         self.download_button.clicked.connect(self.download)
 
@@ -485,14 +490,15 @@ class MyApp(QMainWindow):
             self.download_admin_checkbox.setDisabled(self.only_download_homepage_checkbox.isChecked())
 
         self.only_download_homepage_checkbox.clicked.connect(disable_download_item_menu_button)
-        download_item_layout = QGridLayout()
-        download_item_layout.addWidget(self.download_item_label, 0, 0)
-        download_item_layout.addWidget(self.download_item_menu_button, 0, 1)
-        download_item_layout.addWidget(self.check_all_download_item_checkbox, 0, 2)
-        download_item_layout.addWidget(self.download_admin_checkbox, 1, 1)
-        download_item_layout.addWidget(self.only_download_homepage_checkbox, 1, 2)
-        download_item_group_box = QGroupBox()
-        download_item_group_box.setLayout(download_item_layout)
+
+        self.download_item_layout = QGridLayout()
+        self.download_item_layout.addWidget(self.download_item_label, 0, 0)
+        self.download_item_layout.addWidget(self.download_item_menu_button, 0, 1)
+        self.download_item_layout.addWidget(self.check_all_download_item_checkbox, 0, 2)
+        self.download_item_layout.addWidget(self.only_download_homepage_checkbox, 0, 3)
+
+        self.download_item_group_box = QGroupBox()
+        self.download_item_group_box.setLayout(self.download_item_layout)
 
         self.filepath_label = QLabel()
         self.filepath_line_edit = QLineEdit()
@@ -507,14 +513,14 @@ class MyApp(QMainWindow):
         file_groupbox = QGroupBox()
         file_groupbox.setLayout(file_groupbox_layout)
 
-        download_item_group_box.setProperty("class", "no-padding")
-        options_and_download_layout.addWidget(download_item_group_box, 0, 0)
+        self.download_item_group_box.setProperty("class", "no-padding")
+        self.options_and_download_layout.addWidget(self.download_item_group_box, 0, 0)
         file_groupbox.setProperty("class", "no-padding")
-        options_and_download_layout.addWidget(file_groupbox, 1, 0)
-        options_and_download_layout.addWidget(self.download_button, 2, 0)
+        self.options_and_download_layout.addWidget(file_groupbox, 1, 0)
+        self.options_and_download_layout.addWidget(self.download_button, 2, 0)
 
         # self.options_and_download_groupbox.setProperty("class", "no-padding")
-        self.options_and_download_groupbox.setLayout(options_and_download_layout)
+        self.options_and_download_groupbox.setLayout(self.options_and_download_layout)
 
     def download(self):
         items = []
