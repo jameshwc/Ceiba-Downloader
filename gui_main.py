@@ -382,49 +382,23 @@ class MyApp(QMainWindow):
 
             if course.semester not in courses_by_semester_layouts:
                 layout = QGridLayout()
-                table = QTableWidget()
-                table.setColumnCount(4)
-                table.setHorizontalHeaderLabels(['點選', '課號', '班次', '課程名稱'])
-                table.verticalHeader().setVisible(False)
-                table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-                table.horizontalHeader().setSectionsClickable(True)
-                table.horizontalHeader().setSectionsMovable(False)
-                table.horizontalHeader().setHighlightSections(False)
-                table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
-                table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
-
-                table.horizontalHeader().setDefaultAlignment(Qt.AlignLeft | Qt.AlignCenter)
-
                 courses_by_semester_layouts[course.semester] = layout
-                courses_by_semester_table[course.semester] = table
 
             course_name = course.cname
             if self.language == 'en':
                 course_name = course.ename
+
             checkbox = QCheckBox("&" + course_name)
+            # if self.ceiba.role.is_admin:
+            #     checkbox = QCheckBox("&" + course_name + course.course_num + '(' + course.class_num + ')')
+            # else:
 
             self.courses_checkboxes.append(checkbox)
             courses_by_semester_layouts[course.semester].addWidget(checkbox)
-            table = courses_by_semester_table[course.semester]
-            table_row = table.rowCount()
-            table.insertRow(table_row)
-            table.setCellWidget(table_row, 0, checkbox)
-            for idx, item in enumerate([course.course_num, course.class_num, course_name]):
-                table.setItem(table_row, idx+1, QTableWidgetItem(item))
-
-            table.setRowCount(table_row+1)
 
         tabWidget = SemesterTab()
         for semester in courses_by_semester_layouts:
-            if not self.ceiba.role.is_admin:
-                tabWidget.addSemester(semester, courses_by_semester_layouts[semester])
-            else:
-                l = QVBoxLayout()
-                l.addWidget(courses_by_semester_table[semester])
-                temp_widget = QWidget()
-                temp_widget.setLayout(l)
-                tabWidget.addTab(temp_widget, "&" + semester)
+            tabWidget.addSemester(semester, courses_by_semester_layouts[semester])
 
         def click_all_courses_checkbox(state):
             for checkbox in self.courses_checkboxes:
