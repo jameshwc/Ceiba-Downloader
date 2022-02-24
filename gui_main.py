@@ -240,15 +240,18 @@ class MyApp(QMainWindow):
         self.password_edit.setEchoMode(QLineEdit.Password)
         self.password_edit.setProperty("class", "password")
 
-        self.login_user_menu = QComboBox(self)
+        self.role_label = QLabel("")
+        self.login_user_menu = QComboBox()
+        self.login_user_menu.setPlaceholderText(strings.qt_role_menu_placeholder)
+        self.login_user_menu.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         for role in Role:
             self.login_user_menu.addItem(strings.role(role))
-
         self.login_button = QPushButton()
         self.login_button.clicked.connect(self.login)
 
         self.username_edit.returnPressed.connect(self.login_button.click)
         self.password_edit.returnPressed.connect(self.login_button.click)
+
 
         self.method_toggle = PyToggle(width=80)
 
@@ -280,8 +283,9 @@ class MyApp(QMainWindow):
         self.login_layout.addWidget(self.username_edit, 1, 1, 1, 2)
         self.login_layout.addWidget(self.password_label, 2, 0)
         self.login_layout.addWidget(self.password_edit, 2, 1, 1, 2)
-        self.login_layout.addWidget(self.login_user_menu, 3, 0, 1, 1)
-        self.login_layout.addWidget(self.login_button, 3, 1, 1, 2)
+        self.login_layout.addWidget(self.role_label, 3, 0)
+        self.login_layout.addWidget(self.login_user_menu, 3, 1, 1, 2)
+        self.login_layout.addWidget(self.login_button, 4, 1, 1, 2)
         self.login_layout.setColumnStretch(0, 0)
         self.login_layout.setColumnStretch(1, 1)
         self.login_group_box.setLayout(self.login_layout)
@@ -331,14 +335,14 @@ class MyApp(QMainWindow):
         if self.method_toggle.isChecked():
             worker = Worker(self.ceiba.login, progress=True,
                     cookie_PHPSESSID=self.password_edit.text(),
-                    role=Role(self.login_user_menu.currentIndex())
+                    role=self.login_user_menu.currentIndex()
                 )
             self.progress_bar.setMaximum(1)
         else:
             worker = Worker(self.ceiba.login, progress=True,
                             username=self.username_edit.text(),
                             password=self.password_edit.text(),
-                            role=Role(self.login_user_menu.currentIndex())
+                            role=self.login_user_menu.currentIndex()
                         )
             self.progress_bar.setMaximum(2)
 
@@ -633,9 +637,29 @@ class MyApp(QMainWindow):
         else:
             self.has_checked_onstart = True
 
+    def set_lang(self, lang: str):
+        self.ceiba.set_lang(lang)
+        self.language = lang
+        for role in Role:
+            self.login_user_menu.setItemText(role.value, strings.role(role))
+        self.login_user_menu.setPlaceholderText(strings.qt_role_menu_placeholder)
+
+        for i in range(len(self.courses_checkboxes)):
+            course = self.courses[i]
+            course_name = course.cname if lang == 'zh-tw' else course.ename
+            if self.ceiba.role.is_admin:
+                self.courses_checkboxes[i].setText("&" + strings.course(course_name, course.course_num, course.class_num))
+            else:
+                self.courses_checkboxes[i].setText("&" + course_name)
+        if util.PAUSE:
+            self.pause_button.setText(strings.qt_resume_button)
+        else:
+            self.pause_button.setText(strings.qt_pause_button)
+
+        self.role_label.setText(strings.qt_role_label)
+
     def set_en(self):
-        self.ceiba.set_lang('en')
-        self.language = 'en'
+        self.set_lang('en')
         self.login_group_box.setTitle('User')
         self.username_label.setText('Username (Student ID): ')
         if not self.method_toggle.isChecked():
@@ -647,21 +671,10 @@ class MyApp(QMainWindow):
         self.login_method_right_label.setText('Cookies [?]')
         self.login_method_left_label.setToolTip('It\'s unsafe to log in via a third-party program! You should use cookies as your credential instead.')
         self.login_method_right_label.setToolTip('Log in Ceiba manually and you can view cookies using F12 in your browser. Please copy the content of PHPSESSID in your cookies.')
-        for role in Role:
-            self.login_user_menu.setItemText(role.value, strings.role(role))
-
         self.courses_group_box.setTitle('Courses')
         self.status_group_box.setTitle('Status')
         self.welcome_text = "Welcome, {} ({})!"
         self.welcome_label.setText(self.welcome_text.format(self.ceiba.student_name, self.ceiba.email))
-
-        for i in range(len(self.courses_checkboxes)):
-            course = self.courses[i]
-            if self.ceiba.role.is_admin:
-                self.courses_checkboxes[i].setText("&" + strings.course(course.ename, course.course_num, course.class_num))
-            else:
-                self.courses_checkboxes[i].setText("&" + course.ename)
-
         self.download_button.setText('Download')
         self.check_all_courses_checkbox.setText('Check All Courses')
         self.download_item_label.setText('Download Items: ')
@@ -680,20 +693,13 @@ class MyApp(QMainWindow):
             checkbox = action.defaultWidget()
             if checkbox.text()[1:] in util.ename_map:
                 checkbox.setText("&" + util.ename_map[checkbox.text()[1:]])
-
-        if util.PAUSE:
-            self.pause_button.setText(strings.qt_resume_button)
-        else:
-            self.pause_button.setText(strings.qt_pause_button)
         self.stop_button.setText('Stop Download')
         self.download_finish_msgbox_text = 'The download has completed!'
         self.download_finish_msgbox_open_dir_text = 'Open Ceiba directory'
         self.download_finish_msgbox_open_browser_text = 'Open Ceiba homepage'
 
-
     def set_zh_tw(self):
-        self.ceiba.set_lang('zh-tw')
-        self.language = 'zh-tw'
+        self.set_lang('zh-tw')
         self.login_group_box.setTitle('使用者')
         self.username_label.setText('帳號 (學號) :')
         if not self.method_toggle.isChecked():
@@ -705,20 +711,11 @@ class MyApp(QMainWindow):
         self.login_method_right_label.setText('cookies [?]')
         self.login_method_left_label.setToolTip('除非你信任本程式作者，否則不應該在計中網站以外的地方輸入自己的帳密！')
         self.login_method_right_label.setToolTip('透過手動登入 Ceiba 可以從瀏覽器的 F12 視窗看到 Cookies，請複製 PHPSESSID 的內容')
-        for role in Role:
-            self.login_user_menu.setItemText(role.value, strings.role(role))
 
         self.courses_group_box.setTitle('課程')
         self.status_group_box.setTitle('狀態')
         self.welcome_text = "{} ({})，歡迎你！"
         self.welcome_label.setText(self.welcome_text.format(self.ceiba.student_name, self.ceiba.email))
-
-        for i in range(len(self.courses_checkboxes)):
-            course = self.courses[i]
-            if self.ceiba.role.is_admin:
-                self.courses_checkboxes[i].setText("&" + strings.course(course.cname, course.course_num, course.class_num))
-            else:
-                self.courses_checkboxes[i].setText("&" + course.cname)
 
         self.download_button.setText('下載')
         self.check_all_courses_checkbox.setText('勾選所有課程')
@@ -737,10 +734,6 @@ class MyApp(QMainWindow):
             checkbox: QCheckBox = action.defaultWidget()
             if checkbox.text()[1:] in util.cname_map:
                 checkbox.setText("&" + util.cname_map[checkbox.text()[1:]])
-        if util.PAUSE:
-            self.pause_button.setText(strings.qt_resume_button)
-        else:
-            self.pause_button.setText(strings.qt_pause_button)
         self.stop_button.setText('停止下載')
         self.download_finish_msgbox_text = '下載完成！'
         self.download_finish_msgbox_open_dir_text = '打開檔案目錄'

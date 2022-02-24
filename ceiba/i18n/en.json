@@ -39,6 +39,7 @@
         "urlf": "url: {}",
         "url_duplicate": "duplicate url: skipping download - {}",
         "exception_invalid_login_parameters": "You must fill in the username/password or cookies!",
+        "exception_invalid_login_role": "Fail to log in! Please provide a login role (NTUer, Professor, etc.)!",
         "exception_invalid_credentials": "Fail to log in! Please check if you fill in correct username and password!",
         "exception_invalid_filepath": "The file path is incorrect! Please check if the path is empty or wrong!",
         "exception_null_ticket_content": "The content is empty! You must type something to submit issues!",
@@ -60,6 +61,8 @@
 
     "qt": {
         "pause_button": "Pause Download",
-        "resume_button": "Resume Download"
+        "resume_button": "Resume Download",
+        "role_label": "Role: ",
+        "role_menu_placeholder": "Please select your login role"
     }
 }

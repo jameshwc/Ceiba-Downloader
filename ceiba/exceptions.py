@@ -9,6 +9,9 @@ class InvalidCredentials(Exception):
     def __str__(self):
         return strings.exception_invalid_credentials
 
+class InvalidLoginRole(Exception):
+    def __str__(self):
+        return strings.exception_invalid_login_role
 
 class InvalidFilePath(Exception):
     def __str__(self):
