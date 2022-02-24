@@ -388,10 +388,10 @@ class MyApp(QMainWindow):
             if self.language == 'en':
                 course_name = course.ename
 
-            checkbox = QCheckBox("&" + course_name)
-            # if self.ceiba.role.is_admin:
-            #     checkbox = QCheckBox("&" + course_name + course.course_num + '(' + course.class_num + ')')
-            # else:
+            if self.ceiba.role.is_admin:
+                checkbox = QCheckBox("&" + strings.course.format(course_name, course.course_num, course.class_num))
+            else:
+                checkbox = QCheckBox("&" + course_name)
 
             self.courses_checkboxes.append(checkbox)
             courses_by_semester_layouts[course.semester].addWidget(checkbox)
@@ -654,7 +654,11 @@ class MyApp(QMainWindow):
         self.welcome_label.setText(self.welcome_text.format(self.ceiba.student_name, self.ceiba.email))
 
         for i in range(len(self.courses_checkboxes)):
-            self.courses_checkboxes[i].setText("&" + self.courses[i].ename)
+            course = self.courses[i]
+            if self.ceiba.role.is_admin:
+                self.courses_checkboxes[i].setText("&" + strings.course.format(course.ename, course.course_num, course.class_num))
+            else:
+                self.courses_checkboxes[i].setText("&" + course.ename)
 
         self.download_button.setText('Download')
         self.check_all_courses_checkbox.setText('Check All Courses')
@@ -708,7 +712,11 @@ class MyApp(QMainWindow):
         self.welcome_label.setText(self.welcome_text.format(self.ceiba.student_name, self.ceiba.email))
 
         for i in range(len(self.courses_checkboxes)):
-            self.courses_checkboxes[i].setText("&" + self.courses[i].cname)
+            course = self.courses[i]
+            if self.ceiba.role.is_admin:
+                self.courses_checkboxes[i].setText("&" + strings.course.format(course.cname, course.course_num, course.class_num))
+            else:
+                self.courses_checkboxes[i].setText("&" + course.cname)
 
         self.download_button.setText('下載')
         self.check_all_courses_checkbox.setText('勾選所有課程')
