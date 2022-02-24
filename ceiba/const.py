@@ -1,6 +1,7 @@
 from enum import Enum
 import json
 from pathlib import Path
+from typing import Dict
 
 class Role(Enum):
     NTUer = 0
@@ -27,7 +28,7 @@ class String:
         self.lang = 'zh-tw'
         self.available_langs = ['zh-tw', 'en']
 
-        self._data = {}
+        self._data: Dict[str, Dict[str, str]] = {}
 
         # self._qt_feedback = {}
         # self._qt_submit = {}
@@ -78,9 +79,10 @@ class String:
     def role(self, role: int) -> str:
         return self._data[f'role_{role}'][self.lang]
 
-    @property
-    def course(self) -> str:
-        return self._data['course'][self.lang]
+    def course(self, course_name: str, course_num: str, class_num: str) -> str:
+        if len(class_num) > 0:
+            return self._data['course'][self.lang].format(course_name, course_num, class_num)
+        return self._data['course_without_class'][self.lang].format(course_name, course_num)
 
     @property
     def cancel_on_object(self) -> str:
