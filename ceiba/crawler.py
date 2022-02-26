@@ -73,7 +73,7 @@ class Crawler():
         self.download_imgs(soup.find_all('img'))
 
         if self.module == 'board':
-            self.__handle_board(soup.find_all('caption'))  # special case for board
+            self.__handle_board(soup.find_all('caption'))
         elif self.module == 'bulletin':
             soup = self.__handle_bulletin(soup, response.url)
         elif self.module == 'hw':
