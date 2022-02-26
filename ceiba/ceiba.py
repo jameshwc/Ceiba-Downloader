@@ -177,7 +177,7 @@ class Ceiba():
         self.courses_dir = self.path / "courses"
         self.courses_dir.mkdir(parents=True, exist_ok=True)
 
-        self.download_ceiba_homepage(path, course_id_filter)
+        self.download_ceiba_homepage(path, course_id_filter, download_admin)
 
         logging.info(strings.start_downloading_courses)
         for course in self.courses:
@@ -204,7 +204,8 @@ class Ceiba():
 
     def download_ceiba_homepage(self,
                                 path: Union[Path,str],
-                                course_id_filter=None):
+                                course_id_filter=None,
+                                download_admin=False):
 
         self.path = self.__create_dir(path)
 
@@ -238,11 +239,13 @@ class Ceiba():
                     op = row.find('input', {'value': '管理'})
                     op.name = 'a'
                     op.string = '管理'
-                    op['href'] = "courses/" + self.course_dir_map[course_id] + "/admin/index.html"
                     for attr in ['class', 'name', 'onclick', 'type', 'value']:
                         del op[attr]
-                    valid_a_tag.add(op)
+                    if download_admin:
+                        op['href'] = "courses/" + self.course_dir_map[course_id] + "/admin/index.html"
+                        valid_a_tag.add(op)
                 valid_a_tag.add(course)
+
             except (IndexError, AttributeError) as e:
                 logging.error(e, exc_info=True)
                 logging.warning(strings.warning_partial_failure_on_homepage)
