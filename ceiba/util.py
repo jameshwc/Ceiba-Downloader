@@ -21,7 +21,7 @@ login_url = 'https://ceiba.ntu.edu.tw/ChkSessLib.php'
 login_alternative_url = 'https://ceiba.ntu.edu.tw/index.php?error_check=OK'
 module_url = 'https://ceiba.ntu.edu.tw/modules/main.php'
 
-role_short = {Role.NTUer: 'student', Role.TA: 'ta', Role.Professor: 'teacher',
+role_short = {Role.Student: 'student', Role.TA: 'ta', Role.Professor: 'teacher',
               Role.Outside_Student: 'student', Role.Outside_Teacher: 'outside_teacher'}
 courses_url: Callable[[Role], str] = lambda role: 'https://ceiba.ntu.edu.tw/{}/index.php?seme_op=all'.format(role_short[role])
 info_url: Callable[[Role], str] = lambda role: 'https://ceiba.ntu.edu.tw/{}/?op=personal'.format(role_short[role])
