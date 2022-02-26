@@ -83,7 +83,7 @@ def admin_skip_href_texts(mod: str):
     elif mod == 'board':
         return board_skip_href_texts + ['新增看板', '修改', '刪除']
     elif mod == 'hw':
-        return ['匯出', '指派作業', '依個人']
+        return ['匯出', '指派作業', '依個人', '批改作業']
     elif mod == 'vote':
         return ['張貼投票']
     else:
