@@ -4,14 +4,14 @@ from pathlib import Path
 from typing import Dict
 
 class Role(Enum):
-    NTUer = 0
+    Student = 0
     TA = 1
     Professor = 2
     Outside_Teacher = 3
     Outside_Student = 4
 
     def __str__(self):
-        return self.name.replace('_', ' ')
+        return self.name.lower()
 
     @property
     def is_admin(self) -> bool:
@@ -19,7 +19,7 @@ class Role(Enum):
 
     @property
     def is_sso_login(self) -> bool:  # Use username/password set up in Ceiba
-        return self == Role.NTUer or self == Role.Professor
+        return self == Role.Student or self == Role.Professor
 
 
 class String:

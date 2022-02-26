@@ -61,7 +61,7 @@ class Ceiba():
               password: Optional[str] = None,
               progress = None):
         '''
-        :param role: Integer. 0: NTUer, 1: TA, 2: Professor, 3: Outside NTU
+        :param role: Integer. 0: Student (NTU), 1: TA, 2: Professor, 3: Outside NTU
         '''
         try:
             self.role = Role(role)
@@ -172,15 +172,10 @@ class Ceiba():
                          modules_filter=None,
                          progress = None):
 
-        self.path = Path(path) / "-".join(["ceiba", self.id, datetime.today().strftime('%Y%m%d')])
-        self.courses_dir = self.path / "courses"
+        self.path = self.__create_dir(path)
 
-        try:
-            if type(path) == str and len(path) == 0:
-                raise FileNotFoundError
-            self.courses_dir.mkdir(parents=True, exist_ok=True)
-        except FileNotFoundError:
-            raise InvalidFilePath
+        self.courses_dir = self.path / "courses"
+        self.courses_dir.mkdir(parents=True, exist_ok=True)
 
         self.download_ceiba_homepage(path, course_id_filter)
 
@@ -211,14 +206,7 @@ class Ceiba():
                                 path: Union[Path,str],
                                 course_id_filter=None):
 
-        self.path = Path(path) / "-".join(["ceiba", self.id, datetime.today().strftime('%Y%m%d')])
-
-        try:
-            if type(path) == str and len(path) == 0:
-                raise FileNotFoundError
-            self.path.mkdir(parents=True, exist_ok=True)
-        except FileNotFoundError:
-            raise InvalidFilePath
+        self.path = self.__create_dir(path)
 
         logging.info(strings.start_downloading_homepage)
 
@@ -299,3 +287,13 @@ class Ceiba():
 
     def set_lang(self, lang: str):
         strings.set_lang(lang)
+
+    def __create_dir(self, path: Union[Path, str]) -> Path:
+        try:
+            if type(path) == str and len(path) == 0:
+                raise FileNotFoundError
+            path = Path(path) / "-".join(["ceiba", str(self.role), self.id, datetime.today().strftime('%Y%m%d')])
+            path.mkdir(parents=True, exist_ok=True)
+        except FileNotFoundError:
+            raise InvalidFilePath
+        return path
