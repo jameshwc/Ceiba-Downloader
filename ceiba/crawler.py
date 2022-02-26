@@ -73,11 +73,13 @@ class Crawler():
         self.download_imgs(soup.find_all('img'))
 
         if self.module == 'board':
-            self.__handle_board(soup.find_all('caption'))  # special case for board
+            self.__handle_board(soup.find_all('caption'))
         elif self.module == 'bulletin':
             soup = self.__handle_bulletin(soup, response.url)
         elif self.module == 'hw':
             soup = self.__handle_hw(soup, response.url)
+        elif self.module == 'share':
+            soup = self.__handle_share(soup)
 
         if self.is_admin:
             soup = self.remove_nav_and_footer(soup)
@@ -208,6 +210,12 @@ class Crawler():
                     del great_hw_button[attr]
             else:
                 continue
+        return soup
+
+    def __handle_share(self, soup: BeautifulSoup) -> BeautifulSoup:
+        # handle some encoding error (Some characters could not be decoded, and were replaced with REPLACEMENT CHARACTER.)
+        for a in soup.find_all('a'):
+            a['href'] = a['href'].replace('¤t_', '&')
         return soup
 
     def download_imgs(self, imgs: ResultSet):
