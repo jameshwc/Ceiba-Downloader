@@ -192,7 +192,7 @@ class Crawler():
         # handle some encoding error (Some characters could not be decoded, and were replaced with REPLACEMENT CHARACTER.)
         for a in soup.find_all('a'):
             a['href'] = a['href'].replace('¤t_', '&')
-        return
+        return soup
 
     def download_imgs(self, imgs: ResultSet):
         img: Tag
