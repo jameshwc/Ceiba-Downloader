@@ -69,6 +69,8 @@ class Crawler():
             soup = self.__handle_bulletin(soup, response.url)
         elif self.module == 'hw':
             soup = self.__handle_hw(soup, response.url)
+        elif self.module == 'share':
+            soup = self.__handle_share(soup)
 
         soup = self.crawl_hrefs(soup, response.url)
 
@@ -185,6 +187,12 @@ class Crawler():
             else:
                 continue
         return soup
+
+    def __handle_share(self, soup: BeautifulSoup) -> BeautifulSoup:
+        # handle some encoding error (Some characters could not be decoded, and were replaced with REPLACEMENT CHARACTER.)
+        for a in soup.find_all('a'):
+            a['href'] = a['href'].replace('¤t_', '&')
+        return
 
     def download_imgs(self, imgs: ResultSet):
         img: Tag
