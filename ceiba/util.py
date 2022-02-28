@@ -64,6 +64,23 @@ student_skip_href_texts = default_skip_href_texts + ['上頁', '下頁']
 admin_skip_mod = ['calendar', 'user', 'theme', 'grade', 'mail']
 admin_mod_num = len(admin_cname_map) - len(admin_skip_mod)
 
+ticket_url = 'https://xk4axzhtgc.execute-api.us-east-2.amazonaws.com/Practicing/message'
+
+def homepage_url_to_role(url: str, sso=False) -> Role:
+    m = re.match('https:\/\/ceiba\.ntu\.edu\.tw\/([A-Za-z].*)\/', url)
+    if m and m.group(1):
+        if m.group(1) == 'student':
+            if sso:
+                return Role.Student
+            return Role.Outside_Student
+        elif m.group(1) == 'teacher':
+            return Role.Professor
+        elif m.group(1) == 'ta':
+            return Role.TA
+        elif m.group(1) == 'outside_teacher':
+            return Role.Outside_Teacher
+    return None
+
 def skip_href_texts(mod: str, admin: bool):
     if admin:
         return admin_skip_href_texts(mod)
@@ -89,7 +106,6 @@ def admin_skip_href_texts(mod: str):
     else:
         return []
 
-ticket_url = 'https://xk4axzhtgc.execute-api.us-east-2.amazonaws.com/Practicing/message'
 
 def get_valid_filename(name: str) -> str:
     s = str(name).strip().replace(' ', '_').replace('/', '-')

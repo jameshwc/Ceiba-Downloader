@@ -17,11 +17,6 @@ class Role(Enum):
     def is_admin(self) -> bool:
         return self == Role.TA or self == Role.Professor or self == Role.Outside_Teacher
 
-    @property
-    def is_sso_login(self) -> bool:  # Use username/password set up in Ceiba
-        return self == Role.Student or self == Role.Professor
-
-
 class String:
 
     def __init__(self):
@@ -83,6 +78,14 @@ class String:
         if len(class_num) > 0:
             return self._data['course'][self.lang].format(course_name, course_num, class_num)
         return self._data['course_without_class'][self.lang].format(course_name, course_num)
+
+    @property
+    def sso_login(self) -> str:
+        return self._data['sso_login'][self.lang]
+
+    @property
+    def alternative_login(self) -> str:
+        return self._data['alternative_login'][self.lang]
 
     @property
     def cancel_on_object(self) -> str:
@@ -281,11 +284,7 @@ class String:
         return self._data['qt_resume_button'][self.lang]
 
     @property
-    def qt_role_label(self) -> str:
-        return self._data['qt_role_label'][self.lang]
-
-    @property
-    def qt_role_menu_placeholder(self) -> str:
-        return self._data['qt_role_menu_placeholder'][self.lang]
+    def qt_login_method_label(self) -> str:
+        return self._data['qt_login_method_label'][self.lang]
 
 strings = String()

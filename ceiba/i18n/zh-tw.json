@@ -10,6 +10,8 @@
     "info": {
         "course": "{} {} ({} 班)",
         "course_without_class": "{} {}",
+        "sso_login": "計中帳號登入",
+        "alternative_login": "助教、校外師生、旁聽生登入",
         "cancel_on_object": "{} 的 {} 功能並未開啟！取消下載 {} 檔案。",
         "wrong_with_object": "下載 {} 時遇到問題！取消下載 {} 的 {} 檔案",
         "wrong_with_downloading_url": "下載 {} 時遇到問題！網址為 {}",
@@ -62,7 +64,6 @@
     "qt": {
         "pause_button": "暫停下載",
         "resume_button": "繼續下載",
-        "role_label": "身分：",
-        "role_menu_placeholder": "請選擇您的身分"
+        "login_method_label": "登入方式："
     }
 }

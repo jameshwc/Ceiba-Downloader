@@ -48,30 +48,32 @@ class Ceiba():
         if any(x in resp.content.decode('utf-8') for x in ['登入失敗', '更改密碼']):
             raise InvalidCredentials
         resp = util.post(self.sess, resp.url, data=payload)  # idk why it needs to post twice
+        self.role = util.homepage_url_to_role(resp.url, sso=True)
 
     def login_alternative_user(self, username: str, password: str):
         payload = {'loginid': username, 'password': password, 'op': 'login'}
         resp = util.post(self.sess, util.login_alternative_url, data=payload)  # will get resp that redirect to /ChkSessLib.php
         if '登出' not in resp.content.decode('utf-8'):
             raise InvalidCredentials
+        self.role = util.homepage_url_to_role(resp.url)
 
-    def login(self, role: int = 0,
+    def login(self, sso_login=True,
               cookie_PHPSESSID: Optional[str] = None,
               username: Optional[str] = None,
               password: Optional[str] = None,
               progress = None):
-        '''
-        :param role: Integer. 0: Student (NTU), 1: TA, 2: Professor, 3: Outside NTU
-        '''
-        try:
-            self.role = Role(role)
-        except ValueError:
-            raise InvalidLoginRole
 
         if cookie_PHPSESSID:
             self.sess.cookies.set("PHPSESSID", cookie_PHPSESSID)
+            if sso_login:
+                resp = self.sess.get(util.login_url)
+            else:
+                resp = self.sess.get(util.login_alternative_url)
+            self.role = util.homepage_url_to_role(resp.url, sso=sso_login)
+            if self.role == None:
+                raise InvalidLoginParameters  # TODO: make the exception match for the cause
         elif username and password:
-            if self.role.is_sso_login:
+            if sso_login:
                 self.login_user(username, password)
             else:
                 self.login_alternative_user(username, password)

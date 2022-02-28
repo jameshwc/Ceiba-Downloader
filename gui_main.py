@@ -244,10 +244,9 @@ class MyApp(QMainWindow):
 
         self.role_label = QLabel("")
         self.login_user_menu = QComboBox()
-        self.login_user_menu.setPlaceholderText(strings.qt_role_menu_placeholder)
         self.login_user_menu.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
-        for role in Role:
-            self.login_user_menu.addItem(strings.role(role))
+        self.login_user_menu.addItem(strings.sso_login)
+        self.login_user_menu.addItem(strings.alternative_login)
         self.login_button = QPushButton()
         self.login_button.clicked.connect(self.login)
 
@@ -337,14 +336,14 @@ class MyApp(QMainWindow):
         if self.method_toggle.isChecked():
             worker = Worker(self.ceiba.login, progress=True,
                     cookie_PHPSESSID=self.password_edit.text(),
-                    role=self.login_user_menu.currentIndex()
+                    sso_login=(self.login_user_menu.currentText() == strings.sso_login)
                 )
             self.progress_bar.setMaximum(1)
         else:
             worker = Worker(self.ceiba.login, progress=True,
                             username=self.username_edit.text(),
                             password=self.password_edit.text(),
-                            role=self.login_user_menu.currentIndex()
+                            sso_login=(self.login_user_menu.currentText() == strings.sso_login)
                         )
             self.progress_bar.setMaximum(2)
 
@@ -642,9 +641,8 @@ class MyApp(QMainWindow):
     def set_lang(self, lang: str):
         self.ceiba.set_lang(lang)
         self.language = lang
-        for role in Role:
-            self.login_user_menu.setItemText(role.value, strings.role(role))
-        self.login_user_menu.setPlaceholderText(strings.qt_role_menu_placeholder)
+        self.login_user_menu.setItemText(0, strings.sso_login)
+        self.login_user_menu.setItemText(1, strings.alternative_login)
 
         for i in range(len(self.courses_checkboxes)):
             course = self.courses[i]
@@ -658,7 +656,7 @@ class MyApp(QMainWindow):
         else:
             self.pause_button.setText(strings.qt_pause_button)
 
-        self.role_label.setText(strings.qt_role_label)
+        self.role_label.setText(strings.qt_login_method_label)
 
     def set_en(self):
         self.set_lang('en')
@@ -709,7 +707,7 @@ class MyApp(QMainWindow):
         self.password_label_text = '密碼 :'
 
         self.login_button.setText('登入')
-        self.login_method_left_label.setText('登入方式：帳號 / 密碼 [?]')
+        self.login_method_left_label.setText('認證方式：帳號 / 密碼 [?]')
         self.login_method_right_label.setText('cookies [?]')
         self.login_method_left_label.setToolTip('除非你信任本程式作者，否則不應該在計中網站以外的地方輸入自己的帳密！')
         self.login_method_right_label.setToolTip('透過手動登入 Ceiba 可以從瀏覽器的 F12 視窗看到 Cookies，請複製 PHPSESSID 的內容')
