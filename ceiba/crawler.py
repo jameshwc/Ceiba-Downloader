@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import Dict, Set, List
+from typing import Dict, Set, List, Tuple
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -9,9 +9,8 @@ from bs4 import BeautifulSoup
 from bs4.element import ResultSet, Tag
 
 from . import util
-from .exceptions import NotFound
-from .strings import strings
-
+from .exceptions import NotFound, StopDownload
+from .const import strings
 
 class Crawler():
 
@@ -20,16 +19,25 @@ class Crawler():
 
     # Dicuss: should we move css/img to root folder instead of download them every time in each course?
 
+    @classmethod
+    def reset(cls):
+        cls.crawled_files_path.clear()
+        cls.crawled_urls = {}
+
     def __init__(self,
                  session: requests.Session,
                  url: str,
                  path: Path,
+                 is_admin=False,
+                 course_name: str = "",
                  module: str = "",
                  filename: str = "",
                  text: str = ""):
         self.session = session
         self.url = url
         self.path = path
+        self.is_admin = is_admin
+        self.course_name = course_name
         self.module = module
         self.filename = util.get_valid_filename(filename)
         self.text = text
@@ -40,7 +48,6 @@ class Crawler():
         if self.url in Crawler.crawled_urls:
             # See issue #11 [https://github.com/jameshwc/Ceiba-Downloader/issues/11]
             if util.is_relative_to(Crawler.crawled_urls[self.url], self.path):
-                logging.debug(strings.url_duplicate.format(self.url))
                 return Crawler.crawled_urls[self.url]
 
         response = util.get(self.session, self.url)
@@ -49,13 +56,15 @@ class Crawler():
             raise NotFound(self.text, response.url)
 
         if self.module != "grade" and len(self.text.strip()) > 0:  # grade module has many 'show' and 'hide' pages to download
-            logging.info(strings.crawler_download_info.format(self.text))
+            module_name = util.full_cname_map[self.module] if strings.lang == 'zh-tw' else self.module
+            logging.info(strings.crawler_download_info.format(self.course_name, module_name, self.text))
+
 
         if 'text/html' not in response.headers['content-type']:  # files (e.g. pdf, docs)
-            return self.__save_files(response.content)
+            return self._save_files(response.content)
 
         self.filename += ".html"
-        filepath = self.__get_uniq_filepath(self.path.joinpath(self.filename))
+        filepath = self._get_uniq_filepath(self.path.joinpath(self.filename))
         Crawler.crawled_files_path.add(filepath)
         Crawler.crawled_urls[self.url] = filepath
 
@@ -64,7 +73,7 @@ class Crawler():
         self.download_imgs(soup.find_all('img'))
 
         if self.module == 'board':
-            self.__handle_board(soup.find_all('caption'))  # special case for board
+            self.__handle_board(soup.find_all('caption'))
         elif self.module == 'bulletin':
             soup = self.__handle_bulletin(soup, response.url)
         elif self.module == 'hw':
@@ -72,6 +81,9 @@ class Crawler():
         elif self.module == 'share':
             soup = self.__handle_share(soup)
 
+        if self.is_admin:
+            soup = self.remove_nav_and_footer(soup)
+            soup = self.parse_frame(soup)
         soup = self.crawl_hrefs(soup, response.url)
 
         for op in soup.find_all('option'):
@@ -101,44 +113,56 @@ class Crawler():
 
     def crawl_hrefs(self, soup: BeautifulSoup, resp_url: str) -> BeautifulSoup:
 
-        skip_href_texts = util.default_skip_href_texts
-        if self.module == 'board':
-            skip_href_texts = util.board_skip_href_texts
-        elif self.module == 'student':
-            skip_href_texts = util.student_skip_href_texts
+        skip_href_texts = util.skip_href_texts(self.module, self.is_admin)
 
-        hrefs = soup.find_all('a')
+        if self.is_admin:
+            hrefs = soup.find('div', {'id': 'section'}).find_all('a')
+        else:
+            hrefs = soup.find_all('a')
+
         a: Tag
         for a in hrefs:
-            if a.text in skip_href_texts:
+            util.check_pause_and_stop()
+            if a.text in skip_href_texts or \
+                (self.module == 'ftp' and a.text.endswith('.htm')):
                 a.replaceWithChildren()
                 continue
             url = urljoin(resp_url, a.get('href'))
-            if not url.startswith('http') or urlparse(url).netloc != 'ceiba.ntu.edu.tw' or len(a.text) == 0:
+            if not url.startswith('http') or \
+               urlparse(url).netloc != 'ceiba.ntu.edu.tw' or \
+               urlparse(url).path == '' or \
+               (len(a.text) == 0 and (self.module != 'vote' or a.get('href') != '#')):
                 continue
             filename = a.text
             text = a.text
+            is_admin = self.is_admin
 
             if self.module == 'vote' and a.get('href') == "#" and a.get('onclick'):
                 m = re.search(r"window\.open\(\'(.*?)\'.*", a.get('onclick'))
                 if m:
                     url = urljoin(resp_url, m.group(1))
                     del a['onclick']
-                filename = a.parent.parent.find_all('td')[1].text.strip()
+                if self.is_admin:
+                    filename = a.parent.parent.parent.find_all('td')[0].text.strip() + "_result"
+                else:
+                    filename = a.parent.parent.find_all('td')[1].text.strip()
                 text = filename
+                is_admin = False
 
             crawler_path = self.path
             if self._is_board and a.text in self._board_dir:
                 crawler_path = self._board_dir[a.text]
             try:
-                filename = Crawler(self.session, url, crawler_path, self.module, filename, text).crawl()
+                filename = Crawler(self.session, url, crawler_path, is_admin, self.course_name, self.module, filename, text).crawl()
+            except StopDownload as e:
+                raise e
             except NotFound as e:
                 logging.warning(e)
                 a.string = a.text + " [404 not found]"
                 a['href'] = url
                 # a.replaceWithChildren()  # discuss: when 404 happens, should it link to original url?
             except Exception as e:
-                logging.warning(strings.crawler_download_fail.format(text, url), exc_info=True)
+                logging.error(strings.crawler_download_fail.format(text, url), exc_info=True)
                 a.string = a.text + " [ERROR]"
             else:
                 a['href'] = util.relative_path(self.path, filename)
@@ -217,19 +241,50 @@ class Crawler():
             css['href'] = 'static/' + filename
             static_dir = self.path / 'static'
             static_dir.mkdir(exist_ok=True)
-            Crawler(self.session, url, static_dir, self.module, filename,
-                    css['href']).crawl_css_and_resources()
+            Crawler(self.session, url, static_dir, self.is_admin, filename=filename, text=css['href']).crawl_css_and_resources()
 
-    def __save_files(self, content: bytes) -> Path:
+
+    def parse_frame(self, soup: BeautifulSoup) -> BeautifulSoup:
+        nav = soup.find('div', {"id": "majornav"})
+        try:
+            a: Tag
+            for a in nav.find_all('a'):
+                if a.get_text() == '主功能表':
+                    a['href'] = "../index.html"
+                else:
+                    module = util.admin_ename_map[a.get_text()]
+                    if module in util.admin_skip_mod:
+                        a.parent.parent.extract()
+                        # a.extract()
+                    else:
+                        a['href'] = "../" + module + "/" + module + ".html"
+        except AttributeError as e:
+            logging.error(e, exc_info=True)
+        return soup
+
+    def remove_nav_and_footer(self, soup: BeautifulSoup) -> BeautifulSoup:
+        for a in soup.find('ul', {"id": "nav-top"}).find_all('a'):
+            a.extract()
+
+        for a in soup.find('div', {'id': 'footer'}).find_all('a'):
+            a.extract()
+
+        courses_list_a_tag = soup.find('li', {'id': 'clist'}).find('a')
+        href_path = Path(courses_list_a_tag['href']).parent / '../../index.html'
+        courses_list_a_tag['href'] = href_path.as_posix()
+        soup.find('li', {'id': 'uinfo'}).extract()  # TODO: keep info page
+        return soup
+
+    def _save_files(self, content: bytes) -> Path:
         files_dir = self.path / "files"
         files_dir.mkdir(exist_ok=True)
-        filepath = self.__get_uniq_filepath(files_dir.joinpath(self.filename))
+        filepath = self._get_uniq_filepath(files_dir.joinpath(self.filename))
         filepath.write_bytes(content)
         Crawler.crawled_files_path.add(filepath)
         Crawler.crawled_urls[self.url] = filepath
         return filepath
 
-    def __get_uniq_filepath(self, path: Path):
+    def _get_uniq_filepath(self, path: Path):
         if path not in Crawler.crawled_files_path:
             return path
 

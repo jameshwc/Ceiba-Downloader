@@ -1,4 +1,4 @@
-from .strings import strings
+from .const import strings
 
 class InvalidLoginParameters(Exception):
     def __str__(self):
@@ -9,6 +9,9 @@ class InvalidCredentials(Exception):
     def __str__(self):
         return strings.exception_invalid_credentials
 
+class InvalidLoginRole(Exception):
+    def __str__(self):
+        return strings.exception_invalid_login_role
 
 class InvalidFilePath(Exception):
     def __str__(self):
@@ -21,14 +24,14 @@ class NullTicketContent(Exception):
 class SendTicketError(Exception):
     def __init__(self, content):
         self.content = content
-    
+
     def __str__(self):
         return strings.exception_send_ticket_error.format(self.content)
 
 class CheckForUpdatesError(Exception):
     def __str__(self):
         return strings.exception_check_for_updates
-    
+
 class NotFound(Exception):
     def __init__(self, text, url):
         super().__init__()
@@ -36,11 +39,15 @@ class NotFound(Exception):
         self.url = url
 
     def __str__(self):
-        return strings.exception_http_not_found_error.format(self.text, self.url) 
+        return strings.exception_http_not_found_error.format(self.text, self.url)
 
 class CrawlerConnectionError(Exception):
     def __init__(self, url):
         self.url = url
-        
+
     def __str__(self):
         return strings.exception_crawler_connection_error.format(self.url)
+
+class StopDownload(Exception):
+    def __str__(self):
+        return strings.stop_download
