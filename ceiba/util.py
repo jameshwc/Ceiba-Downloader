@@ -58,7 +58,7 @@ default_skip_href_texts = ['友善列印', '分頁顯示']
 board_skip_href_texts = default_skip_href_texts + [
                 '看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄',
                 ' 新增主題', '引用', ' 回覆', '分頁顯示', '上個主題', '下個主題',
-                '修改', ' 我要評分', ' 我要推薦']
+                '修改', '上一頁', '下一頁', ' 我要評分', ' 我要推薦']
 student_skip_href_texts = default_skip_href_texts + ['上頁', '下頁']
 
 admin_skip_mod = ['calendar', 'user', 'theme', 'grade', 'mail']
