@@ -3,6 +3,8 @@ import logging
 from operator import truediv
 import re
 import time
+import sys
+import os
 
 from requests import Session, Response
 from typing import Callable
@@ -79,6 +81,19 @@ def homepage_url_to_role(url: str, sso=False) -> Role:
             return Role.TA
         elif m.group(1) == 'outside_teacher':
             return Role.Outside_Teacher
+    return None
+
+def code_to_role(code: str) -> Role:
+    if code == 'u':
+        return Role.Student
+    elif code == 'a':
+        return Role.TA
+    elif code == 't':
+        return Role.Professor
+    elif code == 'p':
+        return Role.Outside_Student
+    elif code == 'h':
+        return Role.Outside_Teacher
     return None
 
 def skip_href_texts(mod: str, admin: bool):
@@ -188,3 +203,12 @@ def check_pause_and_stop():
             PAUSE = False
             raise StopDownload
         time.sleep(1)
+
+def open_path(path):
+    if sys.platform == "win32":
+        os.startfile(path)
+    else:
+        opener = "open" if sys.platform == "darwin" else "xdg-open"
+        import subprocess
+
+        subprocess.call([opener, path])

@@ -25,6 +25,7 @@ from ceiba.ceiba import Ceiba
 from ceiba.course import Course
 from ceiba.const import Role, strings
 from ceiba.exceptions import StopDownload
+from sso import SSO_SERVER_ADDR, SSO_SERVER_PORT, SSO_SERVER_URL, SSOServer
 from qt_custom_widget import PyLogOutput, PyToggle
 
 DIRNAME = os.path.dirname(__file__) or '.'
@@ -69,6 +70,7 @@ class Worker(QRunnable):
             self.signals.success.emit()
         finally:
             self.signals.finished.emit()
+
 
 class TicketSubmit(QMainWindow):
     def __init__(self, ceiba: Ceiba, thread_pool: QThreadPool, parent=None):
@@ -242,43 +244,33 @@ class MyApp(QMainWindow):
         self.password_edit.setEchoMode(QLineEdit.Password)
         self.password_edit.setProperty("class", "password")
 
+        self.username_label.setHidden(True)
+        self.password_label.setHidden(True)
+        self.username_edit.setHidden(True)
+        self.password_edit.setHidden(True)
+
         self.role_label = QLabel("")
         self.login_user_menu = QComboBox()
         self.login_user_menu.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.login_user_menu.addItem(strings.sso_login)
         self.login_user_menu.addItem(strings.alternative_login)
+
+        def change_login_method(value):
+            self.username_label.setHidden(value == 0)
+            self.username_edit.setHidden(value == 0)
+            self.password_label.setHidden(value == 0)
+            self.password_edit.setHidden(value == 0)
+        self.login_user_menu.currentIndexChanged.connect(change_login_method)
         self.login_button = QPushButton()
         self.login_button.clicked.connect(self.login)
 
         self.username_edit.returnPressed.connect(self.login_button.click)
         self.password_edit.returnPressed.connect(self.login_button.click)
 
-
-        self.method_toggle = PyToggle(width=80)
-
-        def switch_method():
-            self.username_label.setHidden(self.method_toggle.isChecked())
-            self.username_edit.setHidden(self.method_toggle.isChecked())
-            if self.method_toggle.isChecked():
-                self.password_label.setText("Cookie [PHPSESSID]:")
-            else:
-                self.password_label.setText(self.password_label_text)
-
-        self.method_toggle.clicked.connect(switch_method)
-
-        self.login_method_left_label = QLabel()
-        self.login_method_right_label = QLabel()
-        self.login_method_left_label.setProperty('class', 'hover')
-        self.login_method_right_label.setProperty('class', 'hover')
-
         self.welcome_label = QLabel()
         self.welcome_label.setProperty('class', 'welcome')
 
         self.login_layout = QGridLayout()
-
-        self.login_layout.addWidget(self.login_method_left_label, 0, 0, 1, 1)
-        self.login_layout.addWidget(self.method_toggle, 0, 1, 1, 1)
-        self.login_layout.addWidget(self.login_method_right_label, 0, 2, 1, 1)
 
         self.login_layout.addWidget(self.username_label, 1, 0)
         self.login_layout.addWidget(self.username_edit, 1, 1, 1, 2)
@@ -311,6 +303,7 @@ class MyApp(QMainWindow):
         )
         logging.getLogger().addHandler(self.log_output)
         logging.getLogger("urllib3").propagate = False
+        logging.getLogger("werkzeug").propagate = False
         logging.getLogger().setLevel(logging.INFO)
         # logging.getLogger().setLevel(logging.DEBUG)
         sys.excepthook = exception_handler
@@ -333,33 +326,37 @@ class MyApp(QMainWindow):
         self.status_group_box.setLayout(self.status_layout)
 
     def login(self):
-        if self.method_toggle.isChecked():
-            worker = Worker(self.ceiba.login, progress=True,
-                    cookie_PHPSESSID=self.password_edit.text(),
-                    sso_login=(self.login_user_menu.currentText() == strings.sso_login)
-                )
-            self.progress_bar.setMaximum(1)
-        else:
+        if self.login_user_menu.currentText() == strings.alternative_login:
             worker = Worker(self.ceiba.login, progress=True,
                             username=self.username_edit.text(),
                             password=self.password_edit.text(),
-                            sso_login=(self.login_user_menu.currentText() == strings.sso_login)
+                            sso_login=False,
                         )
             self.progress_bar.setMaximum(2)
 
-        def fail_handler():
-            self.login_button.setEnabled(True)
-            self.password_edit.clear()
-            self.progress_bar.setValue(0)
+            def fail_handler():
+                self.login_button.setEnabled(True)
+                self.password_edit.clear()
+                self.progress_bar.setValue(0)
 
-        worker.signals.failed.connect(fail_handler)
-        worker.signals.success.connect(self.after_login_successfully)
-        worker.signals.progress.connect(self.update_progressbar)
-        self.thread_pool.start(worker)
-        self.login_button.setDisabled(True)
+            worker.signals.failed.connect(fail_handler)
+            worker.signals.success.connect(self.after_login_successfully)
+            worker.signals.progress.connect(self.update_progressbar)
+            self.thread_pool.start(worker)
+            self.login_button.setDisabled(True)
+
+        else:
+            def after_login_sso_successfully():
+                worker = Worker(self.sso_server.shutdown)
+                self.thread_pool.start(worker)
+                self.after_login_successfully()
+            self.sso_server = SSOServer(self.ceiba)
+            self.sso_server.signals.finished.connect(after_login_sso_successfully)
+            self.thread_pool.start(self.sso_server)
+            self.login_button.setDisabled(True)
+            util.open_path(SSO_SERVER_URL)
 
     def after_login_successfully(self):
-
         self.courses_group_box.setVisible(True)
         self.update_progressbar(0)  # busy indicator
         for i in reversed(range(self.login_layout.count())):
@@ -561,14 +558,6 @@ class MyApp(QMainWindow):
         self.progress_bar.reset()
 
     def after_download_successfully(self):
-        def open_path(path):
-            if sys.platform == "win32":
-                os.startfile(path)
-            else:
-                opener = "open" if sys.platform == "darwin" else "xdg-open"
-                import subprocess
-
-                subprocess.call([opener, path])
 
         self.download_finish_msgbox = QMessageBox(self)
         self.download_finish_msgbox.setWindowTitle(TITLE)
@@ -578,9 +567,9 @@ class MyApp(QMainWindow):
         self.download_finish_msgbox.exec()
         role = self.download_finish_msgbox.buttonRole(self.download_finish_msgbox.clickedButton())
         if role == self.download_finish_msgbox.ActionRole:  # open index.html
-            open_path(Path(self.ceiba.path, "index.html"))
+            util.open_path(Path(self.ceiba.path, "index.html"))
         elif role == self.download_finish_msgbox.YesRole:  # open dir
-            open_path(Path(self.ceiba.path))
+            util.open_path(Path(self.ceiba.path))
 
     def pause(self):
         is_pause = util.pause()
@@ -662,15 +651,9 @@ class MyApp(QMainWindow):
         self.set_lang('en')
         self.login_group_box.setTitle('User')
         self.username_label.setText('Username (Student ID): ')
-        if not self.method_toggle.isChecked():
-            self.password_label.setText('Password: ')
-        self.password_label_text = 'Password: '
+        self.password_label.setText('Password: ')
 
         self.login_button.setText('Log in')
-        self.login_method_left_label.setText('Username/Password [?]')
-        self.login_method_right_label.setText('Cookies [?]')
-        self.login_method_left_label.setToolTip('It\'s unsafe to log in via a third-party program! You should use cookies as your credential instead.')
-        self.login_method_right_label.setToolTip('Log in Ceiba manually and you can view cookies using F12 in your browser. Please copy the content of PHPSESSID in your cookies.')
         self.courses_group_box.setTitle('Courses')
         self.status_group_box.setTitle('Status')
         self.welcome_text = "Welcome, {} ({})!"
@@ -702,15 +685,9 @@ class MyApp(QMainWindow):
         self.set_lang('zh-tw')
         self.login_group_box.setTitle('使用者')
         self.username_label.setText('帳號 (學號) :')
-        if not self.method_toggle.isChecked():
-            self.password_label.setText('密碼 :')
-        self.password_label_text = '密碼 :'
+        self.password_label.setText('密碼 :')
 
         self.login_button.setText('登入')
-        self.login_method_left_label.setText('認證方式：帳號 / 密碼 [?]')
-        self.login_method_right_label.setText('cookies [?]')
-        self.login_method_left_label.setToolTip('除非你信任本程式作者，否則不應該在計中網站以外的地方輸入自己的帳密！')
-        self.login_method_right_label.setToolTip('透過手動登入 Ceiba 可以從瀏覽器的 F12 視窗看到 Cookies，請複製 PHPSESSID 的內容')
 
         self.courses_group_box.setTitle('課程')
         self.status_group_box.setTitle('狀態')
