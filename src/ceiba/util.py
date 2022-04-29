@@ -9,7 +9,7 @@ from typing import Callable
 from pathlib import Path
 from os.path import relpath
 
-from .const import strings, Role
+from .const import strings, Role, cname_map
 from .exceptions import CrawlerConnectionError, StopDownload
 
 CONNECT_RETRY_MAX = 10
@@ -37,12 +37,7 @@ ta_admin_url = 'https://ceiba.ntu.edu.tw/course_ta_adm/?csno='
 admin_url = 'https://ceiba.ntu.edu.tw/course_admin/?csno='
 skip_courses_list = ['中文系大學國文網站']
 
-cname_map = {
-    'bulletin': '公佈欄', 'syllabus': '課程大綱', 'hw': '作業',
-    'info': '課程資訊', 'personal': '教師資訊', 'grade': '學習成績',
-    'board': '討論看板', 'calendar': '課程行事曆', 'share': '資源分享',
-    'vote': '投票區', 'student': '修課學生'}
-ename_map = {v: k for k, v in cname_map.items()}
+
 
 admin_cname_map = {
     'ftp': '檔案上傳', 'user': '使用者', 'theme': '主題首頁',
