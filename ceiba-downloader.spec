@@ -37,7 +37,7 @@ exe = EXE(pyz,
           target_arch=None,
           codesign_identity=None,
           entitlements_file=None,
-          icon='resources/ceiba.ico')
+          icon='src/resources/ceiba.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
@@ -48,5 +48,5 @@ coll = COLLECT(exe,
                name='ceiba-downloader')
 app = BUNDLE(coll,
        name='ceiba-downloader.app',
-       icon='resources/ceiba.ico',
+       icon='src/resources/ceiba.ico',
        bundle_identifier=None)
