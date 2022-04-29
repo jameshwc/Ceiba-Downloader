@@ -55,6 +55,10 @@ jobs:
       - name: Install PyInstaller
         run: pip3 install pyinstaller
 
+      - name: Install PIL MacOS missing
+        run: pip3 install Pillow
+        if: ${{ matrix.os == 'macos-latest' }}
+
       - name: Package Application
         run: pyinstaller ceiba-downloader.spec
 

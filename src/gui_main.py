@@ -313,7 +313,7 @@ class MyApp(QMainWindow):
         logging.getLogger("urllib3").propagate = False
         logging.getLogger().setLevel(logging.INFO)
         # logging.getLogger().setLevel(logging.DEBUG)
-        # sys.excepthook = exception_handler
+        sys.excepthook = exception_handler
         self.pause_button = QPushButton()
         self.pause_button.clicked.connect(self.pause)
         self.pause_button.setDisabled(True)
@@ -746,8 +746,8 @@ if __name__ == "__main__":
     app = QApplication([])
 
     window = MyApp()
-    custom_qss_path = DIRNAME / Path("../resources/custom.qss")
-    font_path = DIRNAME / Path("../resources/GenSenRounded-M.ttc")
+    custom_qss_path = DIRNAME / Path("resources/custom.qss")
+    font_path = DIRNAME / Path("resources/GenSenRounded-M.ttc")
 
     font_id = QFontDatabase.addApplicationFont(str(font_path))
     font_name = QFontDatabase.applicationFontFamilies(font_id)[0]
