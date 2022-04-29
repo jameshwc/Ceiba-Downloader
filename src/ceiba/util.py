@@ -3,13 +3,14 @@ import logging
 from operator import truediv
 import re
 import time
-
+import os
 from requests import Session, Response
 from typing import Callable
-from .const import strings, Role
-from .exceptions import CrawlerConnectionError, StopDownload
 from pathlib import Path
 from os.path import relpath
+
+from .const import strings, Role
+from .exceptions import CrawlerConnectionError, StopDownload
 
 CONNECT_RETRY_MAX = 10
 REQUESTS_TIMEOUT = 300

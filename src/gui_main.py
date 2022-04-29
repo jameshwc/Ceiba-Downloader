@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox,
                                QTableWidget, QTableWidgetItem, QHeaderView)
 from qt_material import apply_stylesheet
 
+DIRNAME = os.path.dirname(__file__) or '.'
 from ceiba import util
 from ceiba.ceiba import Ceiba
 from ceiba.course import Course
@@ -27,7 +28,6 @@ from ceiba.const import Role, strings
 from ceiba.exceptions import StopDownload
 from qtlib.custom_widget import PyLogOutput, PyToggle
 
-DIRNAME = os.path.dirname(__file__) or '.'
 TITLE = 'Ceiba Downloader by Jameshwc'
 
 def exception_handler(type, value, tb: TracebackType):
@@ -170,15 +170,16 @@ class MyApp(QMainWindow):
         self.ceiba = Ceiba()
         self.language = 'zh-tw'
 
+        self.create_options_groupbox()
         self.create_menu_bar()
         self.create_login_group_box()
         self.create_courses_group_box()
-        self.create_options_and_download_groupbox()
+        self.create_download_groupbox()
         self.create_status_group_box()
         self.set_zh_tw()
 
         self.courses_group_box.setHidden(True)
-        self.options_and_download_groupbox.setHidden(True)
+        self.download_groupbox.setHidden(True)
         self.setCentralWidget(QWidget(self))
         self.thread_pool = QThreadPool()
 
@@ -186,7 +187,7 @@ class MyApp(QMainWindow):
         self.user_layout = QGridLayout()
         self.user_layout.addWidget(self.login_group_box, 0, 0)
         self.user_layout.addWidget(self.courses_group_box, 1, 0)
-        self.user_layout.addWidget(self.options_and_download_groupbox, 2, 0)
+        self.user_layout.addWidget(self.download_groupbox, 2, 0)
         self.user_groupbox = QGroupBox()
         self.user_groupbox.setLayout(self.user_layout)
         self.main_layout.addWidget(self.user_groupbox, 0, 0)
@@ -214,10 +215,13 @@ class MyApp(QMainWindow):
         self.menu_language.addAction(self.menu_chinese)
         self.menu_language.addAction(self.menu_english)
 
+        self.menu_advanced = self.menu_bar.addAction("&進階 / Advanced")
+        self.menu_advanced.triggered.connect(self.open_options_window)
         menu = self.menu_bar
         if sys.platform == 'darwin':  # mac can't have one action menu
             self.menu_help = self.menu_bar.addMenu("&幫助 / Help")
             menu = self.menu_help
+
 
         self.menu_report = menu.addAction("&意見回饋 / Report Issue")
         self.menu_report.triggered.connect(self.open_ticket_window)
@@ -313,7 +317,7 @@ class MyApp(QMainWindow):
         logging.getLogger("urllib3").propagate = False
         logging.getLogger().setLevel(logging.INFO)
         # logging.getLogger().setLevel(logging.DEBUG)
-        sys.excepthook = exception_handler
+        # sys.excepthook = exception_handler
         self.pause_button = QPushButton()
         self.pause_button.clicked.connect(self.pause)
         self.pause_button.setDisabled(True)
@@ -420,14 +424,9 @@ class MyApp(QMainWindow):
             self.download_item_layout.addWidget(self.only_download_homepage_checkbox, 1, 2)
             self.download_admin_checkbox.setChecked(True)
 
-        self.options_and_download_groupbox.setHidden(False)
+        self.download_groupbox.setHidden(False)
 
-    def create_options_and_download_groupbox(self):
-        self.options_and_download_groupbox = QGroupBox()
-        self.options_and_download_layout = QGridLayout()
-        self.download_button = QPushButton()
-        self.download_button.clicked.connect(self.download)
-
+    def create_options_groupbox(self):
         self.download_item_menu = QMenu(self)
         for item_name in util.cname_map.values():
             checkbox = QCheckBox("&" + item_name)
@@ -480,6 +479,13 @@ class MyApp(QMainWindow):
 
         self.download_item_group_box = QGroupBox()
         self.download_item_group_box.setLayout(self.download_item_layout)
+        self.download_item_group_box.setProperty("class", "no-padding")
+
+    def create_download_groupbox(self):
+        self.download_groupbox = QGroupBox()
+        self.download_layout = QVBoxLayout()
+        self.download_button = QPushButton()
+        self.download_button.clicked.connect(self.download)
 
         self.filepath_label = QLabel()
         self.filepath_line_edit = QLineEdit()
@@ -494,14 +500,13 @@ class MyApp(QMainWindow):
         file_groupbox = QGroupBox()
         file_groupbox.setLayout(file_groupbox_layout)
 
-        self.download_item_group_box.setProperty("class", "no-padding")
-        self.options_and_download_layout.addWidget(self.download_item_group_box, 0, 0)
+        # self.download_layout.addWidget(self.download_item_group_box, 0, 0)
         file_groupbox.setProperty("class", "no-padding")
-        self.options_and_download_layout.addWidget(file_groupbox, 1, 0)
-        self.options_and_download_layout.addWidget(self.download_button, 2, 0)
+        self.download_layout.addWidget(file_groupbox)
+        self.download_layout.addWidget(self.download_button)
 
-        # self.options_and_download_groupbox.setProperty("class", "no-padding")
-        self.options_and_download_groupbox.setLayout(self.options_and_download_layout)
+        self.download_groupbox.setProperty("class", "no-padding")
+        self.download_groupbox.setLayout(self.download_layout)
 
     def download(self):
         items = []
@@ -608,6 +613,12 @@ class MyApp(QMainWindow):
         else:
             self.progress_bar.setValue(self.progress_bar.value() + add_value)
 
+    def open_options_window(self):
+        self.options_window = QMainWindow(self)
+        self.options_window.setWindowTitle('進階 / Advanced')
+        self.options_window.setCentralWidget(self.download_item_group_box)
+        self.options_window.show()
+
     def open_ticket_window(self):
         self.ticket_window = TicketSubmit(self.ceiba, self.thread_pool, self)
         self.ticket_window.move(self.log_output.geometry().center())
@@ -691,8 +702,12 @@ class MyApp(QMainWindow):
         self.download_item_menu_button.setText("<-- Click to expand -->")
         for action in self.download_item_menu.actions():
             checkbox = action.defaultWidget()
-            if checkbox.text()[1:] in util.ename_map:
-                checkbox.setText("&" + util.ename_map[checkbox.text()[1:]])
+            text: str = checkbox.text()[1:]
+            if text in util.ename_map:
+                etext = util.ename_map[text].capitalize()
+                if etext == 'Hw':
+                    etext = 'HW'
+                checkbox.setText("&" + etext)
         self.stop_button.setText('Stop Download')
         self.download_finish_msgbox_text = 'The download has completed!'
         self.download_finish_msgbox_open_dir_text = 'Open Ceiba directory'
