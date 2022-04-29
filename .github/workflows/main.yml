@@ -37,9 +37,6 @@ jobs:
           perl -i -pe's/VERSION/V${{ env.VERSION }}/g' gui_main.py
           perl -i -pe's/self.version: str = \"1.0\"/self.version = \"${{ env.VERSION }}\"/g' ceiba/ceiba.py
 
-      - name: test
-        run: cat ceiba/ceiba.py
-
       - name: Set up python version
         uses: actions/setup-python@v2
         if: ${{ matrix.os != 'macos-latest' }}
@@ -57,6 +54,10 @@ jobs:
 
       - name: Install PyInstaller
         run: pip3 install pyinstaller
+
+      - name: Install PIL MacOS missing
+        run: pip3 install Pillow
+        if: ${{ matrix.os == 'macos-latest' }}
 
       - name: Package Application
         run: pyinstaller ceiba-downloader.spec
