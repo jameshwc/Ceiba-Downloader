@@ -4,13 +4,13 @@
 block_cipher = None
 
 
-a = Analysis(['gui_main.py'],
+a = Analysis(['src/gui_main.py'],
              pathex=[],
              binaries=[],
              datas=[('resources/custom.qss', 'resources'),
                     ('resources/GenSenRounded-M.ttc', 'resources'),
                     ('resources/ceiba.ico', 'resources'),
-                    ('ceiba/i18n/*', 'resources/i18n')],
+                    ('src/ceiba/i18n/*', 'resources/i18n')],
              hiddenimports=[],
              hookspath=[],
              hooksconfig={},
