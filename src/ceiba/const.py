@@ -32,10 +32,10 @@ class String:
 
         self._data: Dict[str, Dict[str, str]] = {}
 
-        self.load_json('zh-tw', zh_tw)
-        self.load_json('en', en)
+        self.load_dict('zh-tw', zh_tw)
+        self.load_dict('en', en)
 
-    def load_json(self, lang, lang_dict):
+    def load_dict(self, lang, lang_dict):
 
         for role in Role:
             name = role.name
