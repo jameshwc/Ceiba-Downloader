@@ -4,13 +4,12 @@
 block_cipher = None
 
 
-a = Analysis(['gui_main.py'],
+a = Analysis(['src/gui_main.py'],
              pathex=[],
              binaries=[],
-             datas=[('resources/custom.qss', 'resources'),
-                    ('resources/GenSenRounded-M.ttc', 'resources'),
-                    ('resources/ceiba.ico', 'resources'),
-                    ('ceiba/i18n/*', 'resources/i18n')],
+             datas=[('src/resources/custom.qss', 'resources'),
+                    ('src/resources/GenSenRounded-M.ttc', 'resources'),
+                    ('src/resources/ceiba.ico', 'resources')],
              hiddenimports=[],
              hookspath=[],
              hooksconfig={},
@@ -37,7 +36,7 @@ exe = EXE(pyz,
           target_arch=None,
           codesign_identity=None,
           entitlements_file=None,
-          icon='resources/ceiba.ico')
+          icon='src/resources/ceiba.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
@@ -48,5 +47,5 @@ coll = COLLECT(exe,
                name='ceiba-downloader')
 app = BUNDLE(coll,
        name='ceiba-downloader.app',
-       icon='resources/ceiba.ico',
+       icon='src/resources/ceiba.ico',
        bundle_identifier=None)
