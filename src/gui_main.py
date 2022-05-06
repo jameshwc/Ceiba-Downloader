@@ -175,7 +175,7 @@ class MyApp(QMainWindow):
         self.create_courses_group_box()
         self.create_download_groupbox()
         self.create_status_group_box()
-        self.set_zh_tw()
+        self.set_lang('zh-tw')
 
         self.courses_group_box.setHidden(True)
         self.download_groupbox.setHidden(True)
@@ -204,8 +204,8 @@ class MyApp(QMainWindow):
         self.menu_chinese = QAction("&中文", self, checkable=True)
         self.menu_english = QAction("&English", self, checkable=True)
 
-        self.menu_chinese.triggered.connect(self.set_zh_tw)
-        self.menu_english.triggered.connect(self.set_en)
+        self.menu_chinese.triggered.connect(lambda: self.set_lang('zh-tw'))
+        self.menu_english.triggered.connect(lambda: self.set_lang('en'))
 
         self.menu_chinese.setChecked(True)
         self.menu_language_group.addAction(self.menu_english)
@@ -223,7 +223,7 @@ class MyApp(QMainWindow):
             menu = self.menu_help
         else:
             self.menu_advanced = self.menu_bar.addAction("&進階 / Advanced")
-        
+
         self.menu_advanced.triggered.connect(self.open_options_window)
 
         self.menu_report = menu.addAction("&意見回饋 / Report Issue")
@@ -709,12 +709,6 @@ class MyApp(QMainWindow):
                 if text == 'Hw':
                     text = 'HW'
                 checkbox.setText("&" + text)
-
-    def set_en(self):
-        self.set_lang('en')
-
-    def set_zh_tw(self):
-        self.set_lang('zh-tw')
 
     def closeEvent(self, event):
         util.stop()
