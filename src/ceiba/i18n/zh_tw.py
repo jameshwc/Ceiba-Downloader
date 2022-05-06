@@ -1,4 +1,4 @@
-{
+zh_tw = {
     "role": {
         "Student": "台大學生",
         "TA": "助教",
@@ -62,8 +62,34 @@
     },
 
     "qt": {
+        "login_groupbox_title": "使用者",
+        "username_label": "帳號 (學號) :",
+        "password_label": "密碼 :",
+        "login_button": "登入",
+        "login_method_left_label": "認證方式：帳號 / 密碼 [?]",
+        "login_method_right_label": "cookies [?]",
+        "login_method_left_label_tooltip": "除非你信任本程式作者，否則不應該在計中網站以外的地方輸入自己的帳密！",
+        "login_method_right_label_tooltip": "透過手動登入 Ceiba 可以從瀏覽器的 F12 視窗看到 Cookies，請複製 PHPSESSID 的內容",
+        "welcome": "{} ({})，歡迎你！",
+        "courses_group_box": "課程",
+        "status_group_box": "狀態",
+        "download_button": "下載",
+        "check_all_courses_checkbox": "勾選所有課程",
+        "download_item_label": " 下載項目： ",
+        "check_all_download_item_checkbox": " 勾選全部下載項目 ",
+        "download_admin_checkbox": "下載管理後台 [?]",
+        "download_admin_checkbox_tooltip": "下載 Ceiba 管理後臺（只有助教、教授與校外老師適用）",
+        "only_download_homepage_checkbox": " 只下載首頁[?] ",
+        "only_download_homepage_checkbox_tooltip": "只下載 Ceiba 首頁。當你已經下載了部分課程，且不希望重複下載那些課程時，可以勾選這個選項。",
+        "filepath_label": " 存放路徑： ",
+        "file_browse_button": "瀏覽",
+        "download_item_menu_button": "<-- 點我展開 -->",
+        "stop_button": "停止下載",
         "pause_button": "暫停下載",
         "resume_button": "繼續下載",
-        "login_method_label": "登入方式："
+        "login_method_label": "登入方式：",
+        "download_finish_msgbox": "下載完成！",
+        "download_finish_msgbox_open_dir": "打開檔案目錄",
+        "download_finish_msgbox_open_browser": "打開 Ceiba 網頁"
     }
 }
