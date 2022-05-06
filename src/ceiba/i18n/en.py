@@ -1,4 +1,4 @@
-{
+en = {
     "role": {
         "Student": "NTU Students",
         "TA": "TA",
@@ -80,7 +80,7 @@
         "download_admin_checkbox": "Download Admin Pages [?]",
         "download_admin_checkbox_tooltip": "Download Ceiba Admin Pages (only available for TAs, Professors, and Outside Teachers.",
         "only_download_homepage_checkbox": "Only Homepage [?]",
-        "only_download_homepage_checkbox_tooltip": "Download Ceiba homepage only.\nYou should use this option when you had downloaded a few courses before\n and don't want to repetively download those courses.",
+        "only_download_homepage_checkbox_tooltip": "Download Ceiba homepage only.\\nYou should use this option when you had downloaded a few courses before\\n and don't want to repetively download those courses.",
         "filepath_label": "Path: ",
         "file_browse_button": "Browse",
         "download_item_menu_button": "<-- Click to expand -->",

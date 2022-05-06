@@ -1,7 +1,7 @@
 from enum import Enum
-import json
-from pathlib import Path
 from typing import Dict
+from .i18n.en import en
+from .i18n.zh_tw import zh_tw
 
 cname_map = {
     'bulletin': '公佈欄', 'syllabus': '課程大綱', 'hw': '作業',
@@ -32,26 +32,21 @@ class String:
 
         self._data: Dict[str, Dict[str, str]] = {}
 
-        self.load_json('zh-tw')
-        self.load_json('en')
+        self.load_json('zh-tw', zh_tw)
+        self.load_json('en', en)
 
-    def load_json(self, lang):
-        try:
-            with open(list(Path().glob(f'**/i18n/{lang}.json'))[0], 'r', encoding='utf-8') as fp:
-                data = json.load(fp)
-        except (FileNotFoundError, IndexError):
-            raise
+    def load_json(self, lang, lang_dict):
 
         for role in Role:
             name = role.name
             self.init_str(f'role_{role}')
-            self._data[f'role_{role}'][lang] = data['role'][name]
+            self._data[f'role_{role}'][lang] = lang_dict['role'][name]
 
-        for info, str_ in data['info'].items():
+        for info, str_ in lang_dict['info'].items():
             self.init_str(info)
             self._data[info][lang] = str_
 
-        for qt, str_ in data['qt'].items():
+        for qt, str_ in lang_dict['qt'].items():
             self.init_str(f'qt_{qt}')
             self._data[f'qt_{qt}'][lang] = str_
 
