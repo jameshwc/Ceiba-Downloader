@@ -214,13 +214,17 @@ class MyApp(QMainWindow):
         self.menu_language.addAction(self.menu_chinese)
         self.menu_language.addAction(self.menu_english)
 
-        self.menu_advanced = self.menu_bar.addAction("&進階 / Advanced")
-        self.menu_advanced.triggered.connect(self.open_options_window)
+
         menu = self.menu_bar
         if sys.platform == 'darwin':  # mac can't have one action menu
+            self.menu_advanced_menu = self.menu_bar.addMenu("&進階 / Advanced")
+            self.menu_advanced = self.menu_advanced_menu.addAction("&進階 / Advanced")
             self.menu_help = self.menu_bar.addMenu("&幫助 / Help")
             menu = self.menu_help
-
+        else:
+            self.menu_advanced = self.menu_bar.addAction("&進階 / Advanced")
+        
+        self.menu_advanced.triggered.connect(self.open_options_window)
 
         self.menu_report = menu.addAction("&意見回饋 / Report Issue")
         self.menu_report.triggered.connect(self.open_ticket_window)
