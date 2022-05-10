@@ -1,7 +1,14 @@
 from enum import Enum
-import json
-from pathlib import Path
 from typing import Dict
+from .i18n.en import en
+from .i18n.zh_tw import zh_tw
+
+cname_map = {
+    'bulletin': '公佈欄', 'syllabus': '課程大綱', 'hw': '作業',
+    'info': '課程資訊', 'personal': '教師資訊', 'grade': '學習成績',
+    'board': '討論看板', 'calendar': '課程行事曆', 'share': '資源分享',
+    'vote': '投票區', 'student': '修課學生'}
+ename_map = {v: k for k, v in cname_map.items()}
 
 class Role(Enum):
     Student = 0
@@ -25,40 +32,21 @@ class String:
 
         self._data: Dict[str, Dict[str, str]] = {}
 
-        # self._qt_feedback = {}
-        # self._qt_submit = {}
-        # self._qt_anonymous = {}
-        # self._qt_submit_ticket_successfully = {}
-        # self._qt_user = {}
-        # self._qt_username = {}
-        # self._qt_password = {}
-        # self._qt_login = {}
-        # self._qt_login_method_unsafe = {}
-        # self._qt_login_method_safe = {}
-        # self._qt_course = {}
-        # self._qt_status = {}
-        # self._qt_send_ticket_button = {}
+        self.load_dict('zh-tw', zh_tw)
+        self.load_dict('en', en)
 
-        self.load_json('zh-tw')
-        self.load_json('en')
-
-    def load_json(self, lang):
-        try:
-            with open(list(Path().glob(f'**/i18n/{lang}.json'))[0], 'r', encoding='utf-8') as fp:
-                data = json.load(fp)
-        except (FileNotFoundError, IndexError):
-            raise
+    def load_dict(self, lang, lang_dict):
 
         for role in Role:
             name = role.name
             self.init_str(f'role_{role}')
-            self._data[f'role_{role}'][lang] = data['role'][name]
+            self._data[f'role_{role}'][lang] = lang_dict['role'][name]
 
-        for info, str_ in data['info'].items():
+        for info, str_ in lang_dict['info'].items():
             self.init_str(info)
             self._data[info][lang] = str_
 
-        for qt, str_ in data['qt'].items():
+        for qt, str_ in lang_dict['qt'].items():
             self.init_str(f'qt_{qt}')
             self._data[f'qt_{qt}'][lang] = str_
 
@@ -78,6 +66,12 @@ class String:
         if len(class_num) > 0:
             return self._data['course'][self.lang].format(course_name, course_num, class_num)
         return self._data['course_without_class'][self.lang].format(course_name, course_num)
+
+    @property
+    def name_map(self) -> Dict[str, str]:
+        if self.lang == 'zh-tw':
+            return cname_map
+        return ename_map
 
     @property
     def sso_login(self) -> str:
@@ -276,6 +270,10 @@ class String:
         return self._data['stop_download'][self.lang]
 
     @property
+    def qt_stop_button(self) -> str:
+        return self._data['qt_stop_button'][self.lang]
+
+    @property
     def qt_pause_button(self) -> str:
         return self._data['qt_pause_button'][self.lang]
 
@@ -286,5 +284,105 @@ class String:
     @property
     def qt_login_method_label(self) -> str:
         return self._data['qt_login_method_label'][self.lang]
+
+    @property
+    def qt_login_groupbox_title(self) -> str:
+        return self._data['qt_login_groupbox_title'][self.lang]
+
+    @property
+    def qt_username_label(self) -> str:
+        return self._data['qt_username_label'][self.lang]
+
+    @property
+    def qt_password_label(self) -> str:
+        return self._data['qt_password_label'][self.lang]
+
+    @property
+    def qt_login_button(self) -> str:
+        return self._data['qt_login_button'][self.lang]
+
+    @property
+    def qt_login_method_left_label(self) -> str:
+        return self._data['qt_login_method_left_label'][self.lang]
+
+    @property
+    def qt_login_method_right_label(self) -> str:
+        return self._data['qt_login_method_right_label'][self.lang]
+
+    @property
+    def qt_login_method_left_label_tooltip(self) -> str:
+        return self._data['qt_login_method_left_label_tooltip'][self.lang]
+
+    @property
+    def qt_login_method_right_label_tooltip(self) -> str:
+        return self._data['qt_login_method_right_label_tooltip'][self.lang]
+
+    @property
+    def qt_welcome(self) -> str:
+        return self._data['qt_welcome'][self.lang]
+
+    @property
+    def qt_courses_group_box(self) -> str:
+        return self._data['qt_courses_group_box'][self.lang]
+
+    @property
+    def qt_status_group_box(self) -> str:
+        return self._data['qt_status_group_box'][self.lang]
+
+    @property
+    def qt_download_button(self) -> str:
+        return self._data['qt_download_button'][self.lang]
+
+    @property
+    def qt_check_all_courses_checkbox(self) -> str:
+        return self._data['qt_check_all_courses_checkbox'][self.lang]
+
+    @property
+    def qt_download_item_label(self) -> str:
+        return self._data['qt_download_item_label'][self.lang]
+
+    @property
+    def qt_check_all_download_item_checkbox(self) -> str:
+        return self._data['qt_check_all_download_item_checkbox'][self.lang]
+
+    @property
+    def qt_download_admin_checkbox(self) -> str:
+        return self._data['qt_download_admin_checkbox'][self.lang]
+
+    @property
+    def qt_download_admin_checkbox_tooltip(self) -> str:
+        return self._data['qt_download_admin_checkbox_tooltip'][self.lang]
+
+    @property
+    def qt_only_download_homepage_checkbox(self) -> str:
+        return self._data['qt_only_download_homepage_checkbox'][self.lang]
+
+    @property
+    def qt_only_download_homepage_checkbox_tooltip(self) -> str:
+        return self._data['qt_only_download_homepage_checkbox_tooltip'][self.lang]
+
+    @property
+    def qt_filepath_label(self) -> str:
+        return self._data['qt_filepath_label'][self.lang]
+
+    @property
+    def qt_file_browse_button(self) -> str:
+        return self._data['qt_file_browse_button'][self.lang]
+
+    @property
+    def qt_download_item_menu_button(self) -> str:
+        return self._data['qt_download_item_menu_button'][self.lang]
+
+    @property
+    def qt_download_finish_msgbox(self) -> str:
+        return self._data['qt_download_finish_msgbox'][self.lang]
+
+    @property
+    def qt_download_finish_msgbox_open_dir(self) -> str:
+        return self._data['qt_download_finish_msgbox_open_dir'][self.lang]
+
+    @property
+    def qt_download_finish_msgbox_open_browser(self) -> str:
+        return self._data['qt_download_finish_msgbox_open_browser'][self.lang]
 
 strings = String()

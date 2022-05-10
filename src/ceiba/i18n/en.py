@@ -1,4 +1,4 @@
-{
+en = {
     "role": {
         "Student": "NTU Students",
         "TA": "TA",
@@ -27,8 +27,8 @@
         "error_skip_and_continue_download_modules": "Error when downloading {1} of {0}! Skip it and continue downloading...",
         "error_skip_and_continue_download_courses": "Error when downloading the course {}! Skip it and continue downloading...",
         "error_unable_to_parse_course_sn": "Can't parse the course code of {} ! Cancel the download of {}...",
-        "try_to_login": "Trying to log in Ceiba...",
-        "login_successfully": "Successfully log in to Ceiba!",
+        "try_to_login": "Trying to sign in Ceiba...",
+        "login_successfully": "Successfully sign in to Ceiba!",
         "try_to_get_courses": "Trying to get the courses...",
         "get_courses_successfully": "Successfully got the courses!",
         "start_downloading_courses": "Downloading the courses...",
@@ -41,8 +41,8 @@
         "urlf": "url: {}",
         "url_duplicate": "duplicate url: skipping download - {}",
         "exception_invalid_login_parameters": "You must fill in the username/password or cookies!",
-        "exception_invalid_login_role": "Fail to log in! Please provide a login role (NTU Students, Professor, etc.)!",
-        "exception_invalid_credentials": "Fail to log in! Please check if you fill in correct username and password!",
+        "exception_invalid_login_role": "Fail to sign in! Please provide a login role (NTU Students, Professor, etc.)!",
+        "exception_invalid_credentials": "Fail to sign in! Please check if you filled in correct username and password!",
         "exception_invalid_filepath": "The file path is incorrect! Please check if the path is empty or wrong!",
         "exception_null_ticket_content": "The content is empty! You must type something to submit issues!",
         "exception_send_ticket_error": "Fail to report issue! Error: {}",
@@ -62,8 +62,34 @@
     },
 
     "qt": {
+        "login_groupbox_title": "User",
+        "username_label": "Username (Student ID): ",
+        "password_label": "Password: ",
+        "login_button": "Sign in",
+        "login_method_left_label": "Username/Password [?]",
+        "login_method_right_label": "Cookies [?]",
+        "login_method_left_label_tooltip": "It's unsafe to sign in via a third-party program! You should use cookies as your credential instead.",
+        "login_method_right_label_tooltip": "Sign in Ceiba manually and you can view cookies using F12 in your browser. Please copy the content of PHPSESSID in your cookies.",
+        "welcome": "Welcome, {} ({})!",
+        "courses_group_box": "Courses",
+        "status_group_box": "Status",
+        "download_button": "Download",
+        "check_all_courses_checkbox": "Check All Courses",
+        "download_item_label": "Download Items: ",
+        "check_all_download_item_checkbox": "Check All Items ",
+        "download_admin_checkbox": "Download Admin Pages [?]",
+        "download_admin_checkbox_tooltip": "Download Ceiba Admin Pages (only available for TAs, Professors, and Outside Teachers.",
+        "only_download_homepage_checkbox": "Only Homepage [?]",
+        "only_download_homepage_checkbox_tooltip": "Download Ceiba homepage only.\\nYou should use this option when you had downloaded a few courses before\\n and don't want to repetively download those courses.",
+        "filepath_label": "Path: ",
+        "file_browse_button": "Browse",
+        "download_item_menu_button": "<-- Click to expand -->",
+        "stop_button": "Stop Download",
         "pause_button": "Pause Download",
         "resume_button": "Resume Download",
-        "login_method_label": "Login Method:"
+        "login_method_label": "Login Method:",
+        "download_finish_msgbox": "The download has completed!",
+        "download_finish_msgbox_open_dir": "Open Ceiba directory",
+        "download_finish_msgbox_open_browser": "Open Ceiba homepage"
     }
 }
