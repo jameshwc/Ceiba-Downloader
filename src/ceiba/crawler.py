@@ -28,6 +28,7 @@ class Crawler():
                  session: requests.Session,
                  url: str,
                  path: Path,
+                 lang: str = "chinese",
                  is_admin=False,
                  course_name: str = "",
                  module: str = "",
@@ -36,6 +37,7 @@ class Crawler():
         self.session = session
         self.url = url
         self.path = path
+        self.lang = lang
         self.is_admin = is_admin
         self.course_name = course_name
         self.module = module
@@ -84,10 +86,11 @@ class Crawler():
         if self.is_admin:
             soup = self.remove_nav_and_footer(soup)
             soup = self.parse_frame(soup)
-        soup = self.crawl_hrefs(soup, response.url)
 
         for op in soup.find_all('option'):
             op.extract()  # TODO: we should use <a> to replace <option>
+
+        soup = self.crawl_hrefs(soup, response.url)
 
         filepath.write_text(str(soup), encoding='utf-8')
         return filepath
@@ -113,7 +116,7 @@ class Crawler():
 
     def crawl_hrefs(self, soup: BeautifulSoup, resp_url: str) -> BeautifulSoup:
 
-        skip_href_texts = util.skip_href_texts(self.module, self.is_admin)
+        skip_href_texts = util.skip_href_texts(self.module, self.lang, self.is_admin)
 
         if self.is_admin:
             hrefs = soup.find('div', {'id': 'section'}).find_all('a')
@@ -153,7 +156,7 @@ class Crawler():
             if self._is_board and a.text in self._board_dir:
                 crawler_path = self._board_dir[a.text]
             try:
-                filename = Crawler(self.session, url, crawler_path, is_admin, self.course_name, self.module, filename, text).crawl()
+                filename = Crawler(self.session, url, crawler_path, self.lang, is_admin, self.course_name, self.module, filename, text).crawl()
             except StopDownload as e:
                 raise e
             except NotFound as e:
@@ -171,7 +174,8 @@ class Crawler():
     def __handle_board(self, captions: List[Tag]):
         for caption in captions:
             caption_text: str = caption.get_text()
-            if caption_text.startswith('看板列表'):
+            if caption_text.startswith('看板列表') or \
+                caption_text.startswith('Forum Index'):
                 rows = caption.parent.find('tbody').find_all('tr')
                 for row in rows:
                     a_tag: Tag = row.find("p", {"class": "fname"}).find('a')
@@ -241,7 +245,7 @@ class Crawler():
             css['href'] = 'static/' + filename
             static_dir = self.path / 'static'
             static_dir.mkdir(exist_ok=True)
-            Crawler(self.session, url, static_dir, self.is_admin, filename=filename, text=css['href']).crawl_css_and_resources()
+            Crawler(self.session, url, static_dir, filename=filename, text=css['href']).crawl_css_and_resources()
 
 
     def parse_frame(self, soup: BeautifulSoup) -> BeautifulSoup:

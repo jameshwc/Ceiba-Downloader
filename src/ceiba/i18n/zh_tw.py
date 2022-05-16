@@ -81,6 +81,7 @@ zh_tw = {
         "download_admin_checkbox_tooltip": "下載 Ceiba 管理後臺（只有助教、教授與校外老師適用）",
         "only_download_homepage_checkbox": " 只下載首頁[?] ",
         "only_download_homepage_checkbox_tooltip": "只下載 Ceiba 首頁。當你已經下載了部分課程，且不希望重複下載那些課程時，可以勾選這個選項。",
+        "logger_debug_checkbox": "顯示 Debug 訊息",
         "filepath_label": " 存放路徑： ",
         "file_browse_button": "瀏覽",
         "download_item_menu_button": "<-- 點我展開 -->",
