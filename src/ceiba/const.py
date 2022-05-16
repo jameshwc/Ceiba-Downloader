@@ -362,6 +362,10 @@ class String:
         return self._data['qt_only_download_homepage_checkbox_tooltip'][self.lang]
 
     @property
+    def qt_logger_debug_checkbox(self) -> str:
+        return self._data['qt_logger_debug_checkbox'][self.lang]
+
+    @property
     def qt_filepath_label(self) -> str:
         return self._data['qt_filepath_label'][self.lang]
 

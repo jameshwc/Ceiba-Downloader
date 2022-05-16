@@ -51,11 +51,18 @@ admin_ename_map = {v: k for k, v in admin_cname_map.items()}
 admin_ename_map['討論看板'] = 'board'
 
 default_skip_href_texts = ['友善列印', '分頁顯示']
+default_skip_href_texts_en = ['Printer Friendly', 'Show by Page']
 board_skip_href_texts = default_skip_href_texts + [
                 '看板列表', '最新張貼', '排行榜', '推薦文章', '搜尋文章', '發表紀錄',
-                ' 新增主題', '引用', ' 回覆', '分頁顯示', '上個主題', '下個主題',
+                ' 新增主題', '引用', ' 回覆', '上個主題', '下個主題',
                 '修改', ' 我要評分', ' 我要推薦']
+board_skip_href_texts_en = default_skip_href_texts_en + [
+    'Forum Index', 'New Posts', 'Ranking', 'Great Picks', 'Search', 'Records',
+    ' New Topic', 'Quote', ' Reply', 'Previous Topic', 'Next Topic',
+    'Modify', ' Rate it'
+]
 student_skip_href_texts = default_skip_href_texts + ['上頁', '下頁']
+student_skip_href_texts_en = default_skip_href_texts_en + ['Previously Page', 'Next Page']
 
 admin_skip_mod = ['calendar', 'user', 'theme', 'grade', 'mail']
 admin_mod_num = len(admin_cname_map) - len(admin_skip_mod)
@@ -77,14 +84,21 @@ def homepage_url_to_role(url: str, sso=False) -> Role:
             return Role.Outside_Teacher
     return None
 
-def skip_href_texts(mod: str, admin: bool):
+def skip_href_texts(mod: str, lang: str, admin: bool):
     if admin:
         return admin_skip_href_texts(mod)
-    if mod == 'board':
-        return board_skip_href_texts
-    elif mod == 'student':
-        return student_skip_href_texts
-    return default_skip_href_texts
+    if lang == 'chinese':
+        if mod == 'board':
+            return board_skip_href_texts
+        elif mod == 'student':
+            return student_skip_href_texts
+        return default_skip_href_texts
+    elif lang == 'english':
+        if mod == 'board':
+            return board_skip_href_texts_en
+        elif mod == 'student':
+            return student_skip_href_texts_en
+        return default_skip_href_texts_en
 
 def admin_skip_href_texts(mod: str):
     if mod == 'syllabus':

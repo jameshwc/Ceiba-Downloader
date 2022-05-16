@@ -30,6 +30,7 @@ class Course():
         self.folder_name: str = util.get_valid_filename("_".join([self.semester, self.cname, self.ename, self.teacher]))
         self.id: str = self.semester + self.course_num
         self.course_sn: str = ""
+        self.lang: str = 'chinese'
         self.path: Path = None
 
     def __str__(self):
@@ -64,6 +65,7 @@ class Course():
             modules_not_in_this_module_num = len(modules_filter_list) - len(modules)
             if modules_not_in_this_module_num > 0:
                 progress.emit(modules_not_in_this_module_num)
+
         self.download_modules(modules, session, progress, admin=False)
 
         if admin:
@@ -90,18 +92,18 @@ class Course():
             url = util.admin_module_urlgen(module)
             module_dir = self.admin_path / module
         else:
-            url = util.module_url + "?csn=" + self.course_sn + "&default_fun=" + module + "&current_lang=chinese"  # TODO:language
+            url = util.module_url + "?csn=" + self.course_sn + "&default_fun=" + module  # TODO:language
             module_dir = self.path / module
 
         module_dir.mkdir(exist_ok=True)
-        Crawler(session, url, module_dir, is_admin=admin, course_name=course_name, module=module, filename=module).crawl()
+        Crawler(session, url, module_dir, lang=self.lang, is_admin=admin, course_name=course_name, module=module, filename=module).crawl()
 
     @util.progress_decorator()
     def download_homepage(self,
                           session: requests.Session,
                           name: str = strings.homepage,
                           modules_filter_list: List[str] = None):
-        param = "?csn=" + self.course_sn + "&default_fun=info&current_lang=chinese"  # TODO:language
+        param = "?csn=" + self.course_sn + "&default_fun=info"  # TODO:language
         button_url = util.button_url + param
         banner_url = util.banner_url + param
         homepage_url = util.homepage_url + param
@@ -148,6 +150,9 @@ class Course():
                 continue
             a['onclick'] = "parent.parent.mainFrame.location='" + item + "/" + item + ".html'"
             items.append(item)
+
+        lang = soup.find('option', selected=True)
+        self.lang = lang['value'] # chinese or english
         self.path.joinpath(filename).write_text(str(soup), encoding='utf-8')
         return items
 

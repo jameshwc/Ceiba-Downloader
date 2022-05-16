@@ -317,10 +317,9 @@ class MyApp(QMainWindow):
             )
         )
         logging.getLogger().addHandler(self.log_output)
-        logging.getLogger("urllib3").propagate = False
+        # logging.getLogger("urllib3").propagate = False
         logging.getLogger().setLevel(logging.INFO)
-        # logging.getLogger().setLevel(logging.DEBUG)
-        # sys.excepthook = exception_handler
+        sys.excepthook = exception_handler
         self.pause_button = QPushButton()
         self.pause_button.clicked.connect(self.pause)
         self.pause_button.setDisabled(True)
@@ -474,11 +473,20 @@ class MyApp(QMainWindow):
 
         self.only_download_homepage_checkbox.clicked.connect(disable_download_item_menu_button)
 
+        self.logger_debug_checkbox = QCheckBox()
+        def enable_debug_messages():
+            if self.logger_debug_checkbox.isChecked():
+                logging.getLogger().setLevel(logging.DEBUG)
+            else:
+                logging.getLogger().setLevel(logging.INFO)
+        self.logger_debug_checkbox.clicked.connect(enable_debug_messages)
+
         self.download_item_layout = QGridLayout()
         self.download_item_layout.addWidget(self.download_item_label, 0, 0)
         self.download_item_layout.addWidget(self.download_item_menu_button, 0, 1)
         self.download_item_layout.addWidget(self.check_all_download_item_checkbox, 0, 2)
         self.download_item_layout.addWidget(self.only_download_homepage_checkbox, 0, 3)
+        self.download_item_layout.addWidget(self.logger_debug_checkbox, 1, 0)
 
         self.download_item_group_box = QGroupBox()
         self.download_item_group_box.setLayout(self.download_item_layout)
@@ -694,6 +702,7 @@ class MyApp(QMainWindow):
         self.download_admin_checkbox.setToolTip(strings.qt_download_admin_checkbox_tooltip)
         self.only_download_homepage_checkbox.setText(strings.qt_only_download_homepage_checkbox)
         self.only_download_homepage_checkbox.setToolTip(strings.qt_only_download_homepage_checkbox_tooltip)
+        self.logger_debug_checkbox.setText(strings.qt_logger_debug_checkbox)
         self.filepath_label.setText(strings.qt_filepath_label)
         self.file_browse_button.setText(strings.qt_file_browse_button)
         self.download_item_menu_button.setText(strings.qt_download_item_menu_button)
