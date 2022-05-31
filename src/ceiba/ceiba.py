@@ -107,7 +107,9 @@ class Ceiba():
         try:
             second_table: Tag = soup.find_all("table")[1]
             # tables[1] may be audit courses or not-set-up-in-ceiba courses
-            if '旁聽' in second_table.find_previous_sibling('h2').get_text():
+            if any(word in second_table.find_previous_sibling('h2').get_text() for word in ['旁聽', 'attend']):
+                rows.extend(second_table.find_all('tr')[1:])
+            if any(word in second_table.find_previous_sibling('h3').get_text() for word in ['合授', 'Co-instructed']):
                 rows.extend(second_table.find_all('tr')[1:])
         except IndexError:
             pass
