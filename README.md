@@ -1,9 +1,15 @@
-# Ceiba 備份下載軟體 Ceiba Downloader 
-[![GitHub stars](https://img.shields.io/github/stars/jameshwc/Ceiba-Downloader)](https://github.com/jameshwc/Ceiba-Downloader/stargazers) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/jameshwc/Ceiba-Downloader?sort=semver) ![GitHub all releases](https://img.shields.io/github/downloads/jameshwc/Ceiba-Downloader/total) [![wakatime](https://wakatime.com/badge/user/2e96fba1-4706-4851-b24f-13b1d9f5e5e0/project/b4b2c09f-879d-4d9d-8815-90aa4c171ce0.svg)](https://wakatime.com/badge/user/2e96fba1-4706-4851-b24f-13b1d9f5e5e0/project/b4b2c09f-879d-4d9d-8815-90aa4c171ce0) [![GitHub license](https://img.shields.io/github/license/jameshwc/Ceiba-Downloader)](https://github.com/jameshwc/Ceiba-Downloader/blob/master/LICENSE) 
+# (Archived) Ceiba 備份下載軟體 Ceiba Downloader
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)[![GitHub stars](https://img.shields.io/github/stars/jameshwc/Ceiba-Downloader)](https://github.com/jameshwc/Ceiba-Downloader/stargazers) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/jameshwc/Ceiba-Downloader?sort=semver) ![GitHub all releases](https://img.shields.io/github/downloads/jameshwc/Ceiba-Downloader/total) [![wakatime](https://wakatime.com/badge/user/2e96fba1-4706-4851-b24f-13b1d9f5e5e0/project/b4b2c09f-879d-4d9d-8815-90aa4c171ce0.svg)](https://wakatime.com/badge/user/2e96fba1-4706-4851-b24f-13b1d9f5e5e0/project/b4b2c09f-879d-4d9d-8815-90aa4c171ce0) [![GitHub license](https://img.shields.io/github/license/jameshwc/Ceiba-Downloader)](https://github.com/jameshwc/Ceiba-Downloader/blob/master/LICENSE) 
+
+## Archive Notice 封存
+
+As of 2024 Jan, this project has been archived and is no longer actively maintained or supported due to the shutdown of the NTU Ceiba site. 
+
+由於 Ceiba 已在 2024 年初下線，本軟體功成身退，將不再執行任何維護與更新。
+
+---
 
 [README in English](https://github.com/jameshwc/Ceiba-Downloader/blob/master/README-en.md)
-
-> 歡迎任何的 issue/pull request，或 star 本專案與開啟 notification 以收到最新消息。
 
 ![](https://i.imgur.com/z7bqTNs.gif)
 
